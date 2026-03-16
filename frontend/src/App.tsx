@@ -27,7 +27,7 @@ function App() {
           </button>
         </div>
         <div className='mt-20 bg-black'>
-          <p className='text-3xl font-bold text-white border-2 border-white p-10'> Como funciona el estado de react como su nombre indica es reactivo a las acciones del usuario mediante Hooks del mismo react como lo son useState, UseEffect, UseContext entre otro. Permiten asignar un valor inicial y SETEAR ese valor para ir en aumento o decremento dependiendo la funcionalidad que se le quiera dar </p>
+          <p className='text-3xl font-bold text-white border-2 border-white p-10'> Como funciona el estado de react como su nombre indica es reactivo a las acciones del usuario mediante Hooks del mismo react como lo son useState, UseEffect, UseContext entre otro. Permiten asignar un valor inicial y SETEAR ese valor para ir en aumento o decremento dependiendo la funcionalidad que se le quiera dar, haciendo los primeros cambiios en una prueba </p>
         </div>
       </div>
 
