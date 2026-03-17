@@ -27,7 +27,7 @@ export function ThemeToggle() {
             }`}
         />
       </div>
-      <span className="sr-only">Cambiar tema</span>
+      <span className="sr-only">Cambiar temaa</span>
     </Button>
   )
 }
