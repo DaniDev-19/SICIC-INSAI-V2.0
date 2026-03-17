@@ -2,7 +2,6 @@ import { useState } from "react";
 import "./index.css";
 
 function App() {
-  const [count, setCount] = useState(0);
 
   // 1. Separación de la lógica: Extraemos las funciones manejadoras de eventos
   const handleIncrement = () => setCount(count + 1);
