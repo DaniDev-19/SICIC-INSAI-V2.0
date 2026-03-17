@@ -19,5 +19,5 @@ export default defineConfig({
     }),
     tailwindcss()
   ],
-  base:'/'
+  base: '/'
 })
