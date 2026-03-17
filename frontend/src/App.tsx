@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/home/Home';
-import Cargos from './pages/cargos/Cargos';
-
+import { useState } from "react";
+import "./index.css";
 
 function App() {
+
+  // 1. Separación de la lógica: Extraemos las funciones manejadoras de eventos
+  const handleIncrement = () => setCount(count + 1);
+  const handleReset = () => setCount(0);
 
   return (
     <BrowserRouter>
@@ -18,4 +19,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
