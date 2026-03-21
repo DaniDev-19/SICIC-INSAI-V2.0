@@ -40,4 +40,3 @@ export default App
 
 // holaaa jesus es Akira
 // soy batman
-// Jesus cuando nos reunimos???
