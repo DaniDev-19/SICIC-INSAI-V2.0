@@ -14,7 +14,7 @@ El sistema utiliza un enfoque de **Base de Datos Maestro** para la gestión de a
 - **Seguridad:** JWT (JSON Web Token), bcrypt, Helmet, CORS
 - **Validación:** Zod
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 1.  **Instalar dependencias:**
     ```bash

@@ -44,16 +44,17 @@ El controlador decide qué hacer:
 
 ##  Diagrama de Flujo Visual (Mermaid)
 
+## Diagrama de Flujo Visual (Mermaid)
 ```mermaid
 graph LR
-    User((Usuario)) --> FW[CORS/Helmet]
-    FW --> VAL[Validación Zod]
+    User((Usuario)) --> FW[CORS / Helmet]
+    FW --> VAL[Validacio Zod]
     VAL --> AUTH{¿Es ruta protegida?}
-    AUTH -- Sí --> JWT[Verificar JWT en Master DB]
+    AUTH -- Si --> JWT[Verificar JWT en Master DB]
     AUTH -- No --> CTRL[Controlador]
     JWT --> CTRL
-    CTRL --> DB_FACTORY{Fábrica de Prisma}
-    DB_FACTORY --> DB_OP[(DB Operativa 2025/2026)]
+    CTRL --> DB_FACTORY[Fabrica de Prisma]
+    DB_FACTORY --> DB_OP[("Base de Datos Operativa")]
     CTRL --> Res[Respuesta JSON]
 ```
 
