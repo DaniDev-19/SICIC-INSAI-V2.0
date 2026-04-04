@@ -2,7 +2,6 @@ import { masterPrisma } from '../config/prisma.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/token.js';
 
-
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -61,7 +60,6 @@ export const login = async (req, res) => {
     },
   });
 };
-
 
 export const logout = (req, res) => {
   res.status(200).json({

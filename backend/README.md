@@ -1,16 +1,18 @@
-# 🛡️ SICIC-INSAI V2.0 - Backend Core
+# SICIC-INSAI V2.0 - Backend Core
 
 Motor de servicios backend para el Sistema Integral de Control de Insumos y Certificaciones (SICIC) del INSAI. Implementado con una arquitectura **Multi-Tenant dinámica** y **PostgreSQL**.
 
-## 🏗️ Arquitectura
+## Arquitectura
+
 El sistema utiliza un enfoque de **Base de Datos Maestro** para la gestión de acceso y **Bases de Datos Operativas** independientes para cada instancia o período de tiempo. Esto permite una escalabilidad horizontal masiva sin comprometer la integridad de los datos.
 
 ### Tecnologías Principales
-*   **Runtime:** Node.js (v18+)
-*   **Framework:** Express.js
-*   **ORM:** Prisma (Dual Schema)
-*   **Seguridad:** JWT (JSON Web Token), bcrypt, Helmet, CORS
-*   **Validación:** Zod
+
+- **Runtime:** Node.js (v18+)
+- **Framework:** Express.js
+- **ORM:** Prisma (Dual Schema)
+- **Seguridad:** JWT (JSON Web Token), bcrypt, Helmet, CORS
+- **Validación:** Zod
 
 ## 🚀 Inicio Rápido
 
@@ -29,13 +31,15 @@ El sistema utiliza un enfoque de **Base de Datos Maestro** para la gestión de a
     npm run dev
     ```
 
-## 📂 Estructura de Carpetas
-*   `/src/config`: Configuraciones globales y fábrica de Prisma.
-*   `/src/controllers`: Lógica de negocio por módulo.
-*   `/src/middlewares`: Capas de seguridad y manejo de errores.
-*   `/src/routes`: Definición de endpoints de la API.
-*   `/src/schemas`: Esquemas de validación de datos (Zod).
-*   `/prisma`: Definiciones de esquemas para Master y Operativa.
+## Estructura de Carpetas
+
+- `/src/config`: Configuraciones globales y fábrica de Prisma.
+- `/src/controllers`: Lógica de negocio por módulo.
+- `/src/middlewares`: Capas de seguridad y manejo de errores.
+- `/src/routes`: Definición de endpoints de la API.
+- `/src/schemas`: Esquemas de validación de datos (Zod).
+- `/prisma`: Definiciones de esquemas para Master y Operativa.
 
 ---
+
 Para más detalles técnicos, consulta la [WIKI de Backend](./WIKI.md).

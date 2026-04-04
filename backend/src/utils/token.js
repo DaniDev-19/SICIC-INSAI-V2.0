@@ -5,8 +5,8 @@ dotenv.config();
 
 /**
  * Genera un token JWT firmado.
- * @param {object} payload 
- * @returns {string} 
+ * @param {object} payload
+ * @returns {string}
  */
 export const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET || 'secret_key', {
@@ -16,8 +16,8 @@ export const generateToken = (payload) => {
 
 /**
  * Verifica la validez de un token JWT.
- * @param {string} token 
- * @returns {object} 
+ * @param {string} token
+ * @returns {object}
  * @throws {Error}
  */
 
@@ -25,6 +25,6 @@ export const verifyToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
   } catch (error) {
-    throw new Error('Token inválido o expirado');
+    throw new Error('Token inválido o expirado', error);
   }
 };

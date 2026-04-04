@@ -16,7 +16,6 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-
     const decoded = verifyToken(token);
 
     const usuario = await masterPrisma.usuarios.findUnique({
@@ -34,7 +33,7 @@ export const protect = async (req, res, next) => {
     req.user = decoded;
 
     next();
-  } catch (error) {
+  } catch (_error) {
     return res.status(401).json({
       status: 'error',
       message: 'Token inválido o expirado',

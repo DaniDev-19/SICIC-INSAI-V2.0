@@ -12,7 +12,8 @@ app.listen(PORT, () => {
      Modo: ${process.env.NODE_ENV || 'development'}
   `);
 
-  masterPrisma.$connect()
+  masterPrisma
+    .$connect()
     .then(async () => {
       console.log('Base de Datos Master: CONECTADA');
 
@@ -34,7 +35,9 @@ app.listen(PORT, () => {
             await tenantPrisma.$connect();
             console.table(`[OK] ENHORABUENA -> ${inst.nombre_mostrable} (${inst.db_name})`);
           } catch (tenantError) {
-            console.error(`[FALLO] ALERTA  -> ${inst.nombre_mostrable} (${inst.db_name}) - Error: ${tenantError.message}`);
+            console.error(
+              `[FALLO] ALERTA  -> ${inst.nombre_mostrable} (${inst.db_name}) - Error: ${tenantError.message}`
+            );
           }
         }
       } catch (dbError) {
