@@ -9,28 +9,28 @@ export const masterPrisma = new MasterClient();
 const tenantClients = {};
 
 /**
- * 
- * @param {string} dbName 
+ *
+ * @param {string} dbName
  */
 export const getTenantPrisma = (dbName) => {
-    if (tenantClients[dbName]) {
-        return tenantClients[dbName];
-    }
+  if (tenantClients[dbName]) {
+    return tenantClients[dbName];
+  }
 
-    const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
+  const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
 
-    const dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
+  const dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
 
-    const prisma = new OperativeClient({
-        datasources: {
-            db: {
-                url: dynamicUrl,
-            },
-        },
-    });
+  const prisma = new OperativeClient({
+    datasources: {
+      db: {
+        url: dynamicUrl,
+      },
+    },
+  });
 
-    tenantClients[dbName] = prisma;
-    return prisma;
+  tenantClients[dbName] = prisma;
+  return prisma;
 };
 
 export default masterPrisma;
