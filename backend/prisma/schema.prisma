@@ -1,0 +1,786 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model acta_silos {
+  id                       Int                        @id @default(autoincrement())
+  semana_epid              String?                    @db.VarChar(100)
+  fecha_notificacion       DateTime?                  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  lugar_ubicacion          String?                    @db.VarChar(100)
+  cant_nacional            Decimal?                   @db.Decimal(14, 2)
+  cant_importado           Decimal?                   @db.Decimal(14, 2)
+  cant_afectado            Decimal?                   @db.Decimal(14, 2)
+  cant_afectado_porcentaje Decimal?                   @db.Decimal(5, 2)
+  n_silos                  String?                    @db.VarChar(240)
+  n_galpones               String?                    @db.VarChar(240)
+  c_instalada              String?                    @db.VarChar(240)
+  c_operativa              String?                    @db.VarChar(240)
+  c_almacenamiento         String?                    @db.VarChar(240)
+  destino_objetivo         String?                    @db.VarChar(240)
+  observaciones            String?
+  medidas_recomendadas     String?
+  evento_id                Int?
+  created_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  unidad_medida_id         Int?
+  planificacion_id         Int?
+  planificaciones          planificaciones?           @relation(fields: [planificacion_id], references: [id], onUpdate: NoAction)
+  t_unidades               t_unidades?                @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction)
+  t_evento                 t_evento?                  @relation(fields: [evento_id], references: [id], onUpdate: NoAction, map: "fk_eventos")
+  movimientos_insumos      movimientos_insumos[]
+  seguimiento_inspecciones seguimiento_inspecciones[]
+  silo_fotos               silo_fotos[]
+}
+
+model animales {
+  id                   Int                  @id @default(autoincrement())
+  nombre               String               @unique @db.VarChar(100)
+  nombre_cientifico    String?              @unique @db.VarChar(100)
+  dieta                String?              @db.VarChar(100)
+  esperanza_vida       String?              @db.VarChar(100)
+  habitat_principal    String?              @db.VarChar(100)
+  peso_promedio_kg     Decimal?             @db.Decimal(10, 2)
+  longitud_promedio_mt Decimal?             @db.Decimal(10, 2)
+  descripcion          String?
+  tipo_animal_id       Int?
+  created_at           DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?            @default(now()) @db.Timestamptz(6)
+  t_animales           t_animales?          @relation(fields: [tipo_animal_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tipo_animales")
+  programa_animales    programa_animales[]
+  propiedad_animales   propiedad_animales[]
+}
+
+model aval_biologicos {
+  id                   Int               @id @default(autoincrement())
+  aval_id              Int
+  insumo_id            Int?
+  fecha_vacunacion     DateTime?         @db.Date
+  pruebas_diagnosticas String?
+  created_at           DateTime?         @default(now()) @db.Timestamp(6)
+  avales_sanitarios    avales_sanitarios @relation(fields: [aval_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  insumos              insumos?          @relation(fields: [insumo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model aval_hallazgos_bov_buf {
+  id                Int               @id @default(autoincrement())
+  aval_id           Int
+  t_toros           Int?              @default(0)
+  t_vacas           Int?              @default(0)
+  t_novillos        Int?              @default(0)
+  t_novillas        Int?              @default(0)
+  t_mautes_m        Int?              @default(0)
+  t_mautes_h        Int?              @default(0)
+  t_becerros        Int?              @default(0)
+  t_becerras        Int?              @default(0)
+  t_bufalos         Int?              @default(0)
+  t_bufalas         Int?              @default(0)
+  t_buvillos        Int?              @default(0)
+  t_buvillas        Int?              @default(0)
+  t_bumautes_m      Int?              @default(0)
+  t_bumautes_h      Int?              @default(0)
+  t_bucerros        Int?              @default(0)
+  t_bucerras        Int?              @default(0)
+  total_bov_buf     Int?              @default(0)
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  avales_sanitarios avales_sanitarios @relation(fields: [aval_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model aval_hallazgos_otras {
+  id                Int               @id @default(autoincrement())
+  aval_id           Int
+  tipo_animal_id    Int?
+  machos            Int?              @default(0)
+  hembras           Int?              @default(0)
+  crias             Int?              @default(0)
+  total             Int?              @default(0)
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  avales_sanitarios avales_sanitarios @relation(fields: [aval_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  t_animales        t_animales?       @relation(fields: [tipo_animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model aval_hierros {
+  id                Int               @id @default(autoincrement())
+  aval_id           Int
+  hierro_img_url    String
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  avales_sanitarios avales_sanitarios @relation(fields: [aval_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model avales_sanitarios {
+  id                                                           Int                      @id @default(autoincrement())
+  numero_aval                                                  String                   @unique @db.VarChar(100)
+  codigo_predio                                                String?                  @db.VarChar(100)
+  fecha_emision                                                DateTime?                @default(dbgenerated("CURRENT_DATE")) @db.Date
+  fecha_vencimiento                                            DateTime?                @db.Date
+  certificado_vacunacion_n                                     String?                  @db.VarChar(150)
+  observaciones                                                String?
+  inspeccion_id                                                Int?
+  medico_responsable_id                                        Int?
+  jefe_osa_id                                                  Int?
+  created_at                                                   DateTime?                @default(now()) @db.Timestamp(6)
+  aval_biologicos                                              aval_biologicos[]
+  aval_hallazgos_bov_buf                                       aval_hallazgos_bov_buf[]
+  aval_hallazgos_otras                                         aval_hallazgos_otras[]
+  aval_hierros                                                 aval_hierros[]
+  inspecciones                                                 inspecciones?            @relation(fields: [inspeccion_id], references: [id], onUpdate: NoAction)
+  empleados_avales_sanitarios_jefe_osa_idToempleados           empleados?               @relation("avales_sanitarios_jefe_osa_idToempleados", fields: [jefe_osa_id], references: [id], onUpdate: NoAction)
+  empleados_avales_sanitarios_medico_responsable_idToempleados empleados?               @relation("avales_sanitarios_medico_responsable_idToempleados", fields: [medico_responsable_id], references: [id], onUpdate: NoAction)
+  movimientos_insumos                                          movimientos_insumos[]
+}
+
+model bitacora {
+  id                Int        @id @default(autoincrement())
+  fecha             DateTime?  @default(now()) @db.Timestamp(6)
+  accion            String     @db.VarChar(100)
+  modulo            String     @db.VarChar(100)
+  usuario_global_id Int
+  empleado_id       Int?
+  username_log      String?    @db.VarChar(100)
+  payload_previo    Json?
+  payload_nuevo     Json?
+  empleados         empleados? @relation(fields: [empleado_id], references: [id], onUpdate: NoAction)
+}
+
+model c_insumos {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique @db.VarChar(100)
+  insumos insumos[]
+}
+
+model carac_statal {
+  id                             Int        @id @default(autoincrement())
+  num_veterinarios_oficiales     Int?       @default(0)
+  num_paraveterinarios_oficiales Int?       @default(0)
+  num_administrativos_oficiales  Int?       @default(0)
+  num_vehiculos_operativos       Int?       @default(0)
+  fecha_actualizacion            DateTime?  @default(now()) @db.Timestamp(6)
+  municipio_id                   Int        @unique(map: "municipio_recurso")
+  municipios                     municipios @relation(fields: [municipio_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model cargos {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @unique @db.VarChar(100)
+  empleados empleados[]
+}
+
+model clientes {
+  id               Int           @id @default(autoincrement())
+  cedula_rif       String        @unique @db.VarChar(20)
+  nombre           String        @db.VarChar(255)
+  codigo_runsai    String?       @db.VarChar(50)
+  telefono         String?       @db.VarChar(50)
+  email            String?       @db.VarChar(100)
+  direccion_fiscal String?
+  created_at       DateTime?     @default(now()) @db.Timestamp(6)
+  propiedades      propiedades[]
+  solicitudes      solicitudes[]
+}
+
+model contrato {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @unique @db.VarChar(100)
+  empleados empleados[]
+}
+
+model cultivo {
+  id                Int                 @id @default(autoincrement())
+  nombre            String              @unique @db.VarChar(100)
+  nombre_cientifico String?             @unique @db.VarChar(100)
+  descripcion       String?
+  tipo_cultivo_id   Int?
+  t_cultivo         t_cultivo?          @relation(fields: [tipo_cultivo_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tipo_cultivo")
+  programa_cultivo  programa_cultivo[]
+  propiedad_cultivo propiedad_cultivo[]
+}
+
+model departamentos {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @unique @db.VarChar(100)
+  empleados empleados[]
+}
+
+model empleado_foto {
+  id          Int       @id @default(autoincrement())
+  foto_url    String
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  empleado_id Int
+  empleados   empleados @relation(fields: [empleado_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_foto_empleado")
+}
+
+model empleado_residencia {
+  id                  Int       @id @default(autoincrement())
+  empleado_id         Int
+  sector_id           Int?
+  direccion_detallada String?
+  punto_referencia    String?
+  google_maps_url     String?
+  es_principal        Boolean?  @default(true)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  empleados           empleados @relation(fields: [empleado_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sectores            sectores? @relation(fields: [sector_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+}
+
+model empleados {
+  id                                                                   Int                       @id @default(autoincrement())
+  cedula                                                               String                    @unique @db.VarChar(20)
+  nombre                                                               String                    @db.VarChar(100)
+  apellido                                                             String                    @db.VarChar(100)
+  telefono                                                             String?                   @db.VarChar(50)
+  email                                                                String?                   @db.VarChar(100)
+  fechas_ingreso                                                       DateTime?                 @db.Date
+  status_laboral                                                       String?                   @default("ACTIVO") @db.VarChar(100)
+  contrato_id                                                          Int?
+  cargo_id                                                             Int?
+  departamento_id                                                      Int?
+  profesion_id                                                         Int?
+  oficina_id                                                           Int?
+  usuario_global_id                                                    Int?
+  created_at                                                           DateTime?                 @default(now()) @db.Timestamp(6)
+  avales_sanitarios_avales_sanitarios_jefe_osa_idToempleados           avales_sanitarios[]       @relation("avales_sanitarios_jefe_osa_idToempleados")
+  avales_sanitarios_avales_sanitarios_medico_responsable_idToempleados avales_sanitarios[]       @relation("avales_sanitarios_medico_responsable_idToempleados")
+  bitacora                                                             bitacora[]
+  empleado_foto                                                        empleado_foto[]
+  empleado_residencia                                                  empleado_residencia[]
+  cargos                                                               cargos?                   @relation(fields: [cargo_id], references: [id], onUpdate: NoAction)
+  contrato                                                             contrato?                 @relation(fields: [contrato_id], references: [id], onUpdate: NoAction)
+  departamentos                                                        departamentos?            @relation(fields: [departamento_id], references: [id], onUpdate: NoAction)
+  oficinas                                                             oficinas?                 @relation(fields: [oficina_id], references: [id], onUpdate: NoAction)
+  profesiones                                                          profesiones?              @relation(fields: [profesion_id], references: [id], onUpdate: NoAction)
+  empleados_programas                                                  empleados_programas[]
+  movimientos_insumos                                                  movimientos_insumos[]
+  planificacion_empleados                                              planificacion_empleados[]
+  solicitudes                                                          solicitudes[]
+}
+
+model empleados_programas {
+  id          Int       @id @default(autoincrement())
+  programa_id Int
+  empleado_id Int
+  empleados   empleados @relation(fields: [empleado_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ep_empleado")
+  programas   programas @relation(fields: [programa_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ep_programa")
+
+  @@unique([programa_id, empleado_id], map: "uq_empleado_programa")
+}
+
+model enfermedades {
+  id                      Int                       @id @default(autoincrement())
+  nombre                  String                    @unique @db.VarChar(100)
+  nombre_cientifico       String?                   @unique @db.VarChar(100)
+  zoonatica               String?                   @db.VarChar(100)
+  descripcion             String?
+  tipo_enfermedad_id      Int?
+  t_enfermedades          t_enfermedades?           @relation(fields: [tipo_enfermedad_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_enfermedad_tipo")
+  epidemiologia_hallazgos epidemiologia_hallazgos[]
+  programa_enfermedades   programa_enfermedades[]
+}
+
+model epidemiologia_hallazgos {
+  id             Int           @id @default(autoincrement())
+  inspeccion_id  Int
+  enfermedad_id  Int?
+  c_probados     Int?          @default(0)
+  c_positivos    Int?          @default(0)
+  c_reactores    Int?          @default(0)
+  c_marcados     Int?          @default(0)
+  c_sacrificados Int?          @default(0)
+  o_tecnicas     String?
+  created_at     DateTime?     @default(now()) @db.Timestamp(6)
+  enfermedades   enfermedades? @relation(fields: [enfermedad_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  inspecciones   inspecciones  @relation(fields: [inspeccion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model estados {
+  id         Int          @id @default(autoincrement())
+  codigo     String       @unique @db.Char(50)
+  area_km2   Decimal?     @default(0) @db.Decimal(10, 2)
+  nombre     String       @unique @db.VarChar(100)
+  municipios municipios[]
+}
+
+model finalidad {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @unique
+  finalidad_inspeccion finalidad_inspeccion[]
+}
+
+model finalidad_inspeccion {
+  id            Int          @id @default(autoincrement())
+  inspeccion_id Int
+  finalidad_id  Int
+  objetivo      String?
+  finalidad     finalidad    @relation(fields: [finalidad_id], references: [id], onUpdate: NoAction)
+  inspecciones  inspecciones @relation(fields: [inspeccion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([inspeccion_id, finalidad_id], map: "uq_inspeccion_finalidad")
+}
+
+model inspeccion_fotos {
+  id            Int          @id @default(autoincrement())
+  imagen        String
+  inspeccion_id Int
+  created_at    DateTime?    @default(now()) @db.Timestamp(6)
+  inspecciones  inspecciones @relation(fields: [inspeccion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inspecciones {
+  id                       Int                        @id @default(autoincrement())
+  n_control                String                     @db.VarChar(100)
+  t_codigo                 String?                    @default("10-00-M00-P00-F01") @db.VarChar(100)
+  fecha_inspeccion         DateTime                   @default(dbgenerated("CURRENT_DATE")) @db.Date
+  hora_inspeccion          DateTime?                  @db.Time(6)
+  atendido_por_nombre      String?                    @db.VarChar(150)
+  atendido_por_cedula      String?                    @db.VarChar(20)
+  atendido_por_email       String?                    @db.VarChar(100)
+  atendido_por_tlf         String?                    @db.VarChar(50)
+  insp_utm_norte           Decimal?                   @db.Decimal
+  insp_utm_este            Decimal?                   @db.Decimal
+  insp_utm_zona            String?                    @db.VarChar(100)
+  google_maps_url          String?
+  aspectos_constatados     String?
+  medidas_ordenadas        String?
+  posee_certificado        String?                    @db.VarChar(100)
+  vigencia_dias            Int?                       @default(30)
+  status                   String?                    @default("PENDIENTE") @db.VarChar(100)
+  created_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  planificacion_id         Int?
+  avales_sanitarios        avales_sanitarios[]
+  epidemiologia_hallazgos  epidemiologia_hallazgos[]
+  finalidad_inspeccion     finalidad_inspeccion[]
+  inspeccion_fotos         inspeccion_fotos[]
+  planificaciones          planificaciones?           @relation(fields: [planificacion_id], references: [id], onUpdate: NoAction)
+  movimientos_insumos      movimientos_insumos[]
+  seguimiento_inspecciones seguimiento_inspecciones[]
+}
+
+model insumos {
+  id                  Int                   @id @default(autoincrement())
+  codigo              String?               @unique @db.VarChar(100)
+  nombre              String                @db.VarChar(150)
+  marca               String?               @db.VarChar(100)
+  descripcion         String?
+  categoria_id        Int?
+  unidad_medida_id    Int?
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  aval_biologicos     aval_biologicos[]
+  c_insumos           c_insumos?            @relation(fields: [categoria_id], references: [id], onUpdate: NoAction)
+  t_unidades          t_unidades?           @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction)
+  insumos_stock       insumos_stock[]
+  movimientos_insumos movimientos_insumos[]
+}
+
+model insumos_stock {
+  id                Int       @id @default(autoincrement())
+  insumo_id         Int
+  oficina_id        Int
+  lote              String?   @db.VarChar(100)
+  fecha_vencimiento DateTime? @db.Date
+  stock_actual      Decimal?  @default(0) @db.Decimal(12, 2)
+  stock_minimo      Decimal?  @default(0) @db.Decimal(12, 2)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  updated_at        DateTime? @default(now()) @db.Timestamp(6)
+  insumos           insumos   @relation(fields: [insumo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  oficinas          oficinas  @relation(fields: [oficina_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([insumo_id, oficina_id, lote], map: "uq_insumo_oficina_lote")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model movimientos_insumos {
+  id                       Int                       @id @default(autoincrement())
+  insumo_id                Int
+  oficina_id               Int
+  tipo_movimiento          String?                   @db.VarChar(30)
+  cantidad                 Decimal                   @db.Decimal(12, 2)
+  lote                     String?                   @db.VarChar(100)
+  inspeccion_id            Int?
+  acta_silo_id             Int?
+  seguimiento_id           Int?
+  aval_id                  Int?
+  empleado_id              Int?
+  observaciones            String?
+  created_at               DateTime?                 @default(now()) @db.Timestamp(6)
+  acta_silos               acta_silos?               @relation(fields: [acta_silo_id], references: [id], onUpdate: NoAction)
+  avales_sanitarios        avales_sanitarios?        @relation(fields: [aval_id], references: [id], onUpdate: NoAction)
+  empleados                empleados?                @relation(fields: [empleado_id], references: [id], onUpdate: NoAction)
+  inspecciones             inspecciones?             @relation(fields: [inspeccion_id], references: [id], onUpdate: NoAction)
+  insumos                  insumos                   @relation(fields: [insumo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  oficinas                 oficinas                  @relation(fields: [oficina_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  seguimiento_inspecciones seguimiento_inspecciones? @relation(fields: [seguimiento_id], references: [id], onUpdate: NoAction)
+}
+
+model municipios {
+  id           Int           @id @default(autoincrement())
+  codigo       String        @db.Char(50)
+  nombre       String        @db.VarChar(100)
+  area_km2     Decimal?      @default(0) @db.Decimal(10, 2)
+  estado_id    Int
+  carac_statal carac_statal?
+  estados      estados       @relation(fields: [estado_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  parroquias   parroquias[]
+
+  @@unique([estado_id, codigo], map: "uq_municipio_codigo")
+}
+
+model notificaciones {
+  id                Int       @id @default(autoincrement())
+  usuario_global_id Int
+  mensaje           String
+  tipo              String?   @default("INFO") @db.VarChar(50)
+  leido             Boolean?  @default(false)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model oficinas {
+  id                   Int                   @id @default(autoincrement())
+  nombre               String                @unique @db.VarChar(150)
+  ubicacion_gms        String?               @db.VarChar(255)
+  es_centro_validacion Boolean?              @default(false)
+  direccion            String?
+  empleados            empleados[]
+  insumos_stock        insumos_stock[]
+  movimientos_insumos  movimientos_insumos[]
+}
+
+model parroquias {
+  id           Int        @id @default(autoincrement())
+  codigo       String     @db.Char(50)
+  nombre       String     @db.VarChar(100)
+  area_km2     Decimal?   @default(0) @db.Decimal(10, 2)
+  municipio_id Int
+  municipios   municipios @relation(fields: [municipio_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sectores     sectores[]
+
+  @@unique([municipio_id, codigo], map: "uq_parroquia_codigo")
+}
+
+model plagas {
+  id                Int              @id @default(autoincrement())
+  nombre            String           @unique @db.VarChar(100)
+  nombre_cientifico String?          @unique @db.VarChar(100)
+  descripcion       String?
+  tipo_plaga_id     Int?
+  t_plagas          t_plagas?        @relation(fields: [tipo_plaga_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_plagas_tipo")
+  programa_plaga    programa_plaga[]
+}
+
+model planificacion_empleados {
+  id               Int             @id @default(autoincrement())
+  planificacion_id Int
+  empleado_id      Int
+  empleados        empleados       @relation(fields: [empleado_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  planificaciones  planificaciones @relation(fields: [planificacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([planificacion_id, empleado_id], map: "uq_planificacion_empleado")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model planificaciones {
+  id                      Int                       @id @default(autoincrement())
+  codigo                  String?                   @unique @db.VarChar(40)
+  fecha_programada        DateTime                  @db.Date
+  hora_inicio             DateTime?                 @db.Time(6)
+  hora_fin                DateTime?                 @db.Time(6)
+  prioridad               String?                   @default("MEDIA") @db.VarChar(100)
+  actividad               String?                   @db.VarChar(100)
+  objetivo                String?
+  convocatoria            String?
+  punto_encuentro         String?                   @db.VarChar(100)
+  ubicacion               String?                   @db.VarChar(100)
+  aseguramiento           String?                   @db.VarChar(100)
+  vehiculo_id             Int?
+  solicitud_id            Int                       @unique
+  status                  String?                   @default("PENDIENTE") @db.VarChar(100)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  acta_silos              acta_silos[]
+  inspecciones            inspecciones[]
+  planificacion_empleados planificacion_empleados[]
+  solicitudes             solicitudes               @relation(fields: [solicitud_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vehiculos               vehiculos?                @relation(fields: [vehiculo_id], references: [id], onUpdate: NoAction)
+}
+
+model profesiones {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @unique @db.VarChar(150)
+  empleados empleados[]
+}
+
+model programa_animales {
+  id          Int       @id @default(autoincrement())
+  programa_id Int
+  animal_id   Int
+  animales    animales  @relation(fields: [animal_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pa_animal")
+  programas   programas @relation(fields: [programa_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pa_programa")
+
+  @@unique([programa_id, animal_id], map: "uq_programa_animal")
+}
+
+model programa_cultivo {
+  id          Int       @id @default(autoincrement())
+  programa_id Int
+  cultivo_id  Int
+  cultivo     cultivo   @relation(fields: [cultivo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pc_cultivo")
+  programas   programas @relation(fields: [programa_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pc_programa")
+
+  @@unique([programa_id, cultivo_id], map: "uq_programa_cultivo")
+}
+
+model programa_enfermedades {
+  id            Int          @id @default(autoincrement())
+  programa_id   Int
+  enfermedad_id Int
+  enfermedades  enfermedades @relation(fields: [enfermedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pe_enfermedad")
+  programas     programas    @relation(fields: [programa_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pe_programa")
+
+  @@unique([programa_id, enfermedad_id], map: "uq_programa_enfermedad")
+}
+
+model programa_plaga {
+  id          Int       @id @default(autoincrement())
+  programa_id Int
+  plaga_id    Int
+  plagas      plagas    @relation(fields: [plaga_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pp_plaga")
+  programas   programas @relation(fields: [programa_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pp_programa")
+
+  @@unique([programa_id, plaga_id], map: "uq_programa_plaga")
+}
+
+model programas {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(100)
+  descripcion           String?
+  tipo_programa_id      Int?
+  empleados_programas   empleados_programas[]
+  programa_animales     programa_animales[]
+  programa_cultivo      programa_cultivo[]
+  programa_enfermedades programa_enfermedades[]
+  programa_plaga        programa_plaga[]
+  t_programa            t_programa?             @relation(fields: [tipo_programa_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_tipo_programa")
+}
+
+model propiedad_animales {
+  id                 Int         @id @default(autoincrement())
+  propiedad_id       Int
+  animal_id          Int
+  cantidad           Decimal?    @db.Decimal
+  cantidad_unidad_id Int?
+  observaciones      String?
+  created_at         DateTime?   @default(now()) @db.Timestamp(6)
+  animales           animales    @relation(fields: [animal_id], references: [id], onUpdate: NoAction, map: "fk_animal_pa")
+  propiedades        propiedades @relation(fields: [propiedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_propiedad_pa")
+  t_unidades         t_unidades? @relation(fields: [cantidad_unidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model propiedad_cultivo {
+  id                                                            Int         @id @default(autoincrement())
+  propiedad_id                                                  Int
+  cultivo_id                                                    Int
+  superficie                                                    Decimal?    @db.Decimal
+  superficie_unidad_id                                          Int?
+  cantidad                                                      Decimal?    @db.Decimal
+  cantidad_unidad_id                                            Int?
+  created_at                                                    DateTime?   @default(now()) @db.Timestamp(6)
+  cultivo                                                       cultivo     @relation(fields: [cultivo_id], references: [id], onUpdate: NoAction, map: "fk_cultivo_pc")
+  propiedades                                                   propiedades @relation(fields: [propiedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_propiedad_pc")
+  t_unidades_propiedad_cultivo_cantidad_unidad_idTot_unidades   t_unidades? @relation("propiedad_cultivo_cantidad_unidad_idTot_unidades", fields: [cantidad_unidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  t_unidades_propiedad_cultivo_superficie_unidad_idTot_unidades t_unidades? @relation("propiedad_cultivo_superficie_unidad_idTot_unidades", fields: [superficie_unidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model propiedad_hierro {
+  id               Int          @id @default(autoincrement())
+  num_reg_hierro   String?      @db.VarChar(100)
+  num_reg_ganadero String?      @db.VarChar(100)
+  hierro_img_url   String?
+  created_at       DateTime?    @default(now()) @db.Timestamp(6)
+  propiedad_id     Int?
+  propiedades      propiedades? @relation(fields: [propiedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_hierros_p")
+}
+
+model propiedad_ubicacion {
+  id              Int          @id @default(autoincrement())
+  propiedad_id    Int?
+  sector_id       Int?
+  google_maps_url String?
+  created_at      DateTime?    @default(now()) @db.Timestamp(6)
+  propiedades     propiedades? @relation(fields: [propiedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sectores        sectores?    @relation(fields: [sector_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+}
+
+model propiedades {
+  id                  Int                   @id @default(autoincrement())
+  codigo_insai        String?               @unique @db.VarChar(50)
+  nombre              String                @db.VarChar(255)
+  rif                 String?               @db.VarChar(50)
+  punto_referencia    String?
+  hectareas_totales   Decimal?              @db.Decimal(10, 2)
+  status              String?               @default("ACTIVA") @db.VarChar(100)
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
+  tipo_propiedad_id   Int?
+  due_o_id            Int?                  @map("dueño_id")
+  propiedad_animales  propiedad_animales[]
+  propiedad_cultivo   propiedad_cultivo[]
+  propiedad_hierro    propiedad_hierro[]
+  propiedad_ubicacion propiedad_ubicacion[]
+  clientes            clientes?             @relation(fields: [due_o_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  t_propiedad         t_propiedad?          @relation(fields: [tipo_propiedad_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  solicitudes         solicitudes[]
+}
+
+model recuperacion_pass {
+  id                Int       @id @default(autoincrement())
+  usuario_global_id Int
+  token             String    @unique @db.VarChar(255)
+  expira_at         DateTime  @db.Timestamp(6)
+  usado             Boolean?  @default(false)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model sectores {
+  id                  Int                   @id @default(autoincrement())
+  codigo              String                @db.Char(50)
+  nombre              String                @db.VarChar(100)
+  parroquia_id        Int
+  empleado_residencia empleado_residencia[]
+  propiedad_ubicacion propiedad_ubicacion[]
+  parroquias          parroquias            @relation(fields: [parroquia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([parroquia_id, codigo], map: "uq_sector_codigo")
+}
+
+model seguimiento_fotos {
+  id                       Int                      @id @default(autoincrement())
+  seguimiento_id           Int
+  imagen                   String
+  created_at               DateTime?                @default(now()) @db.Timestamp(6)
+  seguimiento_inspecciones seguimiento_inspecciones @relation(fields: [seguimiento_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model seguimiento_inspecciones {
+  id                        Int                   @id @default(autoincrement())
+  fecha_seguimiento         DateTime              @default(dbgenerated("CURRENT_DATE")) @db.Date
+  hallazgos_seguimiento     String?
+  recomendaciones_cumplidas Boolean?              @default(false)
+  status                    String?               @db.VarChar(100)
+  inspeccion_id             Int?
+  acta_silo_id              Int?
+  created_at                DateTime?             @default(now()) @db.Timestamp(6)
+  movimientos_insumos       movimientos_insumos[]
+  seguimiento_fotos         seguimiento_fotos[]
+  acta_silos                acta_silos?           @relation(fields: [acta_silo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  inspecciones              inspecciones?         @relation(fields: [inspeccion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model silo_fotos {
+  id           Int        @id @default(autoincrement())
+  acta_silo_id Int
+  imagen       String
+  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+  acta_silos   acta_silos @relation(fields: [acta_silo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model solicitudes {
+  id                Int              @id @default(autoincrement())
+  codigo            String?          @unique @db.VarChar(40)
+  descripcion       String?
+  fecha_solicitada  DateTime?        @default(now()) @db.Timestamp(6)
+  fecha_resolucion  DateTime?        @db.Date
+  estatus           String?          @default("CREADA") @db.VarChar(100)
+  prioridad         String?          @default("MEDIA") @db.VarChar(100)
+  medio_recepcion   String?          @default("PRESENCIAL") @db.VarChar(100)
+  tipo_solicitud_id Int?
+  solicitante_id    Int?
+  atendido_por_id   Int?
+  propiedad_id      Int?
+  created_at        DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?        @default(now()) @db.Timestamp(6)
+  planificaciones   planificaciones?
+  empleados         empleados?       @relation(fields: [atendido_por_id], references: [id], onUpdate: NoAction)
+  propiedades       propiedades?     @relation(fields: [propiedad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  clientes          clientes?        @relation(fields: [solicitante_id], references: [id], onUpdate: NoAction)
+  t_solicitud       t_solicitud?     @relation(fields: [tipo_solicitud_id], references: [id], onUpdate: NoAction)
+}
+
+model t_animales {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @unique @db.VarChar(100)
+  animales             animales[]
+  aval_hallazgos_otras aval_hallazgos_otras[]
+}
+
+model t_cultivo {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique @db.VarChar(100)
+  cultivo cultivo[]
+}
+
+model t_enfermedades {
+  id           Int            @id @default(autoincrement())
+  nombre       String         @db.VarChar(100)
+  enfermedades enfermedades[]
+}
+
+model t_evento {
+  id         Int          @id @default(autoincrement())
+  nombre     String       @db.VarChar(100)
+  acta_silos acta_silos[]
+}
+
+model t_plagas {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique @db.VarChar(100)
+  plagas plagas[]
+}
+
+model t_programa {
+  id        Int         @id @default(autoincrement())
+  nombre    String      @db.VarChar(100)
+  programas programas[]
+}
+
+model t_propiedad {
+  id          Int           @id @default(autoincrement())
+  nombre      String        @unique @db.VarChar(100)
+  propiedades propiedades[]
+}
+
+model t_solicitud {
+  id          Int           @id @default(autoincrement())
+  nombre      String        @db.VarChar(100)
+  solicitudes solicitudes[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model t_unidades {
+  id                                                                   Int                  @id @default(autoincrement())
+  nombre                                                               String               @unique @db.VarChar(50)
+  abreviatura                                                          String?              @db.VarChar(10)
+  tipo                                                                 String?              @db.VarChar(20)
+  acta_silos                                                           acta_silos[]
+  insumos                                                              insumos[]
+  propiedad_animales                                                   propiedad_animales[]
+  propiedad_cultivo_propiedad_cultivo_cantidad_unidad_idTot_unidades   propiedad_cultivo[]  @relation("propiedad_cultivo_cantidad_unidad_idTot_unidades")
+  propiedad_cultivo_propiedad_cultivo_superficie_unidad_idTot_unidades propiedad_cultivo[]  @relation("propiedad_cultivo_superficie_unidad_idTot_unidades")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model vehiculos {
+  id              Int               @id @default(autoincrement())
+  placa           String            @unique @db.VarChar(20)
+  marca           String?           @db.VarChar(50)
+  modelo          String?           @db.VarChar(50)
+  tipo            String?           @db.VarChar(50)
+  color           String?           @db.VarChar(30)
+  status          String?           @default("OPERATIVO") @db.VarChar(20)
+  planificaciones planificaciones[]
+}
