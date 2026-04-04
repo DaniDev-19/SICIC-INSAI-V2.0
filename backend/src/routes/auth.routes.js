@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { loginSchema } from '../schemas/auth.schema.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -17,6 +18,6 @@ router.post('/login', validateSchema(loginSchema), authController.login);
  * @description Cerrar sesión (limpieza del lado del cliente)
  * @access Private (Requiere JWT)
  */
-router.post('/logout', authController.logout);
+router.post('/logout', protect, authController.logout);
 
 export default router;
