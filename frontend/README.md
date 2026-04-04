@@ -1,75 +1,41 @@
-# React + TypeScript + Vite
+#  SICIC-INSAI V2.0 - Interfaz de Usuario (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz de usuario moderna y de alto rendimiento para el Sistema Integral de Control de Insumos y Certificaciones (SICIC) del INSAI. Construida con **Vite**, **React**, **TypeScript** y **TailwindCSS**.
 
-Currently, two official plugins are available:
+##  Tecnología Utilizada
+*   **Vite:** Herramienta de construcción de última generación.
+*   **React:** Biblioteca de UI reactiva y modular.
+*   **TypeScript:** Garantía de tipado fuerte y robustez.
+*   **TailwindCSS:** Diseño visual moderno, responsivo y mantenible.
+*   **UI Components:** Shadcn/ui para una experiencia premium.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+##  Inicio Rápido
 
-## React Compiler
+1.  **Instalar dependencias:**
+    ```bash
+    npm install
+    ```
+2.  **Configurar Variables de Entorno:**
+    Crea un archivo `.env` en la raíz siguiendo el formato de la documentación.
+3.  **Correr en Desarrollo:**
+    ```bash
+    npm run dev
+    ```
+4.  **Generar Build de Producción:**
+    ```bash
+    npm run build
+    ```
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+##  Organización de Carpetas
+*   `/src/components`: Componentes visuales reutilizables.
+*   `/src/pages`: Pantallas principales de la aplicación.
+*   `/src/hooks`: Lógica de React personalizada.
+*   `/src/services`: Conexión directa con la API del backend.
+*   `/src/store`: Gestión del estado global.
+*   `/src/types`: Interfaces y tipos de TypeScript.
 
-Note: This will impact Vite dev & build performances.
+## Despliegue
+Este proyecto está configurado para desplegarse automáticamente en **Vercel** mediante el archivo `vercel.json`.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+Para más detalles sobre los estándares de diseño y flujos de usuario, consulta la [WIKI de Frontend](./WIKI.md).
