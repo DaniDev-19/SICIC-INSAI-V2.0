@@ -4,10 +4,14 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from './components/ThemeProvider.tsx'
 
+import { QueryProvider } from './providers/query-provider.tsx'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <App />
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <App />
+      </ThemeProvider>
+    </QueryProvider>
   </StrictMode>,
 )
