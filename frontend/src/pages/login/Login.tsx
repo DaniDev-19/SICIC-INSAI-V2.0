@@ -7,12 +7,12 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from '@/components/ui/select';
 import image from '@/components/image';
 import { useAuth } from '@/hooks/use-auth';
@@ -99,35 +99,38 @@ export default function Login() {
                         </div>
 
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-                            <div className="space-y-2">
+                            {/* Selector de Instancia / Estado */}
+                            <div className="space-y-1.5 sm:space-y-2">
                                 <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Estado / Instancia</label>
                                 <Controller
                                     name="instanceId"
                                     control={control}
                                     render={({ field }) => (
                                         <div className="relative group/input">
-                                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 z-10 pointer-events-none" />
-                                            <Select 
-                                                onValueChange={field.onChange} 
+                                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 z-10 pointer-events-none transition-colors group-focus-within/input:text-emerald-400" />
+                                            <Select
+                                                onValueChange={field.onChange}
                                                 defaultValue={field.value}
                                                 disabled={isLoggingIn || isAuthLoading}
                                             >
-                                                <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30">
+                                                <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
                                                     <SelectValue placeholder="Seleccione su estado..." />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-emerald-900 border-emerald-700 text-white rounded-xl shadow-2xl">
-                                                    {instances.map((inst: any) => (
-                                                        <SelectItem 
-                                                            key={inst.id} 
-                                                            value={inst.id.toString()}
-                                                            className="hover:bg-emerald-800 cursor-pointer focus:bg-emerald-700"
-                                                        >
-                                                            {inst.nombre_mostrable}
-                                                        </SelectItem>
-                                                    ))}
-                                                    {instances.length === 0 && !isAuthLoading && (
-                                                        <div className="p-2 text-xs text-white/50 italic text-center">No hay instancias activas</div>
-                                                    )}
+                                                <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-[200px] max-h-[300px]">
+                                                    <div className="p-2">
+                                                        {instances.map((inst: any) => (
+                                                            <SelectItem
+                                                                key={inst.id}
+                                                                value={inst.id.toString()}
+                                                                className="hover:bg-white/20 focus:bg-white/20 cursor-pointer py-2.5 px-4 rounded-2xl transition-all outline-none border-none ring-0 focus:ring-0 mb-1 last:mb-0 group/item"
+                                                            >
+                                                                <span className="font-semibold text-sm text-white/90 group-hover/item:text-white transition-colors">{inst.nombre_mostrable}</span>
+                                                            </SelectItem>
+                                                        ))}
+                                                        {instances.length === 0 && !isAuthLoading && (
+                                                            <div className="p-6 text-[11px] text-white/40 italic text-center uppercase tracking-widest animate-pulse">Sincronizando Nodos...</div>
+                                                        )}
+                                                    </div>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -192,7 +195,7 @@ export default function Login() {
 
                     <div className="p-4 sm:p-6 bg-white/5 dark:bg-black/20 border-t border-white/5 text-center">
                         <p className="text-[10px] sm:text-xs text-emerald-100/30 font-medium">
-                            © {new Date().getFullYear()} INSAI - Sistema Integral de Control
+                            © {new Date().getFullYear()} SICIC-INSAI - Sistema Integral de inspecciones de Campo
                         </p>
                     </div>
                 </div>
