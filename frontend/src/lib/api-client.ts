@@ -8,11 +8,10 @@ const apiClient = axios.create({
   },
 });
 
-// Interceptor optimizado: No ensucia la consola con 401 esperados
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Solo logueamos errores que no sean 401 (ya que el 401 se maneja en useAuth)
+
     if (error.response?.status !== 401) {
       console.error('Error de API:', error.response?.data?.message || error.message);
     }
