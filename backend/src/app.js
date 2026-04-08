@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth.routes.js';
+import roleRoutes from './routes/role.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/roles', roleRoutes);
 
 app.use(errorHandler);
 
