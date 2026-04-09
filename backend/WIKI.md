@@ -4,10 +4,12 @@ Esta Wiki contiene la documentación detallada para el motor de servicios del Ba
 
 ---
 
-## Arquitectura Estructural
+## Arquitectura y Seguridad
+ 
+Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y cómo opera el motor de permisos, consulta los manuales técnicos:
 
-Para entender a fondo cómo viajan las peticiones y cómo se protegen los datos, consulta el documento técnico de arquitectura:
-👉 **[Arquitectura y Flujo de Peticiones](./docs/arquitectura_flujo.md)**
+*   👉 **[Arquitectura y Flujo de Peticiones](./docs/arquitectura_flujo.md)**: Ciclo de vida general de una Request en el API.
+*   👉 **[Flujo de Roles y Seguridad (RBAC)](./docs/flujo-roles-backend.md)**: Manual funcional del motor de permisos, Prisma Master y Middlewares.
 
 ---
 

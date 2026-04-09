@@ -62,3 +62,11 @@ graph LR
 ## Gestión de Errores Global
 
 Cualquier fallo (base de datos caída, error de servidor, validación fallida) es capturado por el `errorHandler` centralizado, asegurando que la API nunca "muera" y siempre responda con un formato estándar.
+
+---
+
+[Volver al índice de documentación](../WIKI.md)
+
+**Documentación Técnica Funcional**
+**SICIC-INSAI V2.0**
+

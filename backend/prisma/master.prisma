@@ -22,6 +22,7 @@ model roles {
   nombre            String              @unique @db.VarChar(50)
   descripcion       String?
   permisos          Json?               @default("{}")
+  status            Boolean?            @default(true)
   usuario_instancia usuario_instancia[]
 }
 
