@@ -4,6 +4,15 @@ Esta Wiki detalla los estándares de diseño y flujos de usuario para la interfa
 
 ---
 
+## Documentación Detallada del Flujo
+
+Para profundizar en el funcionamiento técnico del frontend, consulta los siguientes manuales:
+
+*   [**Flujo de Autenticación e Instancias**](./docs/flujo-autenticacion.md): Explicación del login multi-tenant y el hook `useAuth`.
+*   [**Gestión de Roles y Permisos**](./docs/roles-y-permisos.md): Cómo se consumen los permisos dinámicos en la interfaz.
+
+---
+
 ##  Estándares de Diseño y Estética Premium
 
 El proyecto sigue principios de diseño moderno para una experiencia ERP de alto impacto:
