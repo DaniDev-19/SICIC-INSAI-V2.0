@@ -1,8 +1,11 @@
 export const PANTALLAS = [
-    { key: 'home', label: 'Home', ACCIONES: ['see', 'export'] },
-    { key: 'user', label: 'User', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
-    { key: 'roles', label: 'Roles', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
-
+    { key: 'home', label: 'Inicio / Dashboard', ACCIONES: ['see', 'export'] },
+    { key: 'roles', label: 'Gestión de Roles', ACCIONES: ['see', 'create', 'edit', 'delete'] },
+    { key: 'user', label: 'Gestión de Usuarios', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
+    { key: 'inventario', label: 'Inventario', ACCIONES: ['see', 'create', 'edit', 'delete'] },
+    { key: 'reportes', label: 'Reportes y Estadísticas', ACCIONES: ['see', 'export'] },
+    { key: 'auditoria', label: 'Auditoría / Logs', ACCIONES: ['see', 'export', 'clear'] },
+    { key: 'configuracion', label: 'Configuración Global', ACCIONES: ['see', 'edit'] },
 ]
 
 export const ACCIONES = [
@@ -11,5 +14,6 @@ export const ACCIONES = [
     { key: 'edit', label: 'Editar' },
     { key: 'delete', label: 'Eliminar' },
     { key: 'disable', label: 'Deshabilitar' },
-    { key: 'export', label: 'Exportar' }
+    { key: 'export', label: 'Exportar' },
+    { key: 'clear', label: 'Limpiar' }
 ]

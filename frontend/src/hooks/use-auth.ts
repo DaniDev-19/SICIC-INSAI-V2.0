@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type AxiosError } from 'axios';
 import { authService } from '../services/auth.service';
 import type { User, Instance, LoginResponse } from '../types/auth';
 import { useEffect } from 'react';
@@ -18,7 +19,7 @@ export function useAuth() {
       try {
         const response = await authService.getMe();
         return response;
-      } catch (error) {
+      } catch {
         return { data: { user: null, currentInstance: null } } as LoginResponse;
       }
     },
@@ -42,7 +43,7 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    const error: any = instancesError || authError;
+    const error = (instancesError || authError) as AxiosError | null;
     if (error?.response?.status === 429) {
       toast.warning('Acceso Temporalmente Limitado', {
         description: 'Demasiadas peticiones. Se ha relajado el límite, por favor espera unos segundos.',
@@ -72,7 +73,7 @@ export function useAuth() {
   return {
     user: authData?.data?.user as User | null,
     currentInstance: authData?.data?.currentInstance as Instance | null,
-    instances: (instancesData || []) as any[],
+    instances: (instancesData || []) as { id: number; nombre_mostrable: string; db_name: string }[],
     isAuthenticated: !!authData?.data?.user,
     isLoading: isLoading || (isLoadingInstances && !isFetched),
     login: loginMutation.mutateAsync,

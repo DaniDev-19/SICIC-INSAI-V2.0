@@ -4,12 +4,20 @@ export interface User {
   email: string;
 }
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  instanceId: string;
+}
+
+export type PermissionObject = Record<string, string[]>;
+
 export interface Instance {
   id: number;
   nombre: string;
   db_name: string;
   rol: string;
-  permisos: any;
+  permisos: PermissionObject;
 }
 
 export interface LoginResponse {

@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { Lock, Mail, Loader2, Eye, EyeOff, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { useNavigate } from 'react-router-dom';
+import { type AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,6 +28,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const { login, isLoggingIn, isAuthenticated, instances, isLoading: isAuthLoading } = useAuth();
 
@@ -44,15 +47,16 @@ export default function Login() {
     const onSubmit = async (data: LoginFormValues) => {
         if (isAuthenticated) {
             toast.info('Ya tienes una sesión activa. Redirigiendo...');
-            window.location.href = '/home';
+            navigate('/home');
             return;
         }
 
         try {
             await login(data);
             toast.success('¡Bienvenido al sistema SICIC-INSAI!');
-            window.location.href = '/home';
-        } catch (error: any) {
+            navigate('/home');
+        } catch (err: unknown) {
+            const error = err as AxiosError<{ message?: string }>;
             if (!error.response && error.request) {
                 toast.error('Error de Conexión', {
                     description: 'No se pudo contactar con el servidor. Verifique su internet.',
@@ -118,7 +122,7 @@ export default function Login() {
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-[200px] max-h-[300px]">
                                                     <div className="p-2">
-                                                        {instances.map((inst: any) => (
+                                                        {instances.map((inst) => (
                                                             <SelectItem
                                                                 key={inst.id}
                                                                 value={inst.id.toString()}

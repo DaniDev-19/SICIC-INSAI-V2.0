@@ -1,4 +1,13 @@
-import { Calendar, Home, Inbox, Search, Settings, LogOut } from "lucide-react"
+import {
+  Home,
+  Settings,
+  LogOut,
+  Users,
+  ShieldCheck,
+  Package,
+  BarChart3,
+  ClipboardList
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -13,48 +22,75 @@ import {
   SidebarFooter
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/use-auth"
+import { usePermissions } from "@/hooks/use-permissions"
 import { toast } from "sonner"
+import { useNavigate, useLocation } from "react-router-dom"
 
-// Menu items.
 const items = [
   {
-    title: "Home",
-    url: "#",
+    title: "Inicio",
+    url: "/home",
     icon: Home,
+    screen: "home",
   },
   {
-    title: "Inbox",
+    title: "Roles",
+    url: "/home/roles",
+    icon: ShieldCheck,
+    screen: "roles",
+  },
+  {
+    title: "Cargos",
+    url: "/home/cargos",
+    icon: Users,
+    screen: "user",
+  },
+  {
+    title: "Inventario",
     url: "#",
-    icon: Inbox,
+    icon: Package,
+    screen: "inventario",
   },
   {
-    title: "Calendar",
+    title: "Reportes",
     url: "#",
-    icon: Calendar,
+    icon: BarChart3,
+    screen: "reportes",
   },
   {
-    title: "Search",
+    title: "Auditoría",
     url: "#",
-    icon: Search,
+    icon: ClipboardList,
+    screen: "auditoria",
   },
   {
-    title: "Settings",
+    title: "Configuración",
     url: "#",
     icon: Settings,
+    screen: "configuracion",
   },
 ]
 
 export function AppSidebar() {
   const { logout, user } = useAuth();
+  const { canSee } = usePermissions();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
       await logout();
       toast.success("Sesión cerrada correctamente");
-    } catch (error) {
+    } catch {
       toast.error("Error al cerrar sesión");
     }
   };
+
+  const filteredItems = items.filter(item => {
+
+    if (!item.screen) return true;
+    return canSee(item.screen);
+  });
 
   return (
     <Sidebar>
@@ -71,16 +107,20 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <button onClick={() => navigate(item.url)} className="w-full flex items-center gap-2">
+                      <item.icon className="size-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
