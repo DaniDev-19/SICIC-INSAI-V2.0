@@ -62,4 +62,8 @@ Para pruebas rápidas e inserciones iniciales, utiliza los archivos en la carpet
 3.  **Logs:** Revisa la consola del servidor (`npm run dev`) para ver los logs de **Morgan** y detectar errores de red en tiempo real.
 
 ---
-*Manual generado para Danijdev - SICIC-INSAI V2.0*
+
+[Volver al índice de documentación](../WIKI.md)
+
+**Documentación Técnica Funcional**
+**SICIC-INSAI V2.0**

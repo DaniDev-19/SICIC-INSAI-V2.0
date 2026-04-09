@@ -53,6 +53,7 @@ export const createRole = async (req, res) => {
       nombre,
       descripcion,
       permisos: permisos || {},
+      status: req.body.status !== undefined ? req.body.status : true,
     },
   });
 
@@ -97,6 +98,7 @@ export const updateRole = async (req, res) => {
       nombre,
       descripcion,
       permisos,
+      status: req.body.status,
     },
   });
 

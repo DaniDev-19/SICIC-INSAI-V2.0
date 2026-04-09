@@ -2,6 +2,30 @@ import { masterPrisma } from '../config/prisma.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/token.js';
 
+/**
+ * @param {Object} rolPermisos           
+ * @param {Object|null} customPermisos  
+ * @returns {Object}                     
+ */
+const mergePermisos = (rolPermisos, customPermisos) => {
+
+  const base = rolPermisos || {};
+  const custom = customPermisos || {};
+
+  const merged = { ...base };
+
+  for (const [screen, actions] of Object.entries(custom)) {
+    if (!Array.isArray(actions)) continue;
+    if (Array.isArray(merged[screen])) {
+      merged[screen] = [...new Set([...merged[screen], ...actions])];
+    } else {
+      merged[screen] = actions;
+    }
+  }
+
+  return merged;
+};
+
 export const getInstances = async (req, res) => {
   try {
     const instancias = await masterPrisma.instancias.findMany({
@@ -72,6 +96,8 @@ export const login = async (req, res) => {
     });
   }
 
+  const permisosFinales = mergePermisos(ui.roles.permisos, ui.permisos_personalizados);
+
   const token = generateToken({
     id: usuario.id,
     email: usuario.email,
@@ -80,7 +106,7 @@ export const login = async (req, res) => {
       id: ui.instancias.id,
       db_name: ui.instancias.db_name,
       rol: ui.roles.nombre,
-      permisos: ui.roles.permisos,
+      permisos: permisosFinales,
     },
   });
 
@@ -105,7 +131,7 @@ export const login = async (req, res) => {
         nombre: ui.instancias.nombre_mostrable,
         db_name: ui.instancias.db_name,
         rol: ui.roles.nombre,
-        permisos: ui.roles.permisos,
+        permisos: permisosFinales,
       },
     },
   });
