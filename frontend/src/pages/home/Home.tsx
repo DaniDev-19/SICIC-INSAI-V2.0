@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import Card from "@/components/ui/Card";
 import {
-    Settings,
     Users,
     BarChart3,
     Package,
     ClipboardList,
     LayoutDashboard,
     Activity,
-    CheckCircle2
+    CheckCircle2,
+    ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface DashboardData {
     value: string | number;
@@ -43,14 +44,15 @@ const chartData = [
 
 function Home() {
     const navigate = useNavigate();
+    const { canSee } = usePermissions();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<Record<string, DashboardData>>({});
 
     useEffect(() => {
-        // Simulating API fetch
         const timer = setTimeout(() => {
             setData({
                 dashboard: { value: 24, trend: { value: "+12%", label: "vs mes anterior", positive: true } },
+                roles: { value: 4, trend: { value: "Estable", label: "niveles", neutral: true } },
                 cargos: { value: 12, trend: { value: "Estable", label: "sin cambios", neutral: true } },
                 inventario: { value: 145, trend: { value: "+5", label: "nuevos hoy", positive: true } },
                 reportes: { value: "85%", trend: { value: "-2%", label: "vs ayer", positive: false } },
@@ -70,7 +72,17 @@ function Home() {
             description: "Vista general del sistema",
             icon: LayoutDashboard,
             color: "text-blue-600",
-            path: "/"
+            path: "/home",
+            screen: "home"
+        },
+        {
+            id: "roles",
+            title: "Roles",
+            description: "Niveles de acceso y permisos",
+            icon: ShieldCheck,
+            color: "text-indigo-600",
+            path: "/home/roles",
+            screen: "roles"
         },
         {
             id: "cargos",
@@ -78,7 +90,8 @@ function Home() {
             description: "Gestión de roles y cargos",
             icon: Users,
             color: "text-green-600",
-            path: "/cargos"
+            path: "/home/cargos",
+            screen: "user"
         },
         {
             id: "inventario",
@@ -86,7 +99,8 @@ function Home() {
             description: "Control de productos y stock",
             icon: Package,
             color: "text-orange-600",
-            path: "/"
+            path: "/home/inventario",
+            screen: "inventario"
         },
         {
             id: "reportes",
@@ -94,7 +108,8 @@ function Home() {
             description: "Análisis y estadísticas detalladas",
             icon: BarChart3,
             color: "text-purple-600",
-            path: "/"
+            path: "/home/reportes",
+            screen: "reportes"
         },
         {
             id: "auditoria",
@@ -102,17 +117,12 @@ function Home() {
             description: "Registro de actividades y logs",
             icon: ClipboardList,
             color: "text-red-600",
-            path: "/"
+            path: "/home/auditoria",
+            screen: "auditoria"
         },
-        {
-            id: "configuracion",
-            title: "Configuración",
-            description: "Ajustes globales del sistema",
-            icon: Settings,
-            color: "text-slate-600",
-            path: "/"
-        }
     ];
+
+    const allowedCards = dashboardCards.filter(card => canSee(card.screen));
 
     return (
         <div className="p-6 lg:p-10 space-y-4">
@@ -121,8 +131,8 @@ function Home() {
                     <p className="text-muted-foreground font-medium">Gestiona tu sistema de forma eficiente y profesional.</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-4">
-                    {dashboardCards.map((card) => (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-4">
+                    {allowedCards.map((card) => (
                         <Card
                             key={card.id}
                             title={card.title}
@@ -146,7 +156,7 @@ function Home() {
                             <h3 className="text-lg font-bold">Actividad del Sistema</h3>
                         </div>
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-[300px] w-full" style={{ minWidth: 0 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>

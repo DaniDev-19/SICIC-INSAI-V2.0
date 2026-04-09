@@ -43,3 +43,6 @@ Toda la lógica de "a qué base de datos consultar" es transparente para el fron
 
 ---
 [Volver al índice de documentación](../WIKI.md)
+
+**Documentación Técnica Funcional**
+**SICIC-INSAI V2.0**
