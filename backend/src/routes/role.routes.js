@@ -39,4 +39,17 @@ router.patch('/:id', validateSchema(updateRoleSchema), checkPermission('roles', 
  */
 router.delete('/:id', checkPermission('roles', 'delete'), roleController.deleteRole);
 
+/**
+ * @route PATCH /api/roles/:id/status
+ * @access Private
+ */
+router.patch('/:id/status', checkPermission('roles', 'edit'), roleController.updateRoleStatus);
+
+/**
+ * @route POST /api/roles/bulk-delete
+ * @access Private
+ */
+router.post('/bulk-delete', checkPermission('roles', 'delete'), roleController.deleteManyRoles);
+
+
 export default router;
