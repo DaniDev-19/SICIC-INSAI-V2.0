@@ -10,6 +10,8 @@ Para profundizar en el funcionamiento técnico del frontend, consulta los siguie
 *   [**Flujo de Autenticación e Instancias**](./docs/flujo-autenticacion.md): Manual operativo del login multi-tenant y la gestión de sesión mediante `useAuth`.
 *   [**Gestión de Roles y Permisos**](./docs/roles-y-permisos.md): Guía de arquitectura sobre cómo se consumen y validan los permisos dinámicos en la interfaz.
 *   [**Guía de Modernización UI**](./docs/guia-ui-modernizacion.md): Documentación funcional de la nueva arquitectura de componentes (Dialogs, Matrix y Tematización).
+*   [**Manual de Navegación, Búsqueda y UX V2**](./docs/modernizacion-sidebar-v2.md): Guía completa sobre la arquitectura de dominios, motores de búsqueda (Global/Local) y gestión masiva de datos.
+
 ---
 
 ##  Estándares de Diseño y Estética Premium
