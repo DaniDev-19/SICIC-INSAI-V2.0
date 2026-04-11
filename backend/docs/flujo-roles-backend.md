@@ -1,40 +1,42 @@
-# Manual Técnico: Flujo de Datos y Seguridad (Backend)
+# Manual Técnico: Flujo de Datos y Seguridad (Backend V2.0)
 
-Este documento describe el funcionamiento interno del motor de roles y permisos del servidor SICIC-INSAI, detallando la interacción entre la base de datos, el ORM y los middlewares de seguridad.
+Este documento describe el funcionamiento interno del motor de roles y permisos del servidor SICIC-INSAI, detallando la interacción entre la base de datos, el ORM y los mecanismos de integridad referencial.
 
 ## 1. Ciclo de Vida de una Petición (Roles API)
-
 Cada petición al módulo de roles sigue una ruta crítica de validación antes de tocar la base de datos:
 
 1.  **Capa de Ruta (`router`)**: Define el endpoint (ej. `POST /api/roles`).
-2.  **Middleware `requireAuth`**: Valida el JWT del usuario y recupera su perfil global.
-3.  **Middleware `checkPermission`**: Es el motor de RBAC. Compara los privilegios del rol del usuario (almacenados en la sesión) contra la acción requerida.
-4.  **Controlador (`role.controller.js`)**: Ejecuta la lógica de negocio (validaciones de unicidad, formateo de JSON).
-5.  **ORM (`Prisma`)**: Realiza la persistencia final en PostgreSQL.
+2.  **Capa de Validación (`validateSchema`)**: Intercepta el `body` para asegurar que el contrato de datos sea correcto antes de procesar lógica de negocio.
+3.  **Middleware `protect`**: Valida el JWT del usuario y recupera su perfil global desde la Master DB.
+4.  **Middleware `checkPermission`**: Es el motor de RBAC. Compara los privilegios del rol del usuario contra la acción requerida.
+5.  **Controlador (`role.controller.js`)**: Ejecuta la lógica de negocio y validaciones de integridad.
+6.  **ORM (`Prisma`)**: Realiza la persistencia final en PostgreSQL.
 
-## 2. Persistencia y Esquema (`Master Database`)
+## 2. Motor de Integridad y Borrado Masivo (`deleteManyRoles`)
+Para garantizar la estabilidad del sistema, se ha implementado un motor de borrado inteligente que protege las relaciones activas.
 
-El sistema utiliza una arquitectura multi-propósito donde los roles se almacenan en la base de datos **Master** (`insai_master`).
+### 2.1. Lógica de Purgado en Lote
+El endpoint `POST /api/roles/bulk-delete` no realiza un borrado directo, sino un proceso de **filtrado por dependencia**:
+1. **Pre-validación**: Verifica que se reciban máximo 50 IDs (techo de seguridad).
+2. **Chequeo de Uso**: Consulta la tabla `usuario_instancia` para identificar qué roles de la lista están actualmente asignados a usuarios activos.
+3. **Segregación**: Separa los IDs en `deletableIds` (limpios) e `inUseIds` (protegidos).
+4. **Respuesta Híbrida**: 
+    - Si todos se borran: Retorna `200 Success`.
+    - Si hay bloqueos: Retorna `200 Warning`, detallando qué roles fueron omitidos para preservar la integridad del sistema.
 
-### Estructura del Objeto de Rol
-- **`permisos` (JSONB)**: Este es el campo más crítico. Almacena un mapa de objetos donde la clave es la pantalla y el valor es un array de acciones permitidas. Prisma lo entrega como un objeto nativo de JavaScript tras la consulta.
-- **`status` (Boolean)**: Controla la disponibilidad del rol sin romper relaciones históricas. Un rol `status: false` sigue existiendo pero es filtrado o rechazado durante el proceso de login/asignación.
+## 3. Persistencia y Matriz de Permisos
+El sistema utiliza una arquitectura de base de datos dividida:
 
-## 3. Motor de Validación de Permisos
+- **Master Database (`insai_master`)**: Almacena los roles de forma global.
+- **Campo `permisos` (JSONB)**: Almacena el grafo de privilegios. Al ser un tipo JSONB en PostgreSQL, permite consultas rápidas y una estructura flexible que el API consume como un objeto nativo.
+- **Validación de Estatus**: El campo `status` actúa como un interruptor lógico (`soft-toggle`). El motor de seguridad rechaza cualquier intento de sesión con un rol inactivo.
 
-El middleware en `src/middlewares/permission.middleware.js` funciona mediante una lógica de "Círculos de Confianza":
-
-- **Nivel 0 (Bypass)**: Si detecta `{ all: ['*'] }`, el usuario tiene acceso total (Super Admin).
-- **Nivel 1 (Seccional)**: Si la pantalla tiene `['*']`, se omiten las verificaciones de acciones individuales para esa sección.
-- **Nivel 2 (Granular)**: Realiza una búsqueda mediante `.includes(action)` dentro del array de la pantalla solicitada.
-
-## 4. Sincronización del Cliente Prisma
-
-Dado que el servidor utiliza tipos generados, la ejecución de `npx prisma generate` es el paso que "enseña" al código las nuevas columnas de la base de datos. Sin este paso, el motor de Prisma filtrará los campos nuevos (como `status`) antes de enviarlos al controlador, provocando inconsistencias entre la DB y el API.
+## 4. Middleware de Filtro de Seguridad
+El motor de filtrado en el backend asegura que un usuario no pueda degradar su propia seguridad. Por ejemplo:
+- Se prohíbe la desactivación del rol propio.
+- Se prohíbe el borrado de roles que tengan al menos una instancia de usuario vinculada, garantizando que no existan "usuarios huérfanos" en el sistema.
 
 ---
-
 [Volver al índice de documentación](../WIKI.md)
 
-**Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**Arquitectura de Backend - SICIC-INSAI V2.0**

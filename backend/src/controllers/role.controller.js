@@ -2,13 +2,28 @@ import { masterPrisma } from '../config/prisma.js';
 
 
 export const getRoles = async (req, res) => {
-  const roles = await masterPrisma.roles.findMany({
-    orderBy: { nombre: 'asc' },
-  });
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const [roles, totalCount] = await Promise.all([
+    masterPrisma.roles.findMany({
+      skip,
+      take: limit,
+      orderBy: { nombre: 'asc' },
+    }),
+    masterPrisma.roles.count()
+  ]);
 
   res.status(200).json({
     status: 'success',
     data: roles,
+    pagination: {
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      limit,
+    }
   });
 };
 
@@ -31,7 +46,6 @@ export const getRoleById = async (req, res) => {
     data: role,
   });
 };
-
 
 export const createRole = async (req, res) => {
   const { nombre, descripcion, permisos } = req.body;
@@ -63,7 +77,6 @@ export const createRole = async (req, res) => {
     data: role,
   });
 };
-
 
 export const updateRole = async (req, res) => {
   const { id } = req.params;
@@ -109,7 +122,6 @@ export const updateRole = async (req, res) => {
   });
 };
 
-
 export const deleteRole = async (req, res) => {
   const { id } = req.params;
 
@@ -131,5 +143,132 @@ export const deleteRole = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Rol eliminado exitosamente',
+  });
+};
+
+export const deleteManyRoles = async (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids)) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Se requiere un arreglo de IDs para el borrado masivo',
+    });
+  }
+
+  if (ids.length > 50) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'No se pueden eliminar más de 50 registros a la vez por motivos de seguridad.',
+    });
+  }
+
+  const inUseCheck = await masterPrisma.usuario_instancia.findMany({
+    where: {
+      rol_id: { in: ids },
+    },
+    select: {
+      rol_id: true,
+      roles: {
+        select: { nombre: true }
+      }
+    }
+  });
+
+  const inUseIds = [...new Set(inUseCheck.map(item => item.rol_id))];
+  const inUseNames = [...new Set(inUseCheck.map(item => item.roles.nombre))];
+  const deletableIds = ids.filter(id => !inUseIds.includes(id));
+
+  let message = '';
+  if (deletableIds.length > 0) {
+    await masterPrisma.roles.deleteMany({
+      where: {
+        id: { in: deletableIds },
+      },
+    });
+    message = `Se eliminaron ${deletableIds.length} roles correctamente.`;
+  }
+
+  if (inUseIds.length > 0) {
+    message += ` No se pudieron eliminar los siguientes roles por estar en uso: ${inUseNames.join(', ')}.`;
+    return res.status(200).json({
+      status: 'warning',
+      message,
+      data: {
+        deletedCount: deletableIds.length,
+        skippedCount: inUseIds.length,
+        skippedNames: inUseNames,
+      }
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message,
+    data: {
+      deletedCount: deletableIds.length,
+      skippedCount: 0,
+    }
+  });
+};
+export const updateRoleStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (status === undefined) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Se requiere el campo status',
+    });
+  }
+
+  const role = await masterPrisma.roles.findUnique({
+    where: { id: Number(id) },
+  });
+
+  if (!role) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Rol no encontrado',
+    });
+  }
+
+
+  if (status === false) {
+    const currentUserInfo = await masterPrisma.usuario_instancia.findFirst({
+      where: {
+        usuario_id: req.user.id,
+        instancia_id: req.user.currentInstance.id
+      }
+    });
+
+    if (currentUserInfo && currentUserInfo.rol_id === Number(id)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No puedes desactivar tu propio rol actual por motivos de seguridad.',
+      });
+    }
+
+    const inUse = await masterPrisma.usuario_instancia.findFirst({
+      where: { rol_id: Number(id) },
+    });
+
+    if (inUse) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No se puede desactivar un rol que está siendo utilizado por uno o más usuarios.',
+      });
+    }
+  }
+
+  const updatedRole = await masterPrisma.roles.update({
+    where: { id: Number(id) },
+    data: { status },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: `Rol ${status ? 'activado' : 'desactivado'} exitosamente`,
+    data: updatedRole,
   });
 };

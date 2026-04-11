@@ -2,15 +2,17 @@ export const errorHandler = (err, req, res, _next) => {
   console.error(`[Error] ${err.message}`);
 
   if (err.name === 'ZodError') {
+    const issues = err.issues || err.errors || [];
     return res.status(400).json({
       status: 'error',
       message: 'Error de validación de datos',
-      errors: err.errors.map((e) => ({
+      errors: issues.map((e) => ({
         path: e.path.join('.'),
         message: e.message,
       })),
     });
   }
+
 
   if (err.code?.startsWith('P')) {
     return res.status(500).json({
