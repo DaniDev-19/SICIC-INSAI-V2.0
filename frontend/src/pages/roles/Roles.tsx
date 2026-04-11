@@ -1,29 +1,22 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { z } from 'zod';
 import { useRoles } from '@/hooks/use-roles';
-import { PANTALLAS, ACCIONES } from '@/lib/permisusers';
+import { toast } from 'sonner';
+
+
+import { PANTALLAS } from '@/lib/permisusers';
 import {
   Users,
   Plus,
-  Edit,
-  Trash2,
-  ShieldCheck,
-  ShieldAlert,
   Loader2,
   ChevronLeft,
-  Settings2,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { SearchInput } from '@/components/ui/search-input';
+import { Pagination } from '@/components/ui/pagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,19 +30,57 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { Role, CreateRoleDto, UpdateRoleDto } from '@/types/role';
 
+import { RolesTable } from './components/RolesTable';
+import { RoleDialog } from './components/RoleDialog';
+
 function Roles() {
   const navigate = useNavigate();
-  const { roles, isLoading, createRole, updateRole, deleteRole, isCreating, isUpdating } = useRoles();
+  const {
+    roles,
+    pagination,
+    isLoading,
+    setPage,
+    setLimit,
+
+    createRole,
+    updateRole,
+    deleteRole,
+    deleteManyRoles,
+    updateRoleStatus,
+    isCreating,
+    isUpdating,
+    isDeleting
+  } = useRoles();
+
 
   const [isOpen, setIsOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+
+  const [localSearch, setLocalSearch] = useState('');
+
   const [formData, setFormData] = useState<UpdateRoleDto>({
     nombre: '',
     descripcion: '',
     permisos: {},
     status: true
   });
+
+
+  const filteredRoles = useMemo(() => {
+    if (!localSearch) return roles;
+    const term = localSearch.toLowerCase();
+    return roles.filter((role: Role) => {
+      const statusText = role.status ? 'activo' : 'inactivo';
+      return (
+        role.nombre.toLowerCase().includes(term) ||
+        (role.descripcion && role.descripcion.toLowerCase().includes(term)) ||
+        statusText.includes(term)
+      );
+    });
+  }, [roles, localSearch]);
 
   const handleOpenCreate = () => {
     setEditingRole(null);
@@ -76,13 +107,9 @@ function Roles() {
   const handleTogglePermission = (screen: string, action: string) => {
     setFormData((prev) => {
       const currentPermissions = prev.permisos?.[screen] || [];
-      let newPermissions;
-
-      if (currentPermissions.includes(action)) {
-        newPermissions = currentPermissions.filter((a) => a !== action);
-      } else {
-        newPermissions = [...currentPermissions, action];
-      }
+      const newPermissions = currentPermissions.includes(action)
+        ? currentPermissions.filter((a) => a !== action)
+        : [...currentPermissions, action];
 
       return {
         ...prev,
@@ -94,8 +121,54 @@ function Roles() {
     });
   };
 
+  const handleToggleAllPermissions = (checked: boolean) => {
+    if (checked) {
+      const allPerms: Record<string, string[]> = {};
+      PANTALLAS.forEach(p => {
+        allPerms[p.key] = [...p.ACCIONES];
+      });
+      setFormData(prev => ({ ...prev, permisos: allPerms }));
+    } else {
+      setFormData(prev => ({ ...prev, permisos: {} }));
+    }
+  };
+
+  const handleToggleScopePermissions = (screen: string, checked: boolean) => {
+    setFormData(prev => {
+      const newPerms = { ...prev.permisos };
+      if (checked) {
+        const screenDef = PANTALLAS.find(p => p.key === screen);
+        if (screenDef) {
+          newPerms[screen] = [...screenDef.ACCIONES];
+        }
+      } else {
+        delete newPerms[screen];
+      }
+      return { ...prev, permisos: newPerms };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const roleSchema = z.object({
+      nombre: z.string()
+        .min(3, 'El nombre de identidad debe tener al menos 3 caracteres')
+        .max(50, 'El nombre es demasiado largo')
+        .regex(/^[A-Z0-9_]+$/, 'El nombre debe ser en MAYÚSCULAS y sin espacios (formato IDENTITY)'),
+      descripcion: z.string().optional(),
+    });
+
+    const validation = roleSchema.safeParse(formData);
+
+    if (!validation.success) {
+      validation.error.issues.forEach((issue) => {
+        toast.error(issue.message);
+      });
+      return;
+    }
+
+
     try {
       if (editingRole) {
         await updateRole({ id: editingRole.id, data: formData });
@@ -104,26 +177,51 @@ function Roles() {
       }
       setIsOpen(false);
     } catch {
+      // Los errores del servidor (como nombre duplicado) 
+      // ya se manejan automáticamente en el hook useRoles
     }
   };
+
 
   const confirmDelete = async () => {
     if (deleteId) {
       await deleteRole(deleteId);
       setDeleteId(null);
+      setSelectedIds(prev => prev.filter(id => id !== deleteId));
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await deleteManyRoles(selectedIds);
+      setSelectedIds([]);
+      setIsBulkDeleteOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      await updateRoleStatus({ id, status: !currentStatus });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
+
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
+              title='volver'
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all"
+              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </Button>
@@ -135,12 +233,34 @@ function Roles() {
             Administra los niveles de acceso y permisos del sistema de forma granular.
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-          <Plus className="size-4 text-white" /> <span className="text-white">Nuevo Rol</span>
-        </Button>
+
+        <div className="flex items-center gap-3">
+          {/* Local Table Search */}
+          <div className="hidden sm:block">
+            <SearchInput
+              placeholder="Filtrar vista actual..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              onClear={() => setLocalSearch("")}
+              className="w-[200px] lg:w-[250px]"
+            />
+          </div>
+          <Button onClick={handleOpenCreate} title='crea un nuevo rol' className="flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+            <Plus className="size-4 text-white" /> <span className="text-white">Nuevo Rol</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Roles List */}
+      {/* Mobile Search Input */}
+      <div className="sm:hidden w-full">
+        <SearchInput
+          placeholder="Filtrar vista actual..."
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
+          onClear={() => setLocalSearch("")}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed">
@@ -157,234 +277,80 @@ function Roles() {
             </div>
             <h3 className="text-xl font-bold">No hay roles configurados</h3>
             <p className="text-muted-foreground mb-6">Comienza creando el primer nivel de acceso para tu personal.</p>
-            <Button variant="outline" onClick={handleOpenCreate}>Crear primer rol</Button>
+            <Button variant="outline" className='cursor-pointer' onClick={handleOpenCreate}>Crear primer rol</Button>
           </div>
         ) : (
-          <div className="bg-card rounded-2xl border shadow-xl overflow-hidden glass-effect">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-muted/30 border-b">
-                  <tr>
-                    <th className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Nombre</th>
-                    <th className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Descripción</th>
-                    <th className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Estado</th>
-                    <th className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {roles.map((role: Role) => (
-                    <tr key={role.id} className="group hover:bg-primary/5 transition-all duration-300">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                            <ShieldCheck className="size-5" />
-                          </div>
-                          <div>
-                            <span className="font-bold text-foreground block group-hover:translate-x-1 transition-transform">{role.nombre}</span>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">ID: #{role.id}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground font-medium max-w-sm">
-                        <p className="line-clamp-1">{role.descripcion || 'Sin descripción detallada'}</p>
-                      </td>
-                      <td className="px-6 py-5">
-                        {role.status ? (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                            <div className="size-2 rounded-full bg-emerald-500 animate-pulse" /> ACTIVO
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                            <div className="size-2 rounded-full bg-rose-500" /> INACTIVO
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEdit(role)}
-                            className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600"
-                          >
-                            <Edit className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(role.id)}
-                            className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <>
+            <RolesTable
+              roles={filteredRoles}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onEdit={handleOpenEdit}
+              onDelete={(id) => setDeleteId(id)}
+              onToggleStatus={handleToggleStatus}
+            />
+
+
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalCount={filteredRoles.length}
+              limit={pagination.limit}
+              onPageChange={setPage}
+              onLimitChange={setLimit}
+            />
+          </>
         )}
       </div>
 
-      {/* Dialog Form */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl glass-effect">
-          <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-            <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="size-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                  {editingRole ? <Settings2 className="size-6 text-white" /> : <Plus className="size-6 text-white" />}
-                </div>
-                <div>
-                  <DialogTitle className="text-2xl font-black tracking-tight italic uppercase">
-                    {editingRole ? 'Configurar Rol Existente' : 'Arquitectar Nuevo Rol'}
-                  </DialogTitle>
-                  <DialogDescription className="text-muted-foreground font-medium">
-                    Gestiona la identidad y el alcance de este nivel de acceso.
-                  </DialogDescription>
-                </div>
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
+            <div className="flex items-center gap-3 pr-8 border-r border-background/10 dark:border-foreground/10">
+              <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+                {selectedIds.length}
               </div>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-border/50">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nombre de Identidad</label>
-                    <Input
-                      placeholder="Ej: SUPER_ADMIN, AUDITOR_EXTERNO..."
-                      value={formData.nombre}
-                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                      required
-                      className="bg-muted/30 border-none h-12 text-base font-bold focus-visible:ring-primary/30"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Descripción Operativa</label>
-                    <Input
-                      placeholder="Breve explicación de las facultades de este rol"
-                      value={formData.descripcion || ''}
-                      onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                      className="bg-muted/50 dark:bg-muted/20 border-border/30 h-12 focus-visible:ring-primary/30 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 flex flex-col justify-center items-center gap-4 border border-primary/20">
-                  <div className="text-center">
-                    <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Estado del Rol</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Activa o desactiva este rol globalmente</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`text-xs font-bold transition-colors ${!formData.status ? 'text-rose-500' : 'text-muted-foreground'}`}>INACTIVO</span>
-                    <Switch
-                      checked={formData.status}
-                      onCheckedChange={(val) => setFormData({ ...formData, status: val })}
-                      className="data-[state=checked]:bg-emerald-500"
-                    />
-                    <span className={`text-xs font-bold transition-colors ${formData.status ? 'text-emerald-500' : 'text-muted-foreground'}`}>ACTIVO</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                      <ShieldAlert className="size-5 text-indigo-500" />
-                    </div>
-                    <h3 className="text-lg font-black italic uppercase tracking-tight">Matriz de Privilegios</h3>
-                  </div>
-                  <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-emerald-500" /> Habilitado</div>
-                    <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-muted-foreground/30" /> No Aplica</div>
-                  </div>
-                </div>
-
-                <div className="border border-border/50 rounded-2xl bg-card/60 dark:bg-card/40 overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto overflow-y-hidden">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-muted/60 dark:bg-muted/40 border-b border-border/50">
-                          <th className="px-6 py-4 text-[10px] font-black uppercase text-muted-foreground">Módulo / Pantalla</th>
-                          {ACCIONES.map(accion => (
-                            <th key={accion.key} className="px-4 py-4 text-center text-[10px] font-black uppercase text-muted-foreground">
-                              {accion.label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {PANTALLAS.map(pantalla => (
-                          <tr key={pantalla.key} className="hover:bg-primary/5 group transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-sm text-foreground">{pantalla.label}</span>
-                                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tighter">scope: {pantalla.key}</span>
-                              </div>
-                            </td>
-                            {ACCIONES.map(accion => {
-                              const isSupported = pantalla.ACCIONES.includes(accion.key);
-                              const isChecked = formData.permisos?.[pantalla.key]?.includes(accion.key);
-
-                              return (
-                                <td key={accion.key} className="px-4 py-4 text-center">
-                                  {isSupported ? (
-                                    <div className="flex justify-center">
-                                      <Switch
-                                        checked={isChecked}
-                                        onCheckedChange={() => handleTogglePermission(pantalla.key, accion.key)}
-                                        className="scale-90 data-[state=checked]:bg-primary"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <span className="text-[10px] font-black text-muted-foreground/20 italic">n/a</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <p className="text-[10px] text-muted-foreground italic pl-2">
-                  * Los cambios en la matriz se aplicarán de forma inmediata tras guardar el rol.
-                </p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
             </div>
 
-            <DialogFooter className="p-6 bg-muted/20 border-t flex items-center justify-between sm:justify-between">
+            <div className="flex items-center gap-3">
               <Button
-                type="button"
                 variant="ghost"
-                onClick={() => setIsOpen(false)}
-                disabled={isCreating || isUpdating}
-                className="font-bold text-muted-foreground hover:text-foreground"
+                size="sm"
+                title='Eliminar seleccionados'
+                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                onClick={() => setIsBulkDeleteOpen(true)}
               >
-                Cerrar sin guardar
+                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
               </Button>
               <Button
-                type="submit"
-                disabled={isCreating || isUpdating}
-                className="bg-primary hover:bg-primary/90 text-white font-black px-8 h-11 shadow-lg shadow-primary/20"
+                variant="ghost"
+                size="icon"
+                title='Limpiar selección'
+                className="rounded-full hover:bg-white/10 dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                onClick={() => setSelectedIds([])}
               >
-                {(isCreating || isUpdating) ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                )}
-                {editingRole ? 'Sincronizar Cambios' : 'Inicializar Rol'}
+                <X className="size-4" />
               </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Delete Confirmation */}
+      <RoleDialog
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        editingRole={editingRole}
+        formData={formData}
+        setFormData={setFormData}
+        isCreating={isCreating}
+        isUpdating={isUpdating}
+        onSubmit={handleSubmit}
+        onTogglePermission={handleTogglePermission}
+        onToggleAll={handleToggleAllPermissions}
+        onToggleScope={handleToggleScopePermissions}
+      />
+
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
           <AlertDialogHeader>
@@ -399,10 +365,10 @@ function Roles() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
-            <AlertDialogCancel className="font-bold border-none bg-muted/50 hover:bg-muted">Mantener</AlertDialogCancel>
+            <AlertDialogCancel className="font-bold border-none bg-muted/50 hover:bg-muted cursor-pointer">Mantener</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20"
+              className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg cursor-pointer shadow-rose-500/20"
             >
               Destruir Rol
             </AlertDialogAction>
@@ -410,30 +376,31 @@ function Roles() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <style>{`
-        .glass-effect {
-          background: rgba(255, 255, 255, 0.9) !important;
-          backdrop-filter: blur(20px) !important;
-          -webkit-backdrop-filter: blur(20px) !important;
-        }
-        .dark .glass-effect {
-          background: rgba(10, 15, 30, 0.85) !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 10px;
-        }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-        }
-      `}</style>
+      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
+          <AlertDialogHeader>
+            <div className="size-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <AlertTriangle className="size-8 text-rose-500" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black text-center italic uppercase leading-tight">
+              ¿Eliminar {selectedIds.length} Roles?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium px-4">
+              Se intentará eliminar todos los roles seleccionados (máx 50). Aquellos que estén asignados a usuarios serán omitidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel className="font-bold border-none bg-muted/50 hover:bg-muted">Abortar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="animate-spin size-4" /> : 'Confirmar Purga'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

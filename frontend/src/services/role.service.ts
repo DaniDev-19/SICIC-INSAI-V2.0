@@ -2,10 +2,11 @@ import apiClient from '../lib/api-client';
 import type { Role, CreateRoleDto, UpdateRoleDto, RoleResponse } from '../types/role';
 
 export const roleService = {
-  getRoles: async (): Promise<Role[]> => {
-    const response = await apiClient.get<RoleResponse>('/roles');
-    return response.data.data as Role[];
+  getRoles: async (page = 1, limit = 10): Promise<any> => {
+    const response = await apiClient.get<RoleResponse>(`/roles?page=${page}&limit=${limit}`);
+    return response.data;
   },
+
 
   getRoleById: async (id: number): Promise<Role> => {
     const response = await apiClient.get<RoleResponse>(`/roles/${id}`);
@@ -25,4 +26,16 @@ export const roleService = {
   deleteRole: async (id: number): Promise<void> => {
     await apiClient.delete(`/roles/${id}`);
   },
+
+  deleteManyRoles: async (ids: number[]): Promise<any> => {
+    const response = await apiClient.post('/roles/bulk-delete', { ids });
+    return response.data;
+  },
+
+  updateRoleStatus: async (id: number, status: boolean): Promise<Role> => {
+    const response = await apiClient.patch<RoleResponse>(`/roles/${id}/status`, { status });
+    return response.data.data as Role;
+  },
 };
+
+

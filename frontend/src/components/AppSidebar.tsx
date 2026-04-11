@@ -6,7 +6,8 @@ import {
   ShieldCheck,
   Package,
   BarChart3,
-  ClipboardList
+  ClipboardList,
+  Leaf
 } from "lucide-react"
 
 import {
@@ -26,49 +27,74 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { toast } from "sonner"
 import { useNavigate, useLocation } from "react-router-dom"
 
-const items = [
+const navigationGroups = [
   {
-    title: "Inicio",
-    url: "/home",
-    icon: Home,
-    screen: "home",
+    label: "Panel Principal",
+    items: [
+      {
+        title: "Inicio",
+        url: "/home",
+        icon: Home,
+        screen: "home",
+      },
+    ]
   },
   {
-    title: "Roles",
-    url: "/home/roles",
-    icon: ShieldCheck,
-    screen: "roles",
+    label: "Seguridad y acceso",
+    items: [
+      {
+        title: "Roles",
+        url: "/home/roles",
+        icon: ShieldCheck,
+        screen: "roles",
+      },
+      {
+        title: "Cargos",
+        url: "/home/cargos",
+        icon: Users,
+        screen: "user",
+      },
+    ]
   },
   {
-    title: "Cargos",
-    url: "/home/cargos",
-    icon: Users,
-    screen: "user",
+    label: "Inventario y Insumos",
+    items: [
+      {
+        title: "Inventario",
+        url: "#",
+        icon: Package,
+        screen: "inventario",
+      },
+    ]
   },
   {
-    title: "Inventario",
-    url: "#",
-    icon: Package,
-    screen: "inventario",
+    label: "Reportes y Control",
+    items: [
+      {
+        title: "Reportes",
+        url: "#",
+        icon: BarChart3,
+        screen: "reportes",
+      },
+      {
+        title: "Auditoría",
+        url: "#",
+        icon: ClipboardList,
+        screen: "auditoria",
+      },
+    ]
   },
   {
-    title: "Reportes",
-    url: "#",
-    icon: BarChart3,
-    screen: "reportes",
-  },
-  {
-    title: "Auditoría",
-    url: "#",
-    icon: ClipboardList,
-    screen: "auditoria",
-  },
-  {
-    title: "Configuración",
-    url: "#",
-    icon: Settings,
-    screen: "configuracion",
-  },
+    label: "Sistema",
+    items: [
+      {
+        title: "Configuración",
+        url: "#",
+        icon: Settings,
+        screen: "configuracion",
+      },
+    ]
+  }
 ]
 
 export function AppSidebar() {
@@ -86,67 +112,87 @@ export function AppSidebar() {
     }
   };
 
-  const filteredItems = items.filter(item => {
-
-    if (!item.screen) return true;
-    return canSee(item.screen);
-  });
-
   return (
-    <Sidebar>
+    <Sidebar className="border-r border-sidebar-border/50">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
-            <Home className="size-4" />
+        <div className="flex items-center gap-3 px-4 py-6">
+          <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
+            <Leaf className="size-5" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold uppercase tracking-tight">SICIC INSAI</span>
-            <span className="truncate text-[10px] text-muted-foreground">{user?.username || 'Admin Dashboard V2.0'}</span>
+            <span className="truncate font-bold uppercase tracking-wider text-foreground">SICIC-INSAI</span>
+            <span className="truncate text-[12px] text-muted-foreground font-medium mt-1">{user?.username.toUpperCase() || 'V2.0'}</span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.url}
-                    tooltip={item.title}
-                  >
-                    <button onClick={() => navigate(item.url)} className="w-full flex items-center gap-2">
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+
+      <hr className="bg-foreground " />
+
+      <SidebarContent className="custom-scrollbar">
+        {navigationGroups.map((group) => {
+          const filteredItems = group.items.filter(item => {
+            if (!item.screen) return true;
+            return canSee(item.screen);
+          });
+
+          if (filteredItems.length === 0) return null;
+
+          return (
+            <SidebarGroup key={group.label} className="px-2">
+              <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">
+                {group.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {filteredItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname === item.url}
+                        tooltip={item.title}
+                        className="h-10 px-4 cursor-pointer transition-all duration-300 hover:bg-emerald-500/5 data-[active=true]:bg-emerald-500/10 data-[active=true]:text-emerald-500 group"
+                      >
+                        <button onClick={() => navigate(item.url)} className="w-full flex items-center gap-3">
+                          <item.icon className="size-4.5 transition-transform duration-300 group-hover:scale-110" />
+                          <span className="font-medium tracking-tight text-[13px]">{item.title}</span>
+                          {location.pathname === item.url && (
+                            <div className="ml-auto size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                          )}
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu className="px-2 pb-2">
+
+      <SidebarFooter className="border-t border-sidebar-border/30 p-2">
+        <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className=" cursor-pointer text-red-500 hover:text-red-400 hover:bg-red-50/10 transition-colors"
+              className="w-full justify-start gap-3 h-11 px-4 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-300 rounded-xl cursor-pointer group/logout"
               title="Cerrar Sesión"
             >
-              <LogOut className="size-4" />
-              <span className="font-medium">Cerrar Sesión</span>
+              <LogOut className="size-4.5 transition-transform duration-300 group-hover/logout:-translate-x-1" />
+              <span className="font-bold tracking-tight text-[13px]">Cerrar Sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <div className="flex flex-col gap-1 p-4 pt-0 text-[10px] text-sidebar-foreground/30 font-medium border-t border-sidebar-border/30">
-          <p className="uppercase mt-4">SICIC INSAI © 2024</p>
-          <p>All rights reserved</p>
+        <div className="px-1 py-2 flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-emerald-500/50" />
+            <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Sistema de información para el control de inspecciones de campo</p>
+          </div>
+          <hr className="m-2" />
+          <p className="text-[10px] text-muted-foreground/30 font-medium pl-3.5">© 2026 todos los derechos reservados</p>
         </div>
       </SidebarFooter>
+
     </Sidebar>
   )
 }
