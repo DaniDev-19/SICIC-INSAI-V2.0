@@ -50,7 +50,6 @@ export const getRoleById = async (req, res) => {
 export const createRole = async (req, res) => {
   const { nombre, descripcion, permisos } = req.body;
 
-  // Verificar si ya existe un rol con ese nombre
   const existingRole = await masterPrisma.roles.findUnique({
     where: { nombre },
   });
@@ -156,7 +155,7 @@ export const deleteManyRoles = async (req, res) => {
     });
   }
 
-  if (ids.length > 50) {
+  if (ids.length >= 50) {
     return res.status(400).json({
       status: 'error',
       message: 'No se pueden eliminar más de 50 registros a la vez por motivos de seguridad.',
@@ -211,6 +210,7 @@ export const deleteManyRoles = async (req, res) => {
     }
   });
 };
+
 export const updateRoleStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;

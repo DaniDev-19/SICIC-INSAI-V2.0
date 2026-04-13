@@ -27,17 +27,15 @@ model roles {
 }
 
 model usuario_instancia {
-  id                      Int        @id @default(autoincrement())
   usuario_id              Int
   instancia_id            Int
   rol_id                  Int
   permisos_personalizados Json?
-  created_at              DateTime?  @default(now()) @db.Timestamp(6)
   instancias              instancias @relation(fields: [instancia_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ui_instancia")
   roles                   roles      @relation(fields: [rol_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ui_rol")
   usuarios                usuarios   @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ui_usuario")
 
-  @@unique([usuario_id, instancia_id], map: "uq_usuario_instancia")
+  @@id([usuario_id, instancia_id])
 }
 
 model usuarios {
@@ -45,7 +43,6 @@ model usuarios {
   username          String              @unique @db.VarChar(100)
   email             String              @unique @db.VarChar(100)
   password_hash     String
-  mfa_secret        String?
   status            Boolean?            @default(true)
   created_at        DateTime?           @default(now()) @db.Timestamp(6)
   updated_at        DateTime?           @default(now()) @db.Timestamp(6)
