@@ -27,7 +27,7 @@ export function useRoles() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateRoleDto }) => 
+    mutationFn: ({ id, data }: { id: number; data: UpdateRoleDto }) =>
       roleService.updateRole(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
@@ -67,7 +67,7 @@ export function useRoles() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: boolean }) => 
+    mutationFn: ({ id, status }: { id: number; status: boolean }) =>
       roleService.updateRoleStatus(id, status),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });

@@ -2,8 +2,6 @@ import { useState, useMemo } from 'react';
 import { z } from 'zod';
 import { useRoles } from '@/hooks/use-roles';
 import { toast } from 'sonner';
-
-
 import { PANTALLAS } from '@/lib/permisusers';
 import {
   Users,
@@ -177,8 +175,6 @@ function Roles() {
       }
       setIsOpen(false);
     } catch {
-      // Los errores del servidor (como nombre duplicado) 
-      // ya se manejan automáticamente en el hook useRoles
     }
   };
 
@@ -235,14 +231,13 @@ function Roles() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Local Table Search */}
           <div className="hidden sm:block">
             <SearchInput
               placeholder="Filtrar vista actual..."
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
               onClear={() => setLocalSearch("")}
-              className="w-[200px] lg:w-[250px]"
+              className="w-[200px] lg:w-[250px] h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
             />
           </div>
           <Button onClick={handleOpenCreate} title='crea un nuevo rol' className="flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
@@ -251,13 +246,13 @@ function Roles() {
         </div>
       </div>
 
-      {/* Mobile Search Input */}
       <div className="sm:hidden w-full">
         <SearchInput
           placeholder="Filtrar vista actual..."
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           onClear={() => setLocalSearch("")}
+          className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
         />
       </div>
 

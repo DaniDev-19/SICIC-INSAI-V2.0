@@ -27,18 +27,18 @@ export function GlobalSearch() {
   })
 
   return (
-    <div className="relative w-full max-w-[200px] md:max-w-xs transition-all duration-300">
+    <div className="relative w-full max-w-[200px] lg:max-w-[350px] group transition-all duration-300">
       <div className="relative">
         <SearchInput
           placeholder="Busca en todo el sistema..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onClear={() => setQuery("")}
-          className="h-9 text-xs focus-visible:ring-primary/40 focus:scale-[1.02] transition-transform"
+          className="h-10 rounded-xl border-border/60 bg-muted/40 shadow-sm transition-all focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40"
         />
         {(isLoading || isFetching) && query.length > 2 && (
           <div className="absolute right-10 top-1/2 -translate-y-1/2">
-            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
           </div>
         )}
       </div>
