@@ -13,7 +13,6 @@ export const errorHandler = (err, req, res, _next) => {
     });
   }
 
-
   if (err.code?.startsWith('P')) {
     return res.status(500).json({
       status: 'error',

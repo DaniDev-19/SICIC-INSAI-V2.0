@@ -42,7 +42,7 @@ El controlador decide qué hacer:
 
 ---
 
-##  Diagrama de Flujo Visual (Mermaid)
+## Diagrama de Flujo Visual (Mermaid)
 
 ```mermaid
 graph LR
@@ -69,4 +69,3 @@ Cualquier fallo (base de datos caída, error de servidor, validación fallida) e
 
 **Documentación Técnica Funcional**
 **SICIC-INSAI V2.0**
-

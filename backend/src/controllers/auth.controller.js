@@ -1,14 +1,14 @@
 import { masterPrisma } from '../config/prisma.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/token.js';
+import bitacoraService from '../services/bitacora.service.js';
 
 /**
- * @param {Object} rolPermisos           
- * @param {Object|null} customPermisos  
- * @returns {Object}                     
+ * @param {Object} rolPermisos
+ * @param {Object|null} customPermisos
+ * @returns {Object}
  */
 const mergePermisos = (rolPermisos, customPermisos) => {
-
   const base = rolPermisos || {};
   const custom = customPermisos || {};
 
@@ -117,6 +117,16 @@ export const login = async (req, res) => {
     maxAge: 1000 * 60 * 60 * 24, // 24 horas
   });
 
+  bitacoraService.registrar({
+    manualUser: {
+      id: usuario.id,
+      username: usuario.username,
+      db_name: ui.instancias.db_name
+    },
+    accion: 'INICIO_SESION',
+    modulo: 'Seguridad'
+  });
+
   res.status(200).json({
     status: 'success',
     message: 'Login exitoso',
@@ -166,6 +176,15 @@ export const getMe = async (req, res) => {
 };
 
 export const logout = (req, res) => {
+  // Registrar cierre de sesión
+  if (req.user) {
+    bitacoraService.registrar({
+      req,
+      accion: 'CIERRE_SESION',
+      modulo: 'Seguridad'
+    });
+  }
+
   res.clearCookie('token');
   res.status(200).json({
     status: 'success',

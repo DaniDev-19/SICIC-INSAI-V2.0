@@ -51,5 +51,4 @@ router.patch('/:id/status', checkPermission('roles', 'edit'), roleController.upd
  */
 router.post('/bulk-delete', checkPermission('roles', 'delete'), roleController.deleteManyRoles);
 
-
 export default router;

@@ -1,5 +1,5 @@
 import { masterPrisma } from '../config/prisma.js';
-
+import bitacoraService from '../services/bitacora.service.js';
 
 export const getRoles = async (req, res) => {
   const page = Number(req.query.page) || 1;
@@ -12,7 +12,7 @@ export const getRoles = async (req, res) => {
       take: limit,
       orderBy: { nombre: 'asc' },
     }),
-    masterPrisma.roles.count()
+    masterPrisma.roles.count(),
   ]);
 
   res.status(200).json({
@@ -23,7 +23,7 @@ export const getRoles = async (req, res) => {
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       limit,
-    }
+    },
   });
 };
 
@@ -71,6 +71,14 @@ export const createRole = async (req, res) => {
     },
   });
 
+  // Registrar en bitácora
+  bitacoraService.registrar({
+    req,
+    accion: 'CREAR',
+    modulo: 'Roles',
+    payload_nuevo: role
+  });
+
   res.status(201).json({
     status: 'success',
     message: 'Rol creado exitosamente',
@@ -115,6 +123,15 @@ export const updateRole = async (req, res) => {
     },
   });
 
+  // Registrar en bitácora
+  bitacoraService.registrar({
+    req,
+    accion: 'ACTUALIZAR',
+    modulo: 'Roles',
+    payload_previo: existingRole,
+    payload_nuevo: updatedRole
+  });
+
   res.status(200).json({
     status: 'success',
     message: 'Rol actualizado exitosamente',
@@ -136,8 +153,20 @@ export const deleteRole = async (req, res) => {
     });
   }
 
+  const roleToDelete = await masterPrisma.roles.findUnique({
+    where: { id: Number(id) },
+  });
+
   await masterPrisma.roles.delete({
     where: { id: Number(id) },
+  });
+
+  // Registrar en bitácora
+  bitacoraService.registrar({
+    req,
+    accion: 'ELIMINAR',
+    modulo: 'Roles',
+    payload_previo: roleToDelete
   });
 
   res.status(200).json({
@@ -170,14 +199,14 @@ export const deleteManyRoles = async (req, res) => {
     select: {
       rol_id: true,
       roles: {
-        select: { nombre: true }
-      }
-    }
+        select: { nombre: true },
+      },
+    },
   });
 
-  const inUseIds = [...new Set(inUseCheck.map(item => item.rol_id))];
-  const inUseNames = [...new Set(inUseCheck.map(item => item.roles.nombre))];
-  const deletableIds = ids.filter(id => !inUseIds.includes(id));
+  const inUseIds = [...new Set(inUseCheck.map((item) => item.rol_id))];
+  const inUseNames = [...new Set(inUseCheck.map((item) => item.roles.nombre))];
+  const deletableIds = ids.filter((id) => !inUseIds.includes(id));
 
   let message = '';
   if (deletableIds.length > 0) {
@@ -198,7 +227,7 @@ export const deleteManyRoles = async (req, res) => {
         deletedCount: deletableIds.length,
         skippedCount: inUseIds.length,
         skippedNames: inUseNames,
-      }
+      },
     });
   }
 
@@ -208,7 +237,7 @@ export const deleteManyRoles = async (req, res) => {
     data: {
       deletedCount: deletableIds.length,
       skippedCount: 0,
-    }
+    },
   });
 };
 export const updateRoleStatus = async (req, res) => {
@@ -233,13 +262,12 @@ export const updateRoleStatus = async (req, res) => {
     });
   }
 
-
   if (status === false) {
     const currentUserInfo = await masterPrisma.usuario_instancia.findFirst({
       where: {
         usuario_id: req.user.id,
-        instancia_id: req.user.currentInstance.id
-      }
+        instancia_id: req.user.currentInstance.id,
+      },
     });
 
     if (currentUserInfo && currentUserInfo.rol_id === Number(id)) {

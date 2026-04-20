@@ -1,7 +1,7 @@
 /**
  *
- * @param {string} screen  
- * @param {string} action  
+ * @param {string} screen
+ * @param {string} action
  */
 export const checkPermission = (screen, action) => {
   return (req, res, next) => {
