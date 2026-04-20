@@ -143,6 +143,7 @@ export const login = async (req, res) => {
         rol: ui.roles.nombre,
         permisos: permisosFinales,
       },
+      token,
     },
   });
 };
