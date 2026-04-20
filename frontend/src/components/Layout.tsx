@@ -34,19 +34,19 @@ function LayoutContent() {
         <>
             <AppSidebar />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center justify-between border-b px-6 transition-all bg-background">
-                    <div className="flex items-center gap-3">
+                <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 transition-all bg-background gap-2">
+                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                         <SidebarTrigger 
-                            className="-ml-1 cursor-pointer" 
+                            className="-ml-1 cursor-pointer shrink-0" 
                             title={state === 'expanded' ? 'Ocultar barra lateral' : 'Abrir barra lateral'} 
                         />
-                        <Separator orientation="vertical" className="mr-2 h-4" />
-                        <h2 className="text-lg font-bold tracking-tight text-foreground md:text-xl">
+                        <Separator orientation="vertical" className="mr-2 h-4 hidden sm:block" />
+                        <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground md:text-xl truncate">
                             {getPageTitle(location.pathname)}
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
                         <GlobalSearch />
                         <ThemeToggle />
                     </div>

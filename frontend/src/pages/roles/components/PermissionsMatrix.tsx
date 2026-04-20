@@ -24,7 +24,6 @@ export function PermissionsMatrix({
   onToggleScope
 }: PermissionsMatrixProps) {
 
-  // Calculate if all possible permissions are active (Global Master)
   const isAllChecked = PANTALLAS.every(p =>
     p.ACCIONES.every(a => permisos?.[p.key]?.includes(a))
   );
@@ -39,7 +38,6 @@ export function PermissionsMatrix({
           <h3 className="text-lg font-black italic uppercase tracking-tight">Matriz de Privilegios</h3>
         </div>
 
-        {/* Global Master Switch */}
         <div className="flex items-center gap-4 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-primary" />
