@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes.js';
 import roleRoutes from './routes/role.routes.js';
 import bitacoraRoutes from './routes/bitacora.routes.js';
 import cargoRoutes from './routes/cargo.routes.js';
+import profesionRoutes from './routes/profesion.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/bitacora', bitacoraRoutes);
 app.use('/api/cargos', cargoRoutes);
+app.use('/api/profesion', profesionRoutes);
 
 app.use(errorHandler);
 
