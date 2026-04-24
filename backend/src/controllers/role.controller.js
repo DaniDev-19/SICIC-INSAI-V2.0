@@ -70,7 +70,6 @@ export const createRole = async (req, res) => {
     },
   });
 
-  // Registrar en bitácora
   bitacoraService.registrar({
     req,
     accion: 'CREAR',
@@ -122,7 +121,6 @@ export const updateRole = async (req, res) => {
     },
   });
 
-  // Registrar en bitácora
   bitacoraService.registrar({
     req,
     accion: 'ACTUALIZAR',
@@ -160,7 +158,6 @@ export const deleteRole = async (req, res) => {
     where: { id: Number(id) },
   });
 
-  // Registrar en bitácora
   bitacoraService.registrar({
     req,
     accion: 'ELIMINAR',
