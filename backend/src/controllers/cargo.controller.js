@@ -1,4 +1,5 @@
 import { getTenantPrisma } from '../config/prisma.js';
+import bitacoraService from '../services/bitacora.service.js';
 
 const getTenantPrismaFromRequest = (req) => {
     const dbName = req.user?.currentInstance?.db_name;
@@ -12,7 +13,7 @@ export const getCargos = async (req, res) => {
     const tenantPrisma = getTenantPrismaFromRequest(req);
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
-    const skip = (page  - 1) * limit;
+    const skip = (page - 1) * limit;
 
     const [cargos, totalCount] = await Promise.all([
         tenantPrisma.cargos.findMany({
@@ -35,7 +36,7 @@ export const getCargos = async (req, res) => {
     });
 };
 
-export const getCargoById =  async (req, res) => {
+export const getCargoById = async (req, res) => {
     const tenantPrisma = getTenantPrismaFromRequest(req);
     const { id } = req.params;
 
@@ -76,7 +77,14 @@ export const createCargo = async (req, res) => {
             nombre,
         },
     });
-    
+
+    bitacoraService.registrar({
+        req,
+        accion: 'CREAR',
+        modulo: 'Cargos',
+        payload_nuevo: cargo
+    });
+
     res.status(201).json({
         status: 'success',
         data: cargo,
@@ -119,6 +127,14 @@ export const updateCargo = async (req, res) => {
         },
     });
 
+    bitacoraService.registrar({
+        req,
+        accion: 'ACTUALIZAR',
+        modulo: 'Cargos',
+        payload_previo: existingCargo,
+        payload_nuevo: updatedCargo
+    });
+
     res.status(200).json({
         status: 'success',
         message: 'Cargo actualizado exitosamente',
@@ -141,22 +157,33 @@ export const deleteCargo = async (req, res) => {
         });
     }
 
+    const cargoToDelete = await tenantPrisma.cargos.findUnique({
+        where: { id: Number(id) },
+    })
+
     await tenantPrisma.cargos.delete({
         where: { id: Number(id) },
     });
 
-    res.status(200).json({ 
+    bitacoraService.registrar({
+        req,
+        accion: 'ELIMINAR',
+        modulo: 'Cargos',
+        payload_previo: cargoToDelete
+    });
+
+    res.status(200).json({
         status: 'success',
         message: 'Cargo eliminado exitosamente',
     });
 };
 
 
-export const deleteManyCargos= async (req, res) => {
+export const deleteManyCargos = async (req, res) => {
     const tenantPrisma = getTenantPrismaFromRequest(req);
     const { ids } = req.body;
 
-    if(!ids || !Array.isArray(ids)) {
+    if (!ids || !Array.isArray(ids)) {
         return res.status(400).json({
             status: 'error',
             message: 'Se requiere un arreglo de IDs para el borrado masivo',
@@ -175,7 +202,7 @@ export const deleteManyCargos= async (req, res) => {
             cargo_id: { in: ids },
         },
         select: {
-            cargo_id:true,
+            cargo_id: true,
             cargos: {
                 select: { nombre: true }
             }
@@ -188,13 +215,13 @@ export const deleteManyCargos= async (req, res) => {
 
     let message = '';
 
-    if(deletableIds.length > 0) {
+    if (deletableIds.length > 0) {
         await tenantPrisma.cargos.deleteMany({
             where: {
                 id: { in: deletableIds },
             },
         });
-        message = `Cargos con IDs ${deletableIds.join(', ')} eliminados exitosamente.`; 
+        message = `Cargos con IDs ${deletableIds.join(', ')} eliminados exitosamente.`;
     }
 
     if (inUseIds.length > 0) {
