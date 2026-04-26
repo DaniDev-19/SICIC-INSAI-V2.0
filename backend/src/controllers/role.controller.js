@@ -206,11 +206,23 @@ export const deleteManyRoles = async (req, res) => {
 
   let message = '';
   if (deletableIds.length > 0) {
+    const rolesParaBorrar = await masterPrisma.roles.findMany({
+      where: { id: { in: deletableIds } }
+    });
+
     await masterPrisma.roles.deleteMany({
       where: {
         id: { in: deletableIds },
       },
     });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR_MASIVO',
+      modulo: 'Roles',
+      payload_previo: rolesParaBorrar
+    });
+
     message = `Se eliminaron ${deletableIds.length} roles correctamente.`;
   }
 

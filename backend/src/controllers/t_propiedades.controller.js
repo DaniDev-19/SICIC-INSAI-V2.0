@@ -1,171 +1,177 @@
 import bitacoraService from '../services/bitacora.service.js';
 
-export const getProfesion = async (req, res) => {
+export const getTPropiedad = async (req, res) => {
     const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const [profesiones, totalCount] = await Promise.all([
-        tenantPrisma.profesiones.findMany({
+    const [t_propiedad, totalCount] = await Promise.all([
+        tenantPrisma.t_propiedad.findMany({
             skip,
             take: limit,
             orderBy: { nombre: 'asc' },
         }),
-        tenantPrisma.profesiones.count()
+        tenantPrisma.t_propiedad.count()
     ]);
 
     res.status(200).json({
         status: 'success',
-        data: profesiones,
+        data: t_propiedad,
         pagination: {
             totalCount,
             totalPages: Math.ceil(totalCount / limit),
             currentPage: page,
             limit,
         }
+
     });
 };
 
-export const getProfesionById = async (req, res) => {
+export const getTPropiedadById = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
 
-    const profesion = await tenantPrisma.profesiones.findUnique({
+    const tPropiedad = await tenantPrisma.t_propiedad.findUnique({
         where: { id: Number(id) },
     });
 
-    if (!profesion) {
+    if (!tPropiedad) {
         return res.status(404).json({
-            status: 'error',
-            message: 'Profesión no encontrada',
+            status: 'Error',
+            message: 'Error Tipo de Propiedad no encontrado',
         });
-
     }
+
     res.status(200).json({
         status: 'success',
-        data: profesion,
+        data: tPropiedad,
     });
 };
 
-export const createProfesion = async (req, res) => {
+export const createTPropiedad = async (req, res) => {
     const tenantPrisma = req.db;
     const { nombre } = req.body;
 
-    const existingProfesion = await tenantPrisma.profesiones.findUnique({
+    const existingTPropiedad = await tenantPrisma.t_propiedad.findUnique({
         where: { nombre },
     });
 
-    if (existingProfesion) {
+    if (existingTPropiedad) {
         return res.status(400).json({
-            status: 'error',
-            message: 'Ya existe una profesión con este nombre',
+            status: 'Error',
+            message: 'Ya existe un Tipo de Propiedad con este nombre',
         });
     }
 
-    const profesion = await tenantPrisma.profesiones.create({
-        data: { nombre },
+    const response = await tenantPrisma.t_propiedad.create({
+        data: {
+            nombre,
+        },
     });
 
     bitacoraService.registrar({
         req,
         accion: 'CREAR',
-        modulo: 'Profesiones',
-        payload_nuevo: profesion
+        modulo: 'Tipo de Propiedad',
+        payload_nuevo: response
     });
 
-    res.status(201).json({
+    res.status(200).json({
         status: 'success',
-        data: profesion,
+        data: response,
     });
 };
 
-export const updateProfesion = async (req, res) => {
+export const updateTPropiedad = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
     const { nombre } = req.body;
 
-    const existingProfesion = await tenantPrisma.profesiones.findUnique({
+    const existingTPropiedad = await tenantPrisma.t_propiedad.findUnique({
         where: { id: Number(id) },
     });
 
-    if (!existingProfesion) {
+    if (!existingTPropiedad) {
         return res.status(404).json({
-            status: 'error',
-            message: 'Profesión no encontrada',
+            status: 'Error',
+            message: 'Tipo de Propiedad no encontrada'
         });
     }
 
-    if (nombre && nombre !== existingProfesion.nombre) {
-        const nameDuplicate = await tenantPrisma.profesiones.findUnique({
+    if (nombre && nombre !== existingTPropiedad.nombre) {
+        const nameDuplicate = await tenantPrisma.t_propiedad.findUnique({
             where: { nombre },
         });
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'error',
-                message: 'Ya existe una profesión con este nombre',
+                status: 'Error',
+                message: 'Ya existe un cargo con este nombre',
             });
         }
     }
 
-    const updatedProfesion = await tenantPrisma.profesiones.update({
+    const response = await tenantPrisma.t_propiedad.update({
         where: { id: Number(id) },
-        data: { nombre },
+        data: {
+            nombre,
+        },
     });
 
     bitacoraService.registrar({
         req,
         accion: 'ACTUALIZAR',
-        modulo: 'Profesiones',
-        payload_previo: existingProfesion,
-        payload_nuevo: updatedProfesion
+        modulo: 'Tipo de Propiedad',
+        payload_previo: existingTPropiedad,
+        payload_nuevo: response,
     });
 
     res.status(200).json({
         status: 'success',
-        message: 'Profesión actualizada correctamente',
-        data: updatedProfesion,
+        message: 'Tipo de Propiedad actualizado exitosamente',
+        data: response,
     });
 };
 
-export const deleteProfesion = async (req, res) => {
+export const deleteTPropiedad = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
 
-    const inUse = await tenantPrisma.empleados.findFirst({
-        where: { profesion_id: Number(id) },
+    const inUse = await tenantPrisma.propiedades.findFirst({
+        where: { tipo_propiedad_id: Number(id) },
     });
 
     if (inUse) {
         return res.status(400).json({
-            status: 'error',
-            message: 'No se puede eliminar la profesion porque esta siendo utilizado por empleados',
+            status: 'Error',
+            message: 'No se puede eliminar el Tipo de Propiedad porque esta siendo utilizada por una propiedad',
         });
     }
 
-    const profesionToDelete = await tenantPrisma.profesiones.findUnique({
+    const tPropiedadToDelete = await tenantPrisma.t_propiedad.findUnique({
         where: { id: Number(id) },
     });
 
-    await tenantPrisma.profesiones.delete({
+    await tenantPrisma.t_propiedad.delete({
         where: { id: Number(id) },
     });
 
     bitacoraService.registrar({
         req,
         accion: 'ELIMINAR',
-        modulo: 'Profesiones',
-        payload_previo: profesionToDelete
+        modulo: 'Tipo de Propiedad',
+        payload_previo: tPropiedadToDelete
     });
 
     res.status(200).json({
         status: 'success',
-        message: 'Profesión eliminada exitosamente',
+        message: 'Tipo de Propiedad eliminada exitosamente',
     });
 };
 
-export const deleteManyProfesion = async (req, res) => {
+
+export const deleteManyTPropiedad = async (req, res) => {
     const tenantPrisma = req.db;
     const { ids } = req.body;
 
@@ -179,36 +185,36 @@ export const deleteManyProfesion = async (req, res) => {
     if (ids.length >= 50) {
         return res.status(400).json({
             status: 'error',
-            message: 'No se pueden eliminar más de 50 profesiones a la vez por motivos de seguridad',
+            message: 'No se pueden eliminar más de 50 registros a la vez por motivos de seguridad',
         });
     }
 
     const numericIds = ids.map(id => Number(id));
 
-    const inUseCheck = await tenantPrisma.empleados.findMany({
+    const inUseCheck = await tenantPrisma.propiedades.findMany({
         where: {
-            profesion_id: { in: numericIds },
+            tipo_propiedad_id: { in: numericIds },
         },
         select: {
-            profesion_id: true,
-            profesion: {
+            tipo_propiedad_id: true,
+            t_propiedad: {
                 select: { nombre: true }
             }
         }
     });
 
-    const inUseIds = [...new Set(inUseCheck.map(item => item.profesion_id))];
-    const inUseNames = [...new Set(inUseCheck.map(item => item.profesion.nombre))];
+    const inUseIds = [...new Set(inUseCheck.map(item => item.tipo_propiedad_id))];
+    const inUseNames = [...new Set(inUseCheck.map(item => item.t_propiedad.nombre))];
     const deletableIds = numericIds.filter(id => !inUseIds.includes(id));
 
     let message = '';
 
     if (deletableIds.length > 0) {
-        const profesionesParaBorrar = await tenantPrisma.profesiones.findMany({
+        const tiposParaBorrar = await tenantPrisma.t_propiedad.findMany({
             where: { id: { in: deletableIds } }
         });
 
-        await tenantPrisma.profesiones.deleteMany({
+        await tenantPrisma.t_propiedad.deleteMany({
             where: {
                 id: { in: deletableIds },
             },
@@ -217,15 +223,15 @@ export const deleteManyProfesion = async (req, res) => {
         bitacoraService.registrar({
             req,
             accion: 'ELIMINAR_MASIVO',
-            modulo: 'Profesiones',
-            payload_previo: profesionesParaBorrar
+            modulo: 'Tipo de Propiedad',
+            payload_previo: tiposParaBorrar
         });
 
-        message = `Se eliminaron ${deletableIds.length} profesiones exitosamente.`;
+        message = `Se eliminaron ${deletableIds.length} tipos de propiedad exitosamente.`;
     }
 
     if (inUseIds.length > 0) {
-        message += ` ${inUseIds.length} profesiones no se pudieron eliminar por estar en uso: (${inUseNames.join(', ')}).`;
+        message += ` ${inUseIds.length} tipos no se pudieron eliminar por estar en uso: (${inUseNames.join(', ')}).`;
         return res.status(200).json({
             status: 'warning',
             message,
@@ -246,5 +252,4 @@ export const deleteManyProfesion = async (req, res) => {
         }
     });
 };
-
 

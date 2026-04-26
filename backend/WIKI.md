@@ -12,6 +12,7 @@ Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y
 - [**Flujo de Roles y Seguridad (RBAC)**](./docs/flujo-roles-backend.md): Manual funcional del motor de permisos, Prisma Master y Middlewares.
 - [**Arquitectura de Auditoría y Bitácora**](./docs/bitacora-arquitectura-backend.md): Manual técnico sobre el motor de auditoría y registro de movimientos.
 - [**Arquitectura de Resiliencia y Validación de Seguridad**](./docs/refactorizacion-seguridad-api.md): Manual técnico sobre la capa de validación de datos, manejo de excepciones y jerarquía de seguridad perimetral.
+- [**Gestión de Multi-Tenancia y Conexiones Dinámicas**](./docs/multi-tenancia-middleware.md): Manual técnico sobre el middleware de inyección de base de datos (`req.db`).
 
 ---
 
