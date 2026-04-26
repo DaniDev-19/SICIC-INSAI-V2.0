@@ -12,6 +12,8 @@ import bitacoraRoutes from './routes/bitacora.routes.js';
 import cargoRoutes from './routes/cargo.routes.js';
 import profesionRoutes from './routes/profesion.routes.js';
 import tPropiedadesRouter from './routes/t_propiedades.routes.js'
+import tCultivoRouter from './routes/t_cultivo.routes.js';
+import tAnimalesRouter from './routes/t_animales.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -43,7 +45,8 @@ app.use('/api/bitacora', bitacoraRoutes);
 app.use('/api/cargos', cargoRoutes);
 app.use('/api/profesion', profesionRoutes);
 app.use('/api/t_propiedad', tPropiedadesRouter);
-
+app.use('./api/t_cultivo', tCultivoRouter);
+app.use('(/api/t_animales', tAnimalesRouter);
 app.use(errorHandler);
 
 export default app;
