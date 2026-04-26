@@ -1,23 +1,23 @@
 import bitacoraService from '../services/bitacora.service.js';
 
-export const getTPropiedad = async (req, res) => {
+export const getTCultivo = async (req, res) => {
     const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const [t_propiedad, totalCount] = await Promise.all([
-        tenantPrisma.t_propiedad.findMany({
+    const [t_cultivo, totalCount] = await Promise.all([
+        tenantPrisma.t_cultivo.findMany({
             skip,
             take: limit,
             orderBy: { nombre: 'asc' },
         }),
-        tenantPrisma.t_propiedad.count()
+        tenantPrisma.t_cultivo.count()
     ]);
 
     res.status(200).json({
         status: 'success',
-        data: t_propiedad,
+        data: t_cultivo,
         pagination: {
             totalCount,
             totalPages: Math.ceil(totalCount / limit),
@@ -28,43 +28,43 @@ export const getTPropiedad = async (req, res) => {
     });
 };
 
-export const getTPropiedadById = async (req, res) => {
+export const getTCultivoById = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
 
-    const tPropiedad = await tenantPrisma.t_propiedad.findUnique({
+    const tCultivo = await tenantPrisma.t_cultivo.findUnique({
         where: { id: Number(id) },
     });
 
-    if (!tPropiedad) {
+    if (!tCultivo) {
         return res.status(404).json({
             status: 'Error',
-            message: 'Error Tipo de Propiedad no encontrado',
+            message: 'Error Tipo de Cultivo no encontrado',
         });
     }
 
     res.status(200).json({
         status: 'success',
-        data: tPropiedad,
+        data: tCultivo,
     });
 };
 
-export const createTPropiedad = async (req, res) => {
+export const createTCultivo = async (req, res) => {
     const tenantPrisma = req.db;
     const { nombre } = req.body;
 
-    const existingTPropiedad = await tenantPrisma.t_propiedad.findUnique({
+    const existingTCultivo = await tenantPrisma.t_cultivo.findUnique({
         where: { nombre },
     });
 
-    if (existingTPropiedad) {
+    if (existingTCultivo) {
         return res.status(400).json({
             status: 'Error',
-            message: 'Ya existe un Tipo de Propiedad con este nombre',
+            message: 'Ya existe un Tipo de Cultivo con este nombre',
         });
     }
 
-    const response = await tenantPrisma.t_propiedad.create({
+    const response = await tenantPrisma.t_cultivo.create({
         data: {
             nombre,
         },
@@ -73,7 +73,7 @@ export const createTPropiedad = async (req, res) => {
     bitacoraService.registrar({
         req,
         accion: 'CREAR',
-        modulo: 'Tipo de Propiedad',
+        modulo: 'Tipo de Cultivo',
         payload_nuevo: response
     });
 
@@ -83,36 +83,36 @@ export const createTPropiedad = async (req, res) => {
     });
 };
 
-export const updateTPropiedad = async (req, res) => {
+export const updateTCultivo = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
     const { nombre } = req.body;
 
-    const existingTPropiedad = await tenantPrisma.t_propiedad.findUnique({
+    const existingTCultivo = await tenantPrisma.t_cultivo.findUnique({
         where: { id: Number(id) },
     });
 
-    if (!existingTPropiedad) {
+    if (!existingTCultivo) {
         return res.status(404).json({
             status: 'Error',
-            message: 'Tipo de Propiedad no encontrada'
+            message: 'Tipo de Cultivo no encontrada'
         });
     }
 
-    if (nombre && nombre !== existingTPropiedad.nombre) {
-        const nameDuplicate = await tenantPrisma.t_propiedad.findUnique({
+    if (nombre && nombre !== existingTCultivo.nombre) {
+        const nameDuplicate = await tenantPrisma.t_cultivo.findUnique({
             where: { nombre },
         });
 
         if (nameDuplicate) {
             return res.status(409).json({
                 status: 'Error',
-                message: 'Ya existe un tipo de propiedad con este nombre',
+                message: 'Ya existe un cultivo con este nombre',
             });
         }
     }
 
-    const response = await tenantPrisma.t_propiedad.update({
+    const response = await tenantPrisma.t_cultivo.update({
         where: { id: Number(id) },
         data: {
             nombre,
@@ -122,56 +122,56 @@ export const updateTPropiedad = async (req, res) => {
     bitacoraService.registrar({
         req,
         accion: 'ACTUALIZAR',
-        modulo: 'Tipo de Propiedad',
-        payload_previo: existingTPropiedad,
+        modulo: 'Tipo de Cultivo',
+        payload_previo: existingTCultivo,
         payload_nuevo: response,
     });
 
     res.status(200).json({
         status: 'success',
-        message: 'Tipo de Propiedad actualizado exitosamente',
+        message: 'Tipo de Cultivo actualizado exitosamente',
         data: response,
     });
 };
 
-export const deleteTPropiedad = async (req, res) => {
+export const deleteTCultivo = async (req, res) => {
     const tenantPrisma = req.db;
     const { id } = req.params;
 
-    const inUse = await tenantPrisma.propiedades.findFirst({
-        where: { tipo_propiedad_id: Number(id) },
+    const inUse = await tenantPrisma.cultivo.findFirst({
+        where: { tipo_cultivo_id: Number(id) },
     });
 
     if (inUse) {
         return res.status(400).json({
             status: 'Error',
-            message: 'No se puede eliminar el Tipo de Propiedad porque esta siendo utilizada por una propiedad',
+            message: 'No se puede eliminar el Tipo de Cultivo porque esta siendo utilizada por un Cultivo',
         });
     }
 
-    const tPropiedadToDelete = await tenantPrisma.t_propiedad.findUnique({
+    const tCultivoToDelete = await tenantPrisma.t_cultivo.findUnique({
         where: { id: Number(id) },
     });
 
-    await tenantPrisma.t_propiedad.delete({
+    await tenantPrisma.t_cultivo.delete({
         where: { id: Number(id) },
     });
 
     bitacoraService.registrar({
         req,
         accion: 'ELIMINAR',
-        modulo: 'Tipo de Propiedad',
-        payload_previo: tPropiedadToDelete
+        modulo: 'Tipo de Cultivo',
+        payload_previo: tCultivoToDelete
     });
 
     res.status(200).json({
         status: 'success',
-        message: 'Tipo de Propiedad eliminada exitosamente',
+        message: 'Tipo de Cultivo eliminada exitosamente',
     });
 };
 
 
-export const deleteManyTPropiedad = async (req, res) => {
+export const deleteManyTCultivo = async (req, res) => {
     const tenantPrisma = req.db;
     const { ids } = req.body;
 
@@ -191,30 +191,30 @@ export const deleteManyTPropiedad = async (req, res) => {
 
     const numericIds = ids.map(id => Number(id));
 
-    const inUseCheck = await tenantPrisma.propiedades.findMany({
+    const inUseCheck = await tenantPrisma.cultivo.findMany({
         where: {
-            tipo_propiedad_id: { in: numericIds },
+            tipo_cultivo_id: { in: numericIds },
         },
         select: {
-            tipo_propiedad_id: true,
-            t_propiedad: {
+            tipo_cultivo_id: true,
+            t_cultivo: {
                 select: { nombre: true }
             }
         }
     });
 
-    const inUseIds = [...new Set(inUseCheck.map(item => item.tipo_propiedad_id))];
-    const inUseNames = [...new Set(inUseCheck.map(item => item.t_propiedad.nombre))];
+    const inUseIds = [...new Set(inUseCheck.map(item => item.tipo_cultivo_id))];
+    const inUseNames = [...new Set(inUseCheck.map(item => item.t_cultivo.nombre))];
     const deletableIds = numericIds.filter(id => !inUseIds.includes(id));
 
     let message = '';
 
     if (deletableIds.length > 0) {
-        const tiposParaBorrar = await tenantPrisma.t_propiedad.findMany({
+        const tiposParaBorrar = await tenantPrisma.t_cultivo.findMany({
             where: { id: { in: deletableIds } }
         });
 
-        await tenantPrisma.t_propiedad.deleteMany({
+        await tenantPrisma.t_cultivo.deleteMany({
             where: {
                 id: { in: deletableIds },
             },
@@ -223,11 +223,11 @@ export const deleteManyTPropiedad = async (req, res) => {
         bitacoraService.registrar({
             req,
             accion: 'ELIMINAR_MASIVO',
-            modulo: 'Tipo de Propiedad',
+            modulo: 'Tipo de Cultivo',
             payload_previo: tiposParaBorrar
         });
 
-        message = `Se eliminaron ${deletableIds.length} tipos de propiedad exitosamente.`;
+        message = `Se eliminaron ${deletableIds.length} tipos de cultivos exitosamente.`;
     }
 
     if (inUseIds.length > 0) {
