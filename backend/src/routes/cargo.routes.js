@@ -4,10 +4,12 @@ import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createCargoSchema, updateCargoSchema } from '../schemas/cargo.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
+import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
 
 router.use(protect);
+router.use(tenantMiddleware);
 
 /** 
  * @route GET /api/cargos

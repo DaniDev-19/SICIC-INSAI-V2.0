@@ -3,11 +3,13 @@ import * as profesionController from '../controllers/profesion.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createProfesionSchema, updateProfesionSchema } from '../schemas/profesion.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware';
+import { checkPermission } from '../middlewares/permission.middleware.js';
+import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
 
 router.use(protect);
+router.use(tenantMiddleware);
 
 /**
  * @route Get /api/profesion
@@ -38,7 +40,7 @@ router.put('/:id', checkPermission('profesion', 'update'), validateSchema(update
  * @route DELETE /api/profesion/:id
  * @access Private
 */
-router.delete(':id', checkPermission('profesion', 'delete'), profesionController.deleteProfesion);
+router.delete('/:id', checkPermission('profesion', 'delete'), profesionController.deleteProfesion);
 
 /**
  * @route POST /api/profesion/bulk-delete

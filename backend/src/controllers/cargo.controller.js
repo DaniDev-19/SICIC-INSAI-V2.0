@@ -1,16 +1,7 @@
-import { getTenantPrisma } from '../config/prisma.js';
 import bitacoraService from '../services/bitacora.service.js';
 
-const getTenantPrismaFromRequest = (req) => {
-    const dbName = req.user?.currentInstance?.db_name;
-    if (!dbName) {
-        throw new Error('No se seleccionó una instancia operativa en la sesión');
-    }
-    return getTenantPrisma(dbName.trim());
-};
-
 export const getCargos = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -37,7 +28,7 @@ export const getCargos = async (req, res) => {
 };
 
 export const getCargoById = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const { id } = req.params;
 
     const cargo = await tenantPrisma.cargos.findUnique({
@@ -46,7 +37,7 @@ export const getCargoById = async (req, res) => {
 
     if (!cargo) {
         return res.status(404).json({
-            status: 'error',
+            status: 'Error',
             message: 'Cargo no encontrado',
         });
     }
@@ -58,7 +49,7 @@ export const getCargoById = async (req, res) => {
 };
 
 export const createCargo = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const { nombre } = req.body;
 
     const existingCargo = await tenantPrisma.cargos.findUnique({
@@ -92,7 +83,7 @@ export const createCargo = async (req, res) => {
 };
 
 export const updateCargo = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const { id } = req.params;
     const { nombre } = req.body;
 
@@ -102,7 +93,7 @@ export const updateCargo = async (req, res) => {
 
     if (!existingCargo) {
         return res.status(404).json({
-            status: 'error',
+            status: 'Error',
             message: 'Cargo no encontrado',
         });
     }
@@ -113,7 +104,7 @@ export const updateCargo = async (req, res) => {
         });
 
         if (nameDuplicate) {
-            return res.status(404).json({
+            return res.status(409).json({
                 status: 'error',
                 message: 'Ya existe un cargo con este nombre',
             });
@@ -143,7 +134,7 @@ export const updateCargo = async (req, res) => {
 };
 
 export const deleteCargo = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const { id } = req.params;
 
     const inUse = await tenantPrisma.empleados.findFirst({
@@ -159,7 +150,7 @@ export const deleteCargo = async (req, res) => {
 
     const cargoToDelete = await tenantPrisma.cargos.findUnique({
         where: { id: Number(id) },
-    })
+    });
 
     await tenantPrisma.cargos.delete({
         where: { id: Number(id) },
@@ -180,26 +171,28 @@ export const deleteCargo = async (req, res) => {
 
 
 export const deleteManyCargos = async (req, res) => {
-    const tenantPrisma = getTenantPrismaFromRequest(req);
+    const tenantPrisma = req.db;
     const { ids } = req.body;
 
-    if (!ids || !Array.isArray(ids)) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({
             status: 'error',
-            message: 'Se requiere un arreglo de IDs para el borrado masivo',
+            message: 'Se requiere un arreglo de IDs no vacío para el borrado masivo',
         });
     }
 
     if (ids.length >= 50) {
         return res.status(400).json({
             status: 'error',
-            message: 'No se pueden eliminar mas de 50 cargos a la vez por motivos de seguridad',
+            message: 'No se pueden eliminar más de 50 cargos a la vez por motivos de seguridad',
         });
     }
 
+    const numericIds = ids.map(id => Number(id));
+
     const inUseCheck = await tenantPrisma.empleados.findMany({
         where: {
-            cargo_id: { in: ids },
+            cargo_id: { in: numericIds },
         },
         select: {
             cargo_id: true,
@@ -211,21 +204,34 @@ export const deleteManyCargos = async (req, res) => {
 
     const inUseIds = [...new Set(inUseCheck.map(item => item.cargo_id))];
     const inUseNames = [...new Set(inUseCheck.map(item => item.cargos.nombre))];
-    const deletableIds = ids.filter(id => !inUseIds.includes(id));
+    const deletableIds = numericIds.filter(id => !inUseIds.includes(id));
 
     let message = '';
 
     if (deletableIds.length > 0) {
+
+        const cargosParaBorrar = await tenantPrisma.cargos.findMany({
+            where: { id: { in: deletableIds } }
+        });
+
         await tenantPrisma.cargos.deleteMany({
             where: {
                 id: { in: deletableIds },
             },
         });
-        message = `Cargos con IDs ${deletableIds.join(', ')} eliminados exitosamente.`;
+
+        bitacoraService.registrar({
+            req,
+            accion: 'ELIMINAR_MASIVO',
+            modulo: 'Cargos',
+            payload_previo: cargosParaBorrar
+        });
+
+        message = `Se eliminaron ${deletableIds.length} cargos exitosamente.`;
     }
 
     if (inUseIds.length > 0) {
-        message += ` Cargos con IDs ${inUseIds.join(', ')} no se pudieron eliminar porque están siendo utilizados por empleados (${inUseNames.join(', ')}).`;
+        message += ` ${inUseIds.length} cargos no se pudieron eliminar por estar en uso: (${inUseNames.join(', ')}).`;
         return res.status(200).json({
             status: 'warning',
             message,

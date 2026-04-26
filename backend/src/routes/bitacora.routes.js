@@ -2,10 +2,12 @@ import { Router } from 'express';
 import * as bitacoraController from '../controllers/bitacora.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
+import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
 
-router.use(protect)
+router.use(protect);
+router.use(tenantMiddleware);
 
 /**
  * @route GET /api/bitacora
