@@ -13,6 +13,7 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('empleados', 'see'), empleadosController.getEmpleados);
+router.get('/export', checkPermission('empleados', 'export'), empleadosController.exportEmpleados);
 router.get('/:id', checkPermission('empleados', 'see'), empleadosController.getEmpleadoById);
 router.post('/', checkPermission('empleados', 'create'), upload.single('foto'), validateSchema(createEmpleadosSchema), empleadosController.createEmpleado);
 router.put('/:id', checkPermission('empleados', 'update'), upload.single('foto'), validateSchema(updateEmpleadosSchema), empleadosController.updateEmpleado);

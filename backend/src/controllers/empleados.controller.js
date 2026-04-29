@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import excelService from '../services/excel.service.js';
 
 export const getEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
@@ -224,4 +225,56 @@ export const deleteEmpleado = async (req, res) => {
   });
 
   res.status(200).json({ status: 'success', message: 'Empleado eliminado exitosamente' });
+};
+
+export const exportEmpleados = async (req, res) => {
+  const tenantPrisma = req.db;
+
+  const empleados = await tenantPrisma.empleados.findMany({
+    include: {
+      departamentos: { select: { nombre: true } },
+      cargos: { select: { nombre: true } },
+      oficinas: { select: { nombre: true } }
+    },
+    orderBy: { apellido: 'asc' }
+  });
+
+  const data = empleados.map(e => ({
+    cedula: e.cedula,
+    nombre_completo: `${e.nombre} ${e.apellido}`,
+    email: e.email || 'N/A',
+    telefono: e.telefono || 'N/A',
+    departamento: e.departamentos?.nombre || 'N/A',
+    cargo: e.cargos?.nombre || 'N/A',
+    oficina: e.oficinas?.nombre || 'N/A',
+    status: e.status_laboral
+  }));
+
+  const buffer = await excelService.generate({
+    title: 'Reporte Nacional de Empleados - INSAI',
+    columns: [
+      { header: 'Cédula', key: 'cedula', width: 15 },
+      { header: 'Nombre Completo', key: 'nombre_completo', width: 35 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Teléfono', key: 'telefono', width: 20 },
+      { header: 'Departamento', key: 'departamento', width: 25 },
+      { header: 'Cargo', key: 'cargo', width: 25 },
+      { header: 'Oficina', key: 'oficina', width: 25 },
+      { header: 'Estatus', key: 'status', width: 15 },
+    ],
+    data,
+    sheetName: 'Empleados'
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_empleados.xlsx');
+
+  bitacoraService.registrar({
+    req,
+    accion: 'EXPORTAR_EXCEL',
+    modulo: 'Empleados',
+    payload_nuevo: { registros_exportados: data.length }
+  });
+
+  res.send(buffer);
 };

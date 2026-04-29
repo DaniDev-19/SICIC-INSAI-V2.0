@@ -69,6 +69,9 @@ Para pruebas rápidas e inserciones iniciales, utiliza los archivos en la carpet
 1.  **Variables de Entorno (.env):** Nunca subas el archivo `.env` a GitHub. Si cambias de servidor, solo actualiza las variables `DB_USER` y `DB_PASSWORD`.
 2.  **Nueva Instancia Operativa:** Si creas una base de datos nueva (ej. `db_insai_2028`), solo debes registrar su nombre en la tabla `instancias` de la DB Master. El sistema la encontrará automáticamente sin tocar el código.
 3.  **Logs:** Revisa la consola del servidor (`npm run dev`) para ver los logs de **Morgan** y detectar errores de red en tiempo real.
+4.  **Almacenamiento:** Si usas el modo `local`, asegúrate de que la carpeta `/uploads` tenga permisos de escritura. Si usas `r2`, verifica que las claves en el `.env` tengan permisos de lectura/escritura en el bucket de Cloudflare.
+5.  **Excel:** El servicio de Excel está optimizado para no bloquear el hilo principal, pero evita exportar más de 50,000 registros en una sola petición para no agotar la RAM.
+
 
 ---
 
