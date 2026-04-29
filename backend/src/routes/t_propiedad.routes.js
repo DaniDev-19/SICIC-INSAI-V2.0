@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as tPropiedadController from '../controllers/t_propiedades.controller.js';
+import * as tPropiedadController from '../controllers/t_propiedad.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
-import { createTPropiedadSchema, updateTPropiedadSchema } from '../schemas/t_propiedades.schema.js';
+import { createTPropiedadSchema, updateTPropiedadSchema } from '../schemas/t_propiedad.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
