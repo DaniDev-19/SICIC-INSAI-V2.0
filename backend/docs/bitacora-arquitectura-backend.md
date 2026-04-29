@@ -37,6 +37,26 @@ Cada registro de la bitácora contiene:
 - **Módulo**: El componente del sistema donde ocurrió el evento.
 
 ---
+
+## 4. Manual del Desarrollador: Cómo Registrar Eventos
+
+Para registrar una acción en cualquier controlador, se debe importar y usar el `bitacoraService`:
+
+```javascript
+import bitacoraService from '../services/bitacora.service.js';
+
+// Ejemplo de uso
+bitacoraService.registrar({
+  req,             // Objeto de la petición (para extraer usuario e IP)
+  accion: 'CREAR',  // Verbo de la acción (CREAR, ACTUALIZAR, ELIMINAR, EXPORTAR)
+  modulo: 'Nombre', // El módulo que genera el log
+  payload_previo: objetoViejo, // (Opcional) Estado antes del cambio
+  payload_nuevo: objetoNuevo   // (Opcional) Estado después del cambio
+});
+```
+
+
+---
 _Para la implementación visual de estos datos, consulte la [Documentación de Bitácora Frontend](../../frontend/docs/bitacora-arquitectura-frontend.md)._
 
 [Volver al índice de documentación](../WIKI.md)

@@ -13,6 +13,9 @@ Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y
 - [**Arquitectura de Auditoría y Bitácora**](./docs/bitacora-arquitectura-backend.md): Manual técnico sobre el motor de auditoría y registro de movimientos.
 - [**Arquitectura de Resiliencia y Validación de Seguridad**](./docs/refactorizacion-seguridad-api.md): Manual técnico sobre la capa de validación de datos, manejo de excepciones y jerarquía de seguridad perimetral.
 - [**Gestión de Multi-Tenancia y Conexiones Dinámicas**](./docs/multi-tenancia-middleware.md): Manual técnico sobre el middleware de inyección de base de datos (`req.db`).
+- [**Servicios Globales y Flujos Optimizados**](./docs/servicios_y_flujos_optimizados.md): Manual sobre el uso de Imágenes (WebP/Cloud), Excel e integración de tablas puente.
+- [**Gestión de Errores Estandarizada**](./docs/gestion_errores_estandarizada.md): Detalle de códigos de error de base de datos, validación y respuestas HTTP.
+- [**Patrones de Diseño y Arquitectura**](./docs/patrones_diseno_arquitectura.md): Explicación de los patrones Strategy, Factory, Singleton y la estructura modular del sistema.
 
 ---
 
@@ -59,15 +62,7 @@ En lugar de un solo esquema monolítico, manejamos dos archivos dentro de la car
 
 ## Estructura de Errores Global
 
-Cualquier error en el sistema se captura mediante el middleware `error.handler.js`, devolviendo siempre un JSON con el siguiente formato:
-
-```json
-{
-  "status": "error",
-  "message": "Descripción amigable del error",
-  "detail": "Stack trace (solo disponible en desarrollo)"
-}
-```
+Cualquier error en el sistema se captura mediante el middleware `error.handler.js`. Para ver el manual detallado de códigos y validaciones, consulta la [**Gestión de Errores Estandarizada**](./docs/gestion_errores_estandarizada.md).
 
 ---
 

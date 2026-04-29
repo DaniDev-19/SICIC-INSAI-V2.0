@@ -33,12 +33,15 @@ Si la ruta es protegida, el middleware `auth.middleware.js` entra en acción:
 
 El controlador decide qué hacer:
 
-- Si la acción es sobre una instancia específica (ej. "Crear Inspección"), usa la **Fábrica de Prisma** para abrir la conexión a la base de datos operativa correspondiente.
+- Si la acción es sobre una instancia específica (ej. "Crear Inspección"), usa la **Fábrica de Prisma** para abrir la conexión a la base de datos operativa correspondiente (`req.db`).
 
-### 5. Capa de Datos (Prisma Multi-Tenant)
+### 5. Capa de Servicios Transversales (Servicios Globales)
 
-- **MasterClient:** Siempre conectado a la DB central.
-- **OperativeClient:** Se crea dinámicamente según la instancia que el usuario elija.
+Para mantener la arquitectura limpia, los controladores delegan tareas complejas a los servicios:
+
+- **StorageService:** Gestión de archivos (Local/R2) y conversión WebP.
+- **ExcelService:** Generación de reportes institucionales.
+- **BitacoraService:** Registro automático de auditoría.
 
 ---
 
@@ -52,8 +55,9 @@ graph LR
     AUTH -- Sí --> JWT[Verificar JWT en Master DB]
     AUTH -- No --> CTRL[Controlador]
     JWT --> CTRL
-    CTRL --> DB_FACTORY{Fábrica de Prisma}
-    DB_FACTORY --> DB_OP[(DB Operativa 2025/2026)]
+    CTRL --> SERV[Servicios Globales]
+    SERV --> DB_FACTORY{Fábrica de Prisma}
+    DB_FACTORY --> DB_OP[(DB Operativa)]
     CTRL --> Res[Respuesta JSON]
 ```
 
