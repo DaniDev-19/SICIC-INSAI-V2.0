@@ -4,6 +4,7 @@ import corsConfig from './config/cors.js';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 
 import authRoutes from './routes/auth.routes.js';
 import roleRoutes from './routes/role.routes.js';
@@ -58,6 +59,9 @@ app.use(corsConfig);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
+
+// Servir archivos estáticos si el modo es local
+app.use('/uploads', express.static(path.resolve('uploads')));
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Servidor SICIC-INSAI online' });

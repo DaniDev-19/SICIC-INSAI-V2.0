@@ -1,4 +1,5 @@
 import bitacoraService from '../services/bitacora.service.js';
+import storageService from '../services/storage.service.js';
 
 export const getEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
@@ -78,10 +79,10 @@ export const getEmpleadoById = async (req, res) => {
 
 export const createEmpleado = async (req, res) => {
   const tenantPrisma = req.db;
-  const { 
+  const {
     cedula, nombre, apellido, telefono, email, fechas_ingreso, status_laboral,
     contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
-    foto_url, residencia, programas_ids 
+    foto_url, residencia, programas_ids
   } = req.body;
 
   const existing = await tenantPrisma.empleados.findUnique({ where: { cedula } });
@@ -89,15 +90,20 @@ export const createEmpleado = async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Ya existe un empleado con esta cédula' });
   }
 
+  let finalFotoUrl = foto_url;
+  if (req.file) {
+    finalFotoUrl = await storageService.uploadImage(req.file.buffer, `${nombre}-${apellido}`, 'empleados');
+  }
+
   const response = await tenantPrisma.empleados.create({
     data: {
-      cedula, nombre, apellido, telefono, email, 
+      cedula, nombre, apellido, telefono, email,
       fechas_ingreso: fechas_ingreso ? new Date(fechas_ingreso) : null,
       status_laboral, contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
-      empleado_foto: foto_url ? { create: { foto_url } } : undefined,
+      empleado_foto: finalFotoUrl ? { create: { foto_url: finalFotoUrl } } : undefined,
       empleado_residencia: residencia ? { create: residencia } : undefined,
-      empleados_programas: programas_ids ? { 
-        create: programas_ids.map(id => ({ programa_id: id })) 
+      empleados_programas: programas_ids ? {
+        create: programas_ids.map(id => ({ programa_id: id }))
       } : undefined,
     },
     include: {
@@ -120,10 +126,10 @@ export const createEmpleado = async (req, res) => {
 export const updateEmpleado = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const { 
+  const {
     cedula, nombre, apellido, telefono, email, fechas_ingreso, status_laboral,
     contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
-    foto_url, residencia, programas_ids 
+    foto_url, residencia, programas_ids
   } = req.body;
 
   const existing = await tenantPrisma.empleados.findUnique({ where: { id: Number(id) } });
@@ -138,15 +144,29 @@ export const updateEmpleado = async (req, res) => {
     }
   }
 
+  let finalFotoUrl = foto_url;
+  if (req.file) {
+    finalFotoUrl = await storageService.uploadImage(req.file.buffer, `${nombre || existing.nombre}-${apellido || existing.apellido}`, 'empleados');
+
+    const oldFoto = await tenantPrisma.empleado_foto.findFirst({
+      where: { empleado_id: Number(id) },
+      orderBy: { created_at: 'desc' }
+    });
+
+    if (oldFoto) {
+      await storageService.deleteFile(oldFoto.foto_url);
+    }
+  }
+
   const response = await tenantPrisma.empleados.update({
     where: { id: Number(id) },
     data: {
       cedula, nombre, apellido, telefono, email,
       fechas_ingreso: fechas_ingreso ? new Date(fechas_ingreso) : undefined,
       status_laboral, contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
-      empleado_foto: foto_url ? { create: { foto_url } } : undefined, // Agregamos una nueva foto si viene
+      empleado_foto: finalFotoUrl ? { create: { foto_url: finalFotoUrl } } : undefined, // Agregamos una nueva foto si viene
       empleado_residencia: residencia ? {
-        deleteMany: {}, // Simplificamos borrando las anteriores (asumiendo flujo de una residencia principal)
+        deleteMany: {},
         create: residencia
       } : undefined,
       empleados_programas: programas_ids ? {
@@ -181,13 +201,20 @@ export const deleteEmpleado = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Empleado no encontrado' });
   }
 
-  // Verificar si tiene planificaciones o bitácora asociada si es necesario
   const inUse = await tenantPrisma.planificacion_empleados.findFirst({ where: { empleado_id: Number(id) } });
   if (inUse) {
-     return res.status(400).json({ status: 'error', message: 'No se puede eliminar el empleado porque está asignado a planificaciones activas' });
+    return res.status(400).json({ status: 'error', message: 'No se puede eliminar el empleado porque está asignado a planificaciones activas' });
   }
 
+  const fotos = await tenantPrisma.empleado_foto.findMany({
+    where: { empleado_id: Number(id) }
+  });
+
   await tenantPrisma.empleados.delete({ where: { id: Number(id) } });
+
+  for (const foto of fotos) {
+    await storageService.deleteFile(foto.foto_url);
+  }
 
   bitacoraService.registrar({
     req,
