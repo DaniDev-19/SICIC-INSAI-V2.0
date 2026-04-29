@@ -33,6 +33,9 @@ import cultivoRouter from './routes/cultivo.routes.js';
 import animalRouter from './routes/animal.routes.js';
 import plagaRouter from './routes/plaga.routes.js';
 import enfermedadRouter from './routes/enfermedad.routes.js';
+import insumosRouter from './routes/insumos.routes.js';
+import programasRouter from './routes/programas.routes.js';
+import vehiculosRouter from './routes/vehiculos.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -85,6 +88,9 @@ app.use('/api/cultivos', cultivoRouter);
 app.use('/api/animales', animalRouter);
 app.use('/api/plagas', plagaRouter);
 app.use('/api/enfermedades', enfermedadRouter);
+app.use('/api/insumos', insumosRouter);
+app.use('/api/programas', programasRouter);
+app.use('/api/vehiculos', vehiculosRouter);
 app.use(errorHandler);
 
 
