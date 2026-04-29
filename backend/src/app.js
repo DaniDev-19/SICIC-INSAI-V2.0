@@ -36,6 +36,8 @@ import enfermedadRouter from './routes/enfermedad.routes.js';
 import insumosRouter from './routes/insumos.routes.js';
 import programasRouter from './routes/programas.routes.js';
 import vehiculosRouter from './routes/vehiculos.routes.js';
+import caracStatalRouter from './routes/carac_statal.routes.js';
+import empleadosRouter from './routes/empleados.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -91,7 +93,8 @@ app.use('/api/enfermedades', enfermedadRouter);
 app.use('/api/insumos', insumosRouter);
 app.use('/api/programas', programasRouter);
 app.use('/api/vehiculos', vehiculosRouter);
+app.use('/api/carac_statal', caracStatalRouter);
+app.use('/api/empleados', empleadosRouter);
 app.use(errorHandler);
-
 
 export default app;
