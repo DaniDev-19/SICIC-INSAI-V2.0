@@ -19,6 +19,7 @@ import tPlagasRouter from './routes/t_plagas.routes.js';
 import tEnfermedadRouter from './routes/t_enfermedad.routes.js';
 import tEventoRouter from './routes/t_evento.routes.js';
 import tSolicitudRouter from './routes/t_solitud.routes.js';
+import tProgramaRouter from './routes/t_programas.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/t_plaga', tPlagasRouter);
 app.use('/api/t_enfermedad', tEnfermedadRouter);
 app.use('/api/t_evento', tEventoRouter);
 app.use('/api/t_solicitud', tSolicitudRouter);
+app.use('/api/t_programa', tProgramaRouter);
 app.use(errorHandler);
 
 
