@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createTEnfermedadSchema, updateTEnfermedadSchema } from '../schemas/t_enfermedades.schema.js';
-import * as TEnfermedadController from '../controllers/t_enfermedad.controller.js';
+import * as TEnfermedadController from '../controllers/t_enfermedades.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
