@@ -193,7 +193,7 @@ export const deleteManyTPrograma = async (req, res) => {
 
     const inUseCheck = await tenantPrisma.programas.findMany({
         where: {
-            tipo_programas_id: { in: numericIds },
+            tipo_programa_id: { in: numericIds },
         },
         select: {
             tipo_programa_id: true,
