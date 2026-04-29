@@ -23,6 +23,12 @@ import tProgramaRouter from './routes/t_programas.routes.js';
 import finalidadRouter from './routes/finalidad.routes.js';
 import tUnidadesRouter from './routes/t_unidades.routes.js';
 import oficinasRouter from './routes/oficinas.routes.js';
+import departamentoRouter from './routes/departamento.routes.js';
+import contratoRouter from './routes/contrato.routes.js';
+import estadoRouter from './routes/estado.routes.js';
+import municipioRouter from './routes/municipio.routes.js';
+import parroquiaRouter from './routes/parroquia.routes.js';
+import sectorRouter from './routes/sector.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -65,6 +71,12 @@ app.use('/api/t_programa', tProgramaRouter);
 app.use('/api/finalidades', finalidadRouter);
 app.use('/api/t_unidades', tUnidadesRouter);
 app.use('/api/oficinas', oficinasRouter);
+app.use('/api/departamentos', departamentoRouter);
+app.use('/api/contratos', contratoRouter);
+app.use('/api/estados', estadoRouter);
+app.use('/api/municipios', municipioRouter);
+app.use('/api/parroquias', parroquiaRouter);
+app.use('/api/sectores', sectorRouter);
 app.use(errorHandler);
 
 
