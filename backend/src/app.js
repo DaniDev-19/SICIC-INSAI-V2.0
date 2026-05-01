@@ -41,6 +41,9 @@ import programasRouter from './routes/programas.routes.js';
 import vehiculosRouter from './routes/vehiculos.routes.js';
 import caracStatalRouter from './routes/carac_statal.routes.js';
 import empleadosRouter from './routes/empleados.routes.js';
+import solicitudesRouter from './routes/solicitudes.routes.js';
+import planificacionesRouter from './routes/planificaciones.routes.js';
+import inspeccionesRouter from './routes/inspecciones.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -62,7 +65,6 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// Servir archivos estáticos si el modo es local
 app.use('/uploads', express.static(path.resolve('uploads')));
 
 app.get('/health', (req, res) => {
@@ -103,6 +105,9 @@ app.use('/api/programas', programasRouter);
 app.use('/api/vehiculos', vehiculosRouter);
 app.use('/api/carac_statal', caracStatalRouter);
 app.use('/api/empleados', empleadosRouter);
+app.use('/api/solicitudes', solicitudesRouter);
+app.use('/api/planificaciones', planificacionesRouter);
+app.use('/api/inspecciones', inspeccionesRouter);
 app.use(errorHandler);
 
 export default app;
