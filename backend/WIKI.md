@@ -14,6 +14,9 @@ Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y
 - [**Arquitectura de Resiliencia y Validación de Seguridad**](./docs/refactorizacion-seguridad-api.md): Manual técnico sobre la capa de validación de datos, manejo de excepciones y jerarquía de seguridad perimetral.
 - [**Gestión de Multi-Tenancia y Conexiones Dinámicas**](./docs/multi-tenancia-middleware.md): Manual técnico sobre el middleware de inyección de base de datos (`req.db`).
 - [**Servicios Globales y Flujos Optimizados**](./docs/servicios_y_flujos_optimizados.md): Manual sobre el uso de Imágenes (WebP/Cloud), Excel e integración de tablas puente.
+- [**Flujo Operativo: De Solicitud a Inspección**](./docs/flujo_operativo_inspecciones.md): Manual funcional sobre el ciclo de vida de trámites, avales y silos.
+- [**Gestión de Inventario Inteligente**](./docs/gestion_inventario_inteligente.md): Manual técnico sobre el motor de Kardex, trazabilidad y reversiones de stock.
+- [**Gestión Centralizada (Master)**](./docs/gestion_centralizada_master.md): Manual sobre la administración global de usuarios, instancias y roles multi-tenant.
 - [**Gestión de Errores Estandarizada**](./docs/gestion_errores_estandarizada.md): Detalle de códigos de error de base de datos, validación y respuestas HTTP.
 - [**Patrones de Diseño y Arquitectura**](./docs/patrones_diseno_arquitectura.md): Explicación de los patrones Strategy, Factory, Singleton y la estructura modular del sistema.
 

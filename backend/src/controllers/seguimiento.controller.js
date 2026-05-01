@@ -200,7 +200,6 @@ export const deleteSeguimiento = async (req, res) => {
 
   try {
     await tenantPrisma.$transaction(async (tx) => {
-      // 1. Revertir inventario
       await inventoryService.revertirMovimientosDeProceso({
         tx,
         proceso_id: Number(id),
@@ -208,12 +207,10 @@ export const deleteSeguimiento = async (req, res) => {
         empleado_id
       });
 
-      // 2. Eliminar fotos
       for (const foto of toDelete.seguimiento_fotos) {
         await storageService.deleteFile(foto.imagen);
       }
 
-      // 3. Eliminar seguimiento
       await tx.seguimiento_inspecciones.delete({ where: { id: Number(id) } });
     });
 
