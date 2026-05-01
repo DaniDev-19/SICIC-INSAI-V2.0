@@ -12,7 +12,6 @@ export const createAvalSchema = z.object({
     medico_responsable_id: z.number({ required_error: 'El médico responsable es requerido' }),
     jefe_osa_id: z.number({ required_error: 'El jefe de OSA es requerido' }),
 
-    // Hallazgos Bovinos/Bufalinos
     hallazgos_bov_buf: z.object({
       t_toros: z.number().optional().default(0),
       t_vacas: z.number().optional().default(0),
@@ -32,7 +31,6 @@ export const createAvalSchema = z.object({
       t_bucerras: z.number().optional().default(0),
     }).optional(),
 
-    // Otras especies
     hallazgos_otras: z.array(z.object({
       tipo_animal_id: z.number(),
       machos: z.number().optional().default(0),
@@ -40,10 +38,9 @@ export const createAvalSchema = z.object({
       crias: z.number().optional().default(0),
     })).optional(),
 
-    // Biológicos (Consumo de inventario)
     biologicos: z.array(z.object({
       insumo_id: z.number(),
-      oficina_id: z.number(), // Necesario para saber de dónde sale
+      oficina_id: z.number(),
       cantidad: z.number().default(1),
       lote: z.string().optional().nullable(),
       fecha_vacunacion: z.string().optional().nullable(),
