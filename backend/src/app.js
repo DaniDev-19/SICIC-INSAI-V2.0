@@ -44,6 +44,8 @@ import empleadosRouter from './routes/empleados.routes.js';
 import solicitudesRouter from './routes/solicitudes.routes.js';
 import planificacionesRouter from './routes/planificaciones.routes.js';
 import inspeccionesRouter from './routes/inspecciones.routes.js';
+import actaSilosRouter from './routes/acta_silos.routes.js';
+import seguimientoRouter from './routes/seguimiento.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -108,6 +110,8 @@ app.use('/api/empleados', empleadosRouter);
 app.use('/api/solicitudes', solicitudesRouter);
 app.use('/api/planificaciones', planificacionesRouter);
 app.use('/api/inspecciones', inspeccionesRouter);
+app.use('/api/acta_silos', actaSilosRouter);
+app.use('/api/seguimientos', seguimientoRouter);
 app.use(errorHandler);
 
 export default app;
