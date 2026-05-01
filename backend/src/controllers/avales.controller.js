@@ -53,7 +53,6 @@ export const createAval = async (req, res) => {
 
   const empleado_id = req.user?.empleado_id || null;
 
-  // Manejo de imágenes de hierros
   let hierroUrls = [];
   if (req.files && req.files.length > 0) {
     const uploadPromises = req.files.map((file, index) =>
@@ -64,7 +63,7 @@ export const createAval = async (req, res) => {
 
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
-      // 1. Crear el Aval
+
       const aval = await tx.avales_sanitarios.create({
         data: {
           numero_aval,
@@ -76,14 +75,12 @@ export const createAval = async (req, res) => {
           inspeccion_id,
           medico_responsable_id,
           jefe_osa_id,
-          // Hallazgos Bov/Buf (uno a uno)
           aval_hallazgos_bov_buf: hallazgos_bov_buf ? {
             create: {
               ...JSON.parse(hallazgos_bov_buf),
               total_bov_buf: Object.values(JSON.parse(hallazgos_bov_buf)).reduce((a, b) => a + (Number(b) || 0), 0)
             }
           } : undefined,
-          // Otras especies (uno a muchos)
           aval_hallazgos_otras: hallazgos_otras ? {
             create: JSON.parse(hallazgos_otras).map(h => ({
               tipo_animal_id: h.tipo_animal_id,
@@ -93,18 +90,17 @@ export const createAval = async (req, res) => {
               total: (h.machos || 0) + (h.hembras || 0) + (h.crias || 0)
             }))
           } : undefined,
-          // Imágenes de hierros
           aval_hierros: hierroUrls.length > 0 ? {
             create: hierroUrls.map(url => ({ hierro_img_url: url }))
           } : undefined
         }
       });
 
-      // 2. Registrar biológicos y descontar inventario
+
       if (biologicos) {
         const parsedBiologicos = JSON.parse(biologicos);
         for (const bio of parsedBiologicos) {
-          // Guardar en tabla de biológicos vinculada al aval
+
           await tx.aval_biologicos.create({
             data: {
               aval_id: aval.id,
@@ -114,7 +110,7 @@ export const createAval = async (req, res) => {
             }
           });
 
-          // Registrar salida de inventario
+
           await inventoryService.registrarMovimiento({
             tx,
             insumo_id: bio.insumo_id,
@@ -167,4 +163,155 @@ export const getAvalById = async (req, res) => {
   }
 
   res.status(200).json({ status: 'success', data: aval });
+};
+
+export const updateAval = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+  const {
+    codigo_predio, fecha_emision, fecha_vencimiento,
+    certificado_vacunacion_n, observaciones,
+    medico_responsable_id, jefe_osa_id,
+    hallazgos_bov_buf, hallazgos_otras, biologicos
+  } = req.body;
+
+  const empleado_id = req.user?.empleado_id || null;
+
+  const existing = await tenantPrisma.avales_sanitarios.findUnique({
+    where: { id: Number(id) },
+    include: { aval_hierros: true, aval_biologicos: true }
+  });
+
+  if (!existing) {
+    return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+  }
+
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+
+      if (biologicos) {
+        await inventoryService.revertirMovimientosDeProceso({
+          tx,
+          proceso_id: existing.id,
+          tipo_proceso: 'aval',
+          empleado_id
+        });
+
+
+        await tx.aval_biologicos.deleteMany({ where: { aval_id: existing.id } });
+
+
+        const parsedBiologicos = JSON.parse(biologicos);
+        for (const bio of parsedBiologicos) {
+          await tx.aval_biologicos.create({
+            data: {
+              aval_id: existing.id,
+              insumo_id: bio.insumo_id,
+              fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
+              pruebas_diagnosticas: bio.pruebas_diagnosticas
+            }
+          });
+
+          await inventoryService.registrarMovimiento({
+            tx,
+            insumo_id: bio.insumo_id,
+            oficina_id: bio.oficina_id,
+            tipo_movimiento: 'CONSUMO',
+            cantidad: bio.cantidad || 1,
+            lote: bio.lote,
+            aval_id: existing.id,
+            empleado_id,
+            observaciones: `Consumo actualizado por Aval ${existing.numero_aval}`
+          });
+        }
+      }
+
+      const updated = await tx.avales_sanitarios.update({
+        where: { id: Number(id) },
+        data: {
+          codigo_predio,
+          fecha_emision: fecha_emision ? new Date(fecha_emision) : undefined,
+          fecha_vencimiento: fecha_vencimiento ? new Date(fecha_vencimiento) : undefined,
+          certificado_vacunacion_n,
+          observaciones,
+          medico_responsable_id,
+          jefe_osa_id,
+          aval_hallazgos_bov_buf: hallazgos_bov_buf ? {
+            deleteMany: {},
+            create: {
+              ...JSON.parse(hallazgos_bov_buf),
+              total_bov_buf: Object.values(JSON.parse(hallazgos_bov_buf)).reduce((a, b) => a + (Number(b) || 0), 0)
+            }
+          } : undefined,
+          aval_hallazgos_otras: hallazgos_otras ? {
+            deleteMany: {},
+            create: JSON.parse(hallazgos_otras).map(h => ({
+              tipo_animal_id: h.tipo_animal_id,
+              machos: h.machos,
+              hembras: h.hembras,
+              crias: h.crias,
+              total: (h.machos || 0) + (h.hembras || 0) + (h.crias || 0)
+            }))
+          } : undefined
+        }
+      });
+
+      return updated;
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ACTUALIZAR',
+      modulo: 'Avales Sanitarios',
+      payload_previo: existing,
+      payload_nuevo: response
+    });
+
+    res.status(200).json({ status: 'success', data: response });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+export const deleteAval = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+  const empleado_id = req.user?.empleado_id || null;
+
+  const toDelete = await tenantPrisma.avales_sanitarios.findUnique({
+    where: { id: Number(id) },
+    include: { aval_hierros: true }
+  });
+
+  if (!toDelete) {
+    return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+  }
+
+  try {
+    await tenantPrisma.$transaction(async (tx) => {
+      await inventoryService.revertirMovimientosDeProceso({
+        tx,
+        proceso_id: Number(id),
+        tipo_proceso: 'aval',
+        empleado_id
+      });
+
+      for (const foto of toDelete.aval_hierros) {
+        await storageService.deleteFile(foto.hierro_img_url);
+      }
+
+      await tx.avales_sanitarios.delete({ where: { id: Number(id) } });
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR',
+      modulo: 'Avales Sanitarios',
+      payload_previo: toDelete
+    });
+
+    res.status(200).json({ status: 'success', message: 'Aval eliminado y stock restaurado' });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
 };

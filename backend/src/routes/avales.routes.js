@@ -5,15 +5,22 @@ import { createAvalSchema } from '../schemas/avales.schema.js';
 import multer from 'multer';
 
 const router = Router();
-const upload = multer(); // Para manejar multipart/form-data (hierros y JSON)
+const upload = multer();
 
 router.get('/', avalesCtrl.getAvales);
 router.get('/:id', avalesCtrl.getAvalById);
 
-router.post('/', 
-  upload.array('hierros', 5), // Hasta 5 imágenes de hierros
-  validateSchema(createAvalSchema), 
+router.post('/',
+  upload.array('hierros', 5),
+  validateSchema(createAvalSchema),
   avalesCtrl.createAval
 );
+
+router.put('/:id',
+  upload.array('hierros', 5),
+  avalesCtrl.updateAval
+);
+
+router.delete('/:id', avalesCtrl.deleteAval);
 
 export default router;

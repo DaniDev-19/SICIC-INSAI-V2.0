@@ -159,7 +159,6 @@ export const createInspeccion = async (req, res) => {
         }
       });
 
-      // Registrar consumo de insumos si se proveen
       if (insumos_consumidos) {
         const parsedInsumos = typeof insumos_consumidos === 'string' ? JSON.parse(insumos_consumidos) : insumos_consumidos;
         for (const item of parsedInsumos) {
@@ -177,7 +176,6 @@ export const createInspeccion = async (req, res) => {
         }
       }
 
-      // 2. Actualizar estados vinculados
       const plan = await tx.planificaciones.findUnique({
         where: { id: planificacion_id },
         select: { solicitud_id: true }
@@ -300,18 +298,31 @@ export const deleteInspeccion = async (req, res) => {
     });
   }
 
-  for (const foto of toDelete.inspeccion_fotos) {
-    await storageService.deleteFile(foto.imagen);
+  try {
+    await tenantPrisma.$transaction(async (tx) => {
+      await inventoryService.revertirMovimientosDeProceso({
+        tx,
+        proceso_id: Number(id),
+        tipo_proceso: 'inspeccion',
+        empleado_id
+      });
+
+      for (const foto of toDelete.inspeccion_fotos) {
+        await storageService.deleteFile(foto.imagen);
+      }
+
+      await tx.inspecciones.delete({ where: { id: Number(id) } });
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR',
+      modulo: 'Inspecciones',
+      payload_previo: toDelete
+    });
+
+    res.status(200).json({ status: 'success', message: 'Inspección eliminada y stock restaurado' });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-
-  await tenantPrisma.inspecciones.delete({ where: { id: Number(id) } });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ELIMINAR',
-    modulo: 'Inspecciones',
-    payload_previo: toDelete
-  });
-
-  res.status(200).json({ status: 'success', message: 'Inspección eliminada exitosamente' });
 };

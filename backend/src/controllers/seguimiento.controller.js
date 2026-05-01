@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import inventoryService from '../services/inventory.service.js';
 
 export const getSeguimientos = async (req, res) => {
   const tenantPrisma = req.db;
@@ -73,8 +74,10 @@ export const createSeguimiento = async (req, res) => {
   const tenantPrisma = req.db;
   const {
     fecha_seguimiento, hallazgos_seguimiento, recomendaciones_cumplidas,
-    status, inspeccion_id, acta_silo_id
+    status, inspeccion_id, acta_silo_id, insumos_consumidos
   } = req.body;
+
+  const empleado_id = req.user?.empleado_id || null;
 
   let photoUrls = [];
   if (req.files && req.files.length > 0) {
@@ -84,28 +87,53 @@ export const createSeguimiento = async (req, res) => {
     photoUrls = await Promise.all(uploadPromises);
   }
 
-  const response = await tenantPrisma.seguimiento_inspecciones.create({
-    data: {
-      fecha_seguimiento: fecha_seguimiento ? new Date(fecha_seguimiento) : new Date(),
-      hallazgos_seguimiento,
-      recomendaciones_cumplidas: recomendaciones_cumplidas === 'true' || recomendaciones_cumplidas === true,
-      status,
-      inspeccion_id: inspeccion_id ? Number(inspeccion_id) : null,
-      acta_silo_id: acta_silo_id ? Number(acta_silo_id) : null,
-      seguimiento_fotos: {
-        create: photoUrls.map(url => ({ imagen: url }))
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      const seguimiento = await tx.seguimiento_inspecciones.create({
+        data: {
+          fecha_seguimiento: fecha_seguimiento ? new Date(fecha_seguimiento) : new Date(),
+          hallazgos_seguimiento,
+          recomendaciones_cumplidas: recomendaciones_cumplidas === 'true' || recomendaciones_cumplidas === true,
+          status,
+          inspeccion_id: inspeccion_id ? Number(inspeccion_id) : null,
+          acta_silo_id: acta_silo_id ? Number(acta_silo_id) : null,
+          seguimiento_fotos: {
+            create: photoUrls.map(url => ({ imagen: url }))
+          }
+        }
+      });
+
+      if (insumos_consumidos) {
+        const parsedInsumos = typeof insumos_consumidos === 'string' ? JSON.parse(insumos_consumidos) : insumos_consumidos;
+        for (const item of parsedInsumos) {
+          await inventoryService.registrarMovimiento({
+            tx,
+            insumo_id: item.insumo_id,
+            oficina_id: item.oficina_id,
+            tipo_movimiento: 'CONSUMO',
+            cantidad: item.cantidad,
+            lote: item.lote,
+            seguimiento_id: seguimiento.id,
+            empleado_id,
+            observaciones: `Consumo en Seguimiento ID: ${seguimiento.id}`
+          });
+        }
       }
-    }
-  });
 
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Seguimientos',
-    payload_nuevo: response
-  });
+      return seguimiento;
+    });
 
-  res.status(201).json({ status: 'success', data: response });
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Seguimientos',
+      payload_nuevo: response
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
 };
 
 export const updateSeguimiento = async (req, res) => {
@@ -159,35 +187,45 @@ export const updateSeguimiento = async (req, res) => {
 export const deleteSeguimiento = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
+  const empleado_id = req.user?.empleado_id || null;
 
   const toDelete = await tenantPrisma.seguimiento_inspecciones.findUnique({
     where: { id: Number(id) },
-    include: { seguimiento_fotos: true, movimientos_insumos: true }
+    include: { seguimiento_fotos: true }
   });
 
   if (!toDelete) {
     return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
   }
 
-  if (toDelete.movimientos_insumos.length > 0) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'No se puede eliminar el seguimiento porque tiene movimientos de insumos asociados.'
+  try {
+    await tenantPrisma.$transaction(async (tx) => {
+      // 1. Revertir inventario
+      await inventoryService.revertirMovimientosDeProceso({
+        tx,
+        proceso_id: Number(id),
+        tipo_proceso: 'seguimiento',
+        empleado_id
+      });
+
+      // 2. Eliminar fotos
+      for (const foto of toDelete.seguimiento_fotos) {
+        await storageService.deleteFile(foto.imagen);
+      }
+
+      // 3. Eliminar seguimiento
+      await tx.seguimiento_inspecciones.delete({ where: { id: Number(id) } });
     });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR',
+      modulo: 'Seguimientos',
+      payload_previo: toDelete
+    });
+
+    res.status(200).json({ status: 'success', message: 'Seguimiento eliminado y stock restaurado' });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-
-  for (const foto of toDelete.seguimiento_fotos) {
-    await storageService.deleteFile(foto.imagen);
-  }
-
-  await tenantPrisma.seguimiento_inspecciones.delete({ where: { id: Number(id) } });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ELIMINAR',
-    modulo: 'Seguimientos',
-    payload_previo: toDelete
-  });
-
-  res.status(200).json({ status: 'success', message: 'Seguimiento eliminado exitosamente' });
 };

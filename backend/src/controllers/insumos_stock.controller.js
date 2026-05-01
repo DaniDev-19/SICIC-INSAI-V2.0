@@ -29,12 +29,11 @@ export const getStockByOficina = async (req, res) => {
 
 export const registrarMovimientoManual = async (req, res) => {
   const tenantPrisma = req.db;
-  const { 
-    insumo_id, oficina_id, tipo_movimiento, cantidad, 
-    lote, fecha_vencimiento, observaciones 
+  const {
+    insumo_id, oficina_id, tipo_movimiento, cantidad,
+    lote, fecha_vencimiento, observaciones
   } = req.body;
 
-  // El empleado_id se obtiene del usuario autenticado (si está disponible en req.user)
   const empleado_id = req.user?.empleado_id || null;
 
   try {

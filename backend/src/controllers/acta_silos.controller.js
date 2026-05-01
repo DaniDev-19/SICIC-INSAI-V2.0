@@ -130,7 +130,6 @@ export const createActaSilo = async (req, res) => {
         }
       });
 
-      // Registrar consumo de insumos si se proveen
       if (insumos_consumidos) {
         const parsedInsumos = typeof insumos_consumidos === 'string' ? JSON.parse(insumos_consumidos) : insumos_consumidos;
         for (const item of parsedInsumos) {
@@ -246,18 +245,31 @@ export const deleteActaSilo = async (req, res) => {
     });
   }
 
-  for (const foto of toDelete.silo_fotos) {
-    await storageService.deleteFile(foto.imagen);
+  try {
+    await tenantPrisma.$transaction(async (tx) => {
+      await inventoryService.revertirMovimientosDeProceso({
+        tx,
+        proceso_id: Number(id),
+        tipo_proceso: 'acta_silo',
+        empleado_id
+      });
+
+      for (const foto of toDelete.silo_fotos) {
+        await storageService.deleteFile(foto.imagen);
+      }
+
+      await tx.acta_silos.delete({ where: { id: Number(id) } });
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR',
+      modulo: 'Acta Silos',
+      payload_previo: toDelete
+    });
+
+    res.status(200).json({ status: 'success', message: 'Acta de Silo eliminada y stock restaurado' });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-
-  await tenantPrisma.acta_silos.delete({ where: { id: Number(id) } });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ELIMINAR',
-    modulo: 'Acta Silos',
-    payload_previo: toDelete
-  });
-
-  res.status(200).json({ status: 'success', message: 'Acta de Silo eliminada exitosamente' });
 };
