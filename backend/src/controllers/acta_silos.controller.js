@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import inventoryService from '../services/inventory.service.js';
 
 export const getActaSilos = async (req, res) => {
   const tenantPrisma = req.db;
@@ -88,8 +89,10 @@ export const createActaSilo = async (req, res) => {
     cant_importado, cant_afectado, cant_afectado_porcentaje, n_silos,
     n_galpones, c_instalada, c_operativa, c_almacenamiento, destino_objetivo,
     observaciones, medidas_recomendadas, evento_id, unidad_medida_id,
-    planificacion_id
+    planificacion_id, insumos_consumidos
   } = req.body;
+
+  const empleado_id = req.user?.empleado_id || null;
 
   let photoUrls = [];
   if (req.files && req.files.length > 0) {
@@ -99,61 +102,83 @@ export const createActaSilo = async (req, res) => {
     photoUrls = await Promise.all(uploadPromises);
   }
 
-  const response = await tenantPrisma.$transaction(async (tx) => {
-    const acta = await tx.acta_silos.create({
-      data: {
-        semana_epid,
-        fecha_notificacion: fecha_notificacion ? new Date(fecha_notificacion) : new Date(),
-        lugar_ubicacion,
-        cant_nacional,
-        cant_importado,
-        cant_afectado,
-        cant_afectado_porcentaje,
-        n_silos,
-        n_galpones,
-        c_instalada,
-        c_operativa,
-        c_almacenamiento,
-        destino_objetivo,
-        observaciones,
-        medidas_recomendadas,
-        evento_id: evento_id ? Number(evento_id) : null,
-        unidad_medida_id: unidad_medida_id ? Number(unidad_medida_id) : null,
-        planificacion_id: Number(planificacion_id),
-        silo_fotos: {
-          create: photoUrls.map(url => ({ imagen: url }))
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      const acta = await tx.acta_silos.create({
+        data: {
+          semana_epid,
+          fecha_notificacion: fecha_notificacion ? new Date(fecha_notificacion) : new Date(),
+          lugar_ubicacion,
+          cant_nacional,
+          cant_importado,
+          cant_afectado,
+          cant_afectado_porcentaje,
+          n_silos,
+          n_galpones,
+          c_instalada,
+          c_operativa,
+          c_almacenamiento,
+          destino_objetivo,
+          observaciones,
+          medidas_recomendadas,
+          evento_id: evento_id ? Number(evento_id) : null,
+          unidad_medida_id: unidad_medida_id ? Number(unidad_medida_id) : null,
+          planificacion_id: Number(planificacion_id),
+          silo_fotos: {
+            create: photoUrls.map(url => ({ imagen: url }))
+          }
+        }
+      });
+
+      // Registrar consumo de insumos si se proveen
+      if (insumos_consumidos) {
+        const parsedInsumos = typeof insumos_consumidos === 'string' ? JSON.parse(insumos_consumidos) : insumos_consumidos;
+        for (const item of parsedInsumos) {
+          await inventoryService.registrarMovimiento({
+            tx,
+            insumo_id: item.insumo_id,
+            oficina_id: item.oficina_id,
+            tipo_movimiento: 'CONSUMO',
+            cantidad: item.cantidad,
+            lote: item.lote,
+            acta_silo_id: acta.id,
+            empleado_id,
+            observaciones: `Consumo en Acta de Silo: ${lugar_ubicacion}`
+          });
         }
       }
-    });
 
-    const plan = await tx.planificaciones.findUnique({
-      where: { id: Number(planificacion_id) },
-      select: { solicitud_id: true }
-    });
-
-    if (plan) {
-      await tx.planificaciones.update({
+      const plan = await tx.planificaciones.findUnique({
         where: { id: Number(planificacion_id) },
-        data: { status: 'FINALIZADA' }
+        select: { solicitud_id: true }
       });
 
-      await tx.solicitudes.update({
-        where: { id: plan.solicitud_id },
-        data: { estatus: 'FINALIZADA' }
-      });
-    }
+      if (plan) {
+        await tx.planificaciones.update({
+          where: { id: Number(planificacion_id) },
+          data: { status: 'FINALIZADA' }
+        });
 
-    return acta;
-  });
+        await tx.solicitudes.update({
+          where: { id: plan.solicitud_id },
+          data: { estatus: 'FINALIZADA' }
+        });
+      }
 
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Acta Silos',
-    payload_nuevo: response
-  });
+      return acta;
+    });
 
-  res.status(201).json({ status: 'success', data: response });
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Acta Silos',
+      payload_nuevo: response
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
 };
 
 export const updateActaSilo = async (req, res) => {

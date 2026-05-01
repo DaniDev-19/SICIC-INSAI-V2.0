@@ -46,6 +46,8 @@ import planificacionesRouter from './routes/planificaciones.routes.js';
 import inspeccionesRouter from './routes/inspecciones.routes.js';
 import actaSilosRouter from './routes/acta_silos.routes.js';
 import seguimientoRouter from './routes/seguimiento.routes.js';
+import avalesRouter from './routes/avales.routes.js';
+import insumosStockRouter from './routes/insumos_stock.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -112,6 +114,8 @@ app.use('/api/planificaciones', planificacionesRouter);
 app.use('/api/inspecciones', inspeccionesRouter);
 app.use('/api/acta_silos', actaSilosRouter);
 app.use('/api/seguimientos', seguimientoRouter);
+app.use('/api/avales', avalesRouter);
+app.use('/api/insumos_stock', insumosStockRouter);
 app.use(errorHandler);
 
 export default app;

@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import inventoryService from '../services/inventory.service.js';
 
 export const getInspecciones = async (req, res) => {
   const tenantPrisma = req.db;
@@ -100,8 +101,10 @@ export const createInspeccion = async (req, res) => {
     atendido_por_cedula, atendido_por_email, atendido_por_tlf, insp_utm_norte,
     insp_utm_este, insp_utm_zona, google_maps_url, aspectos_constatados,
     medidas_ordenadas, posee_certificado, vigencia_dias, status, planificacion_id,
-    finalidades
+    finalidades, insumos_consumidos
   } = req.body;
+
+  const empleado_id = req.user?.empleado_id || null;
 
 
   let finalNControl = n_control;
@@ -122,69 +125,90 @@ export const createInspeccion = async (req, res) => {
     photoUrls = await Promise.all(uploadPromises);
   }
 
-  const response = await tenantPrisma.$transaction(async (tx) => {
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      const insp = await tx.inspecciones.create({
+        data: {
+          n_control: finalNControl,
+          t_codigo: t_codigo || '10-00-M00-P00-F01',
+          fecha_inspeccion: new Date(fecha_inspeccion),
+          hora_inspeccion: hora_inspeccion ? new Date(`1970-01-01T${hora_inspeccion}`) : null,
+          atendido_por_nombre,
+          atendido_por_cedula,
+          atendido_por_email,
+          atendido_por_tlf,
+          insp_utm_norte,
+          insp_utm_este,
+          insp_utm_zona,
+          google_maps_url,
+          aspectos_constatados,
+          medidas_ordenadas,
+          posee_certificado,
+          vigencia_dias: Number(vigencia_dias) || 30,
+          status: status || 'PENDIENTE',
+          planificacion_id,
+          finalidad_inspeccion: {
+            create: JSON.parse(finalidades).map(f => ({
+              finalidad_id: Number(f.finalidad_id),
+              objetivo: f.objetivo
+            }))
+          },
+          inspeccion_fotos: {
+            create: photoUrls.map(url => ({ imagen: url }))
+          }
+        }
+      });
 
-    const insp = await tx.inspecciones.create({
-      data: {
-        n_control: finalNControl,
-        t_codigo: t_codigo || '10-00-M00-P00-F01',
-        fecha_inspeccion: new Date(fecha_inspeccion),
-        hora_inspeccion: hora_inspeccion ? new Date(`1970-01-01T${hora_inspeccion}`) : null,
-        atendido_por_nombre,
-        atendido_por_cedula,
-        atendido_por_email,
-        atendido_por_tlf,
-        insp_utm_norte,
-        insp_utm_este,
-        insp_utm_zona,
-        google_maps_url,
-        aspectos_constatados,
-        medidas_ordenadas,
-        posee_certificado,
-        vigencia_dias: Number(vigencia_dias) || 30,
-        status: status || 'PENDIENTE',
-        planificacion_id,
-        finalidad_inspeccion: {
-          create: JSON.parse(finalidades).map(f => ({
-            finalidad_id: Number(f.finalidad_id),
-            objetivo: f.objetivo
-          }))
-        },
-        inspeccion_fotos: {
-          create: photoUrls.map(url => ({ imagen: url }))
+      // Registrar consumo de insumos si se proveen
+      if (insumos_consumidos) {
+        const parsedInsumos = typeof insumos_consumidos === 'string' ? JSON.parse(insumos_consumidos) : insumos_consumidos;
+        for (const item of parsedInsumos) {
+          await inventoryService.registrarMovimiento({
+            tx,
+            insumo_id: item.insumo_id,
+            oficina_id: item.oficina_id,
+            tipo_movimiento: 'CONSUMO',
+            cantidad: item.cantidad,
+            lote: item.lote,
+            inspeccion_id: insp.id,
+            empleado_id,
+            observaciones: `Consumo en Inspección: ${finalNControl}`
+          });
         }
       }
-    });
 
-    // 2. Actualizar estados vinculados
-    const plan = await tx.planificaciones.findUnique({
-      where: { id: planificacion_id },
-      select: { solicitud_id: true }
-    });
-
-    if (plan) {
-      await tx.planificaciones.update({
+      // 2. Actualizar estados vinculados
+      const plan = await tx.planificaciones.findUnique({
         where: { id: planificacion_id },
-        data: { status: status === 'FINALIZADA' ? 'FINALIZADA' : 'INSPECCIONANDO' }
+        select: { solicitud_id: true }
       });
 
-      await tx.solicitudes.update({
-        where: { id: plan.solicitud_id },
-        data: { estatus: status === 'FINALIZADA' ? 'FINALIZADA' : 'INSPECCIONANDO' }
-      });
-    }
+      if (plan) {
+        await tx.planificaciones.update({
+          where: { id: planificacion_id },
+          data: { status: status === 'FINALIZADA' ? 'FINALIZADA' : 'INSPECCIONANDO' }
+        });
 
-    return insp;
-  });
+        await tx.solicitudes.update({
+          where: { id: plan.solicitud_id },
+          data: { estatus: status === 'FINALIZADA' ? 'FINALIZADA' : 'INSPECCIONANDO' }
+        });
+      }
 
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Inspecciones',
-    payload_nuevo: response
-  });
+      return insp;
+    });
 
-  res.status(201).json({ status: 'success', data: response });
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Inspecciones',
+      payload_nuevo: response
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
+  }
 };
 
 export const updateInspeccion = async (req, res) => {
