@@ -14,12 +14,10 @@ export interface BitacoraLog {
   };
 }
 
+import type { RawPagination } from "./pagination";
+
 export interface BitacoraResponse {
   status: string;
   data: BitacoraLog[];
-  pagination: {
-    total: number;
-    page: number;
-    pages: number;
-  };
+  pagination: RawPagination;
 }

@@ -18,8 +18,11 @@ export interface UpdateRoleDto extends Partial<CreateRoleDto> {
   status?: boolean;
 }
 
+import type { PaginationData } from "./pagination";
+
 export interface RoleResponse {
   status: 'success' | 'error';
   message?: string;
   data: Role | Role[];
+  pagination?: PaginationData;
 }

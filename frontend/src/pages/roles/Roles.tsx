@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { z } from 'zod';
 import { useRoles } from '@/hooks/use-roles';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Trash2,
   X,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
@@ -25,6 +26,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from 'react-router-dom';
 import type { Role, CreateRoleDto, UpdateRoleDto } from '@/types/role';
 
@@ -37,14 +45,17 @@ function Roles() {
     roles,
     pagination,
     isLoading,
+    search,
+    status,
     setPage,
     setLimit,
-
+    setSearch,
+    setStatus,
     createRole,
     updateRole,
+    updateRoleStatus,
     deleteRole,
     deleteManyRoles,
-    updateRoleStatus,
     isCreating,
     isUpdating,
     isDeleting
@@ -57,8 +68,6 @@ function Roles() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
-  const [localSearch, setLocalSearch] = useState('');
-
   const [formData, setFormData] = useState<UpdateRoleDto>({
     nombre: '',
     descripcion: '',
@@ -66,19 +75,6 @@ function Roles() {
     status: true
   });
 
-
-  const filteredRoles = useMemo(() => {
-    if (!localSearch) return roles;
-    const term = localSearch.toLowerCase();
-    return roles.filter((role: Role) => {
-      const statusText = role.status ? 'activo' : 'inactivo';
-      return (
-        role.nombre.toLowerCase().includes(term) ||
-        (role.descripcion && role.descripcion.toLowerCase().includes(term)) ||
-        statusText.includes(term)
-      );
-    });
-  }, [roles, localSearch]);
 
   const handleOpenCreate = () => {
     setEditingRole(null);
@@ -151,9 +147,8 @@ function Roles() {
 
     const roleSchema = z.object({
       nombre: z.string()
-        .min(3, 'El nombre de identidad debe tener al menos 3 caracteres')
-        .max(50, 'El nombre es demasiado largo')
-        .regex(/^[A-Z0-9_]+$/, 'El nombre debe ser en MAYÚSCULAS y sin espacios (formato IDENTITY)'),
+        .min(3, 'El nombre debe tener al menos 3 caracteres')
+        .max(50, 'El nombre es demasiado largo'),
       descripcion: z.string().optional(),
     });
 
@@ -231,34 +226,46 @@ function Roles() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:block">
-            <SearchInput
-              placeholder="Filtrar vista actual..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              onClear={() => setLocalSearch("")}
-              className="w-[200px] lg:w-[250px] h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
-            />
+          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger
+                title="Filtrar por Estado"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+              >
+                <ShieldCheck className={`size-4 ${status !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="sr-only">
+                  <SelectValue placeholder="Estado" />
+                </span>
+              </SelectTrigger>
+              <SelectContent className="glass-effect border-border top-9 right-15">
+                <SelectItem value="all" className="cursor-pointer">Todos</SelectItem>
+                <SelectItem value="true" className="cursor-pointer">Activos</SelectItem>
+                <SelectItem value="false" className="cursor-pointer">Inactivos</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+
+            <div className="w-[200px] lg:w-[280px]">
+              <SearchInput
+                placeholder="Buscar roles..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClear={() => setSearch('')}
+                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+              />
+            </div>
           </div>
-          <Button onClick={handleOpenCreate} title='crea un nuevo rol' className="flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-            <Plus className="size-4 text-white" /> <span className="text-white">Nuevo Rol</span>
+
+          <Button onClick={handleOpenCreate} title='crea un nuevo rol' variant={'primary'}>
+            <Plus className="size-4" /> <span className="hidden sm:inline">Nuevo Rol</span>
           </Button>
         </div>
       </div>
 
-      <div className="sm:hidden w-full">
-        <SearchInput
-          placeholder="Filtrar vista actual..."
-          value={localSearch}
-          onChange={(e) => setLocalSearch(e.target.value)}
-          onClear={() => setLocalSearch("")}
-          className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
+      <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed">
+          <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed m-4">
             <div className="relative">
               <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
               <Loader2 className="size-10 text-primary animate-spin" />
@@ -266,7 +273,7 @@ function Roles() {
             <p className="text-muted-foreground font-medium animate-pulse">Sincronizando base de datos...</p>
           </div>
         ) : roles.length === 0 ? (
-          <div className="text-center py-20 bg-card/30 border-2 border-dashed rounded-2xl transition-all hover:bg-card/50">
+          <div className="text-center py-20 bg-card/30 border-2 border-dashed rounded-2xl m-4 transition-all hover:bg-card/50">
             <div className="size-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
               <Users className="size-10 text-muted-foreground opacity-50" />
             </div>
@@ -276,24 +283,24 @@ function Roles() {
           </div>
         ) : (
           <>
-            <RolesTable
-              roles={filteredRoles}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
-              onEdit={handleOpenEdit}
-              onDelete={(id) => setDeleteId(id)}
-              onToggleStatus={handleToggleStatus}
-            />
+            <div className="overflow-x-auto custom-scrollbar">
+              <RolesTable
+                roles={roles}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onEdit={handleOpenEdit}
+                onDelete={(id) => setDeleteId(id)}
+                onToggleStatus={handleToggleStatus}
+              />
+            </div>
 
-
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              totalCount={filteredRoles.length}
-              limit={pagination.limit}
-              onPageChange={setPage}
-              onLimitChange={setLimit}
-            />
+            <div className="px-6 py-4 border-t border-border bg-muted/20">
+              <Pagination
+                pagination={pagination}
+                onPageChange={setPage}
+                onLimitChange={setLimit}
+              />
+            </div>
           </>
         )}
       </div>

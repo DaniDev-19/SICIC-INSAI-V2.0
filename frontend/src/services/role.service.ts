@@ -2,8 +2,8 @@ import apiClient from '../lib/api-client';
 import type { Role, CreateRoleDto, UpdateRoleDto, RoleResponse } from '../types/role';
 
 export const roleService = {
-  getRoles: async (page = 1, limit = 10): Promise<any> => {
-    const response = await apiClient.get<RoleResponse>(`/roles?page=${page}&limit=${limit}`);
+  getRoles: async (params: { page?: number; limit?: number; search?: string; status?: string }): Promise<any> => {
+    const response = await apiClient.get<RoleResponse>('/roles', { params });
     return response.data;
   },
 

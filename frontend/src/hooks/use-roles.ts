@@ -3,16 +3,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AxiosError } from 'axios';
 import { roleService } from '../services/role.service';
 import { toast } from 'sonner';
+import { useDebounce } from './use-debounce';
 import type { UpdateRoleDto } from '../types/role';
 
 export function useRoles() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(5);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+
+  const debouncedSearch = useDebounce(search, 500);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['roles', page, limit],
-    queryFn: () => roleService.getRoles(page, limit),
+    queryKey: ['roles', page, limit, debouncedSearch, status],
+    queryFn: () => roleService.getRoles({ 
+      page, 
+      limit, 
+      search: debouncedSearch, 
+      status: status === 'all' ? undefined : status 
+    }),
   });
 
   const createMutation = useMutation({
@@ -86,8 +96,12 @@ export function useRoles() {
     error,
     page,
     limit,
+    search,
+    status,
     setPage,
     setLimit,
+    setSearch,
+    setStatus,
     createRole: createMutation.mutateAsync,
     updateRole: updateMutation.mutateAsync,
     updateRoleStatus: updateStatusMutation.mutateAsync,
