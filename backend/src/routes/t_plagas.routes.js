@@ -4,7 +4,7 @@ import { createTPlagasSchema, updateTPlagasSchema } from '../schemas/t_plagas.sc
 import { protect } from '../middlewares/auth.middleware.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
-import { tenantMiddleware } from '../middlewares/tenant.middleware';
+import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
 router.use(protect);

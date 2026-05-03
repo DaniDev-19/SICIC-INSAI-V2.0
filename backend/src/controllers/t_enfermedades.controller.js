@@ -1,4 +1,4 @@
-import bitacoraService from "../services/bitacora.service";
+import bitacoraService from "../services/bitacora.service.js";
 
 export const getTEnfermedades = async (req, res) => {
     const tenantPrisma = req.db;

@@ -2,11 +2,11 @@ import { Router } from 'express';
 import * as userCtrl from '../controllers/user.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createUserSchema, updateUserSchema, assignInstanceSchema } from '../schemas/user.schema.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.use(authMiddleware);
+router.use(protect);
 
 router.get('/', userCtrl.getUsers);
 router.get('/:id', userCtrl.getUserById);
