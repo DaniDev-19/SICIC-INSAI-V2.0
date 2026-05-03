@@ -5,14 +5,29 @@ export const getRoles = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
+  const { search, status } = req.query;
+
+  const where = {};
+  
+  if (search) {
+    where.OR = [
+      { nombre: { contains: search, mode: 'insensitive' } },
+      { descripcion: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  if (status !== undefined && status !== 'all') {
+    where.status = status === 'true';
+  }
 
   const [roles, totalCount] = await Promise.all([
     masterPrisma.roles.findMany({
+      where,
       skip,
       take: limit,
       orderBy: { nombre: 'asc' },
     }),
-    masterPrisma.roles.count(),
+    masterPrisma.roles.count({ where }),
   ]);
 
   res.status(200).json({

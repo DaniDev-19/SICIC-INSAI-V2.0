@@ -2,11 +2,11 @@ import { Router } from 'express';
 import * as instCtrl from '../controllers/instance.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createInstanceSchema, updateInstanceSchema } from '../schemas/instance.schema.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.use(authMiddleware);
+router.use(protect);
 
 router.get('/', instCtrl.getInstances);
 router.get('/:id', instCtrl.getInstanceById);

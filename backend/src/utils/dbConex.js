@@ -1,4 +1,4 @@
-import { getTenantPrisma } from "../config/prisma";
+import { getTenantPrisma } from "../config/prisma.js";
 
 export const getTenantPrismaFromRequest = (req) => {
     const dbName = req.user?.currentInstance?.db_name;
