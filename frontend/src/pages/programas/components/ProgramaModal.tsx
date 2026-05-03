@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +8,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -19,94 +15,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Cultivo, TipoCultivo } from '@/types/cultivos';
-import { Sprout, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import type { Programa, TipoPrograma, CreateProgramaDto } from '@/types/programas';
+import { Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 
-const cultivoSchema = z.object({
-  nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-  nombre_cientifico: z.string().nullable().optional(),
-  descripcion: z.string().nullable().optional(),
-  tipo_cultivo_id: z.string().min(1, 'El tipo de cultivo es requerido'),
-});
-
-type CultivoFormValues = z.infer<typeof cultivoSchema>;
-
-interface CultivoModalProps {
+interface ProgramaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
-  cultivo?: Cultivo | null;
-  tipos: TipoCultivo[];
+  onSave: (data: any) => Promise<void>;
+  programa?: Programa | null;
+  tipos: TipoPrograma[];
   isLoading?: boolean;
   onCreateTipo?: (nombre: string) => Promise<any>;
   onUpdateTipo?: (args: { id: number; nombre: string }) => Promise<any>;
   onDeleteTipo?: (id: number) => Promise<any>;
 }
 
-export function CultivoModal({
+export function ProgramaModal({
   isOpen,
   onClose,
-  onSubmit,
-  cultivo,
+  onSave,
+  programa,
   tipos,
   isLoading,
   onCreateTipo,
   onUpdateTipo,
-  onDeleteTipo,
-}: CultivoModalProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<CultivoFormValues>({
-    resolver: zodResolver(cultivoSchema),
-    defaultValues: {
-      nombre: '',
-      nombre_cientifico: '',
-      descripcion: '',
-      tipo_cultivo_id: '',
-    },
+  onDeleteTipo
+}: ProgramaModalProps) {
+  const [formData, setFormData] = useState<CreateProgramaDto>({
+    nombre: '',
+    descripcion: '',
+    tipo_programa_id: undefined,
   });
 
-  // Estado para crear nuevo tipo inline
   const [showNewTipo, setShowNewTipo] = useState(false);
   const [newTipoNombre, setNewTipoNombre] = useState('');
   const [creatingTipo, setCreatingTipo] = useState(false);
 
-  // Estado para editar tipo inline
   const [editingTipoId, setEditingTipoId] = useState<number | null>(null);
   const [editingTipoNombre, setEditingTipoNombre] = useState('');
   const [updatingTipoId, setUpdatingTipoId] = useState<number | null>(null);
   const [deletingTipoId, setDeletingTipoId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (cultivo) {
-      reset({
-        nombre: cultivo.nombre,
-        nombre_cientifico: cultivo.nombre_cientifico || '',
-        descripcion: cultivo.descripcion || '',
-        tipo_cultivo_id: cultivo.tipo_cultivo_id?.toString() || '',
+    if (programa) {
+      setFormData({
+        nombre: programa.nombre,
+        descripcion: programa.descripcion || '',
+        tipo_programa_id: programa.tipo_programa_id,
       });
     } else {
-      reset({
+      setFormData({
         nombre: '',
-        nombre_cientifico: '',
         descripcion: '',
-        tipo_cultivo_id: '',
+        tipo_programa_id: undefined,
       });
     }
     setShowNewTipo(false);
     setEditingTipoId(null);
-  }, [cultivo, reset, isOpen]);
+  }, [programa, isOpen]);
 
-  const handleFormSubmit = async (values: CultivoFormValues) => {
-    await onSubmit({
-      ...values,
-      tipo_cultivo_id: parseInt(values.tipo_cultivo_id),
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSave(formData);
     onClose();
   };
 
@@ -145,49 +117,40 @@ export function CultivoModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl glass-effect p-0 overflow-hidden">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Sprout className="size-6" />
-            </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold">
-                {cultivo ? 'Editar Cultivo' : 'Nuevo Cultivo'}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
+        <form onSubmit={handleSubmit}>
+          <div className="bg-primary/5 p-6 border-b border-border/50">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                {programa ? 'Editar Programa' : 'Nuevo Programa'}
               </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {cultivo ? 'Modifica la información del cultivo' : 'Registra un nuevo tipo de cultivo en el sistema'}
+              <p className="text-muted-foreground text-sm font-medium">
+                {programa ? 'Actualiza los datos del programa existente.' : 'Define un nuevo programa para el control fitosanitario.'}
               </p>
-            </div>
+            </DialogHeader>
           </div>
-        </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
-          <div className="space-y-5">
+          <div className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Nombre del Cultivo</label>
+              <Label htmlFor="nombre" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+                Nombre del Programa
+              </Label>
               <Input
-                {...register('nombre')}
-                placeholder="Ej. Maíz Amarillo"
-                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
-              />
-              {errors.nombre && <p className="text-xs text-rose-500 font-medium pl-1">{errors.nombre.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Nombre Científico (opcional)</label>
-              <Input
-                {...register('nombre_cientifico')}
-                placeholder="Ej. Zea mays"
-                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all italic"
+                id="nombre"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                placeholder="Ej: Control de Plagas en Maíz"
+                className="h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm"
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Tipo de Cultivo</label>
+              <Label htmlFor="tipo" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+                Tipo de Programa
+              </Label>
 
-              {/* Inline crear nuevo tipo */}
               {showNewTipo && (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Input
@@ -219,7 +182,6 @@ export function CultivoModal({
                 </div>
               )}
 
-              {/* Inline editar tipo (misma ubicación que crear) */}
               {editingTipoId !== null && (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Input
@@ -256,16 +218,16 @@ export function CultivoModal({
 
               <div className="flex items-center gap-2">
                 <Select
-                  onValueChange={(val) => setValue('tipo_cultivo_id', val, { shouldValidate: true })}
-                  value={watch('tipo_cultivo_id')}
+                  value={formData.tipo_programa_id?.toString()}
+                  onValueChange={(value) => setFormData({ ...formData, tipo_programa_id: parseInt(value) })}
                 >
-                  <SelectTrigger className="w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all">
-                    <SelectValue placeholder="Selecciona el tipo" />
+                  <SelectTrigger className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm">
+                    <SelectValue placeholder="Seleccione un tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-[250px] min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px] min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
-                        <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
+                        <SelectItem value={tipo.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-20">
                           {tipo.nombre}
                         </SelectItem>
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
@@ -310,38 +272,43 @@ export function CultivoModal({
                   variant="ghost"
                   size="icon"
                   onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
-                  className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                  className="size-12 shrink-0 rounded-2xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
                   title="Crear nuevo tipo"
                 >
                   <Plus className="size-5" />
                 </Button>
               </div>
-              {errors.tipo_cultivo_id && <p className="text-xs text-rose-500 font-medium pl-1">{errors.tipo_cultivo_id.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Descripción (Opcional)</label>
+              <Label htmlFor="descripcion" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+                Descripción
+              </Label>
               <Textarea
-                {...register('descripcion')}
-                placeholder="Breve descripción..."
-                className="min-h-[100px] rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none"
+                id="descripcion"
+                value={formData.descripcion}
+                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                placeholder="Detalla los objetivos y alcance del programa..."
+                className="min-h-[120px] rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
+          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="rounded-2xl h-12 px-6 font-bold hover:bg-background transition-all cursor-pointer"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                cultivo ? 'Guardar Cambios' : 'Registrar Cultivo'
-              )}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="rounded-2xl h-12 px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              {isLoading ? 'Guardando...' : programa ? 'Guardar Cambios' : 'Crear Programa'}
             </Button>
           </DialogFooter>
         </form>

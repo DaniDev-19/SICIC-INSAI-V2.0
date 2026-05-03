@@ -5,9 +5,20 @@ export const getProgramas = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { tipo_programa_id } = req.query;
+  const { tipo_programa_id, search } = req.query;
 
-  const where = tipo_programa_id ? { tipo_programa_id: Number(tipo_programa_id) } : {};
+  const where = {};
+
+  if (tipo_programa_id && tipo_programa_id !== 'all') {
+    where.tipo_programa_id = Number(tipo_programa_id);
+  }
+
+  if (search) {
+    where.OR = [
+      { nombre: { contains: search, mode: 'insensitive' } },
+      { descripcion: { contains: search, mode: 'insensitive' } },
+    ];
+  }
 
   const [programas, totalCount] = await Promise.all([
     tenantPrisma.programas.findMany({

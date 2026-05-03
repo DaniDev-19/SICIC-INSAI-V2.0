@@ -14,8 +14,23 @@ export const cultivosService = {
   },
 
   getTipos: async (): Promise<TipoCultivoResponse> => {
-    const { data } = await apiClient.get<TipoCultivoResponse>('/cultivos/tipos');
+    const { data } = await apiClient.get<TipoCultivoResponse>('/t_cultivo');
     return data;
+  },
+
+  createTipo: async (nombre: string): Promise<any> => {
+    const response = await apiClient.post('/t_cultivo', { nombre });
+    return response.data;
+  },
+
+  updateTipo: async (id: number, nombre: string): Promise<any> => {
+    const response = await apiClient.put(`/t_cultivo/${id}`, { nombre });
+    return response.data;
+  },
+
+  deleteTipo: async (id: number): Promise<any> => {
+    const response = await apiClient.delete(`/t_cultivo/${id}`);
+    return response.data;
   },
 
   create: async (data: CreateCultivoDto): Promise<Cultivo> => {
@@ -24,7 +39,7 @@ export const cultivosService = {
   },
 
   update: async (id: number, data: UpdateCultivoDto): Promise<Cultivo> => {
-    const response = await apiClient.patch<CultivoResponse>(`/cultivos/${id}`, data);
+    const response = await apiClient.put<CultivoResponse>(`/cultivos/${id}`, data);
     return response.data.data as Cultivo;
   },
 

@@ -5,9 +5,12 @@ import Home from './pages/home/Home';
 import Roles from './pages/roles/Roles';
 import BitacoraPage from './pages/bitacora/BitacoraPage';
 import Cultivos from './pages/cultivos/Cultivos';
+import Programas from './pages/programas/Programas';
+import HelpMe from './pages/help/Help';
 import Login from './pages/login/Login';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { PublicRoute } from './components/auth/public-route';
+import Error from './pages/error/Error';
 
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -38,10 +41,13 @@ function App() {
               <Route path='roles' element={<Roles />} />
               <Route path='bitacora' element={<BitacoraPage />} />
               <Route path='cultivos' element={<Cultivos />} />
+              <Route path='programas' element={<Programas />} />
+              <Route path='help' element={<HelpMe />} />
+
             </Route>
           </Route>
 
-          <Route path='*' element={<Navigate to="/home" replace />} />
+          <Route path='*' element={<Error />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

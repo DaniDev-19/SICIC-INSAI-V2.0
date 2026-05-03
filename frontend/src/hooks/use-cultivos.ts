@@ -75,6 +75,41 @@ export function useCultivos() {
     },
   });
 
+  // --- Tipo CRUD ---
+  const createTipoMutation = useMutation({
+    mutationFn: (nombre: string) => cultivosService.createTipo(nombre),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
+      toast.success('Tipo de cultivo creado');
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Error al crear el tipo');
+    },
+  });
+
+  const updateTipoMutation = useMutation({
+    mutationFn: ({ id, nombre }: { id: number; nombre: string }) => cultivosService.updateTipo(id, nombre),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
+      queryClient.invalidateQueries({ queryKey: ['cultivos'] });
+      toast.success('Tipo de cultivo actualizado');
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Error al actualizar el tipo');
+    },
+  });
+
+  const deleteTipoMutation = useMutation({
+    mutationFn: (id: number) => cultivosService.deleteTipo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
+      toast.success('Tipo de cultivo eliminado');
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Error al eliminar el tipo');
+    },
+  });
+
   return {
     cultivos: (Array.isArray(response?.data) ? response?.data : []) as any[],
     tipos: tiposResponse?.data || [],
@@ -93,8 +128,12 @@ export function useCultivos() {
     updateCultivo: updateMutation.mutateAsync,
     deleteCultivo: deleteMutation.mutateAsync,
     deleteManyCultivos: deleteManyMutation.mutateAsync,
+    createTipo: createTipoMutation.mutateAsync,
+    updateTipo: updateTipoMutation.mutateAsync,
+    deleteTipo: deleteTipoMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending || deleteManyMutation.isPending,
   };
 }
+
