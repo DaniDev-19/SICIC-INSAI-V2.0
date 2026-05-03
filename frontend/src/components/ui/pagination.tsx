@@ -8,23 +8,21 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import type { PaginationData } from "@/types/pagination";
+
 interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
-  limit: number;
+  pagination: PaginationData;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
 }
 
 export function Pagination({
-  currentPage,
-  totalPages,
-  totalCount,
-  limit,
+  pagination,
   onPageChange,
   onLimitChange,
 }: PaginationProps) {
+  const { currentPage, totalPages, totalCount, limit } = pagination;
+
   const startItem = (currentPage - 1) * limit + 1;
   const endItem = Math.min(currentPage * limit, totalCount);
 
@@ -37,14 +35,14 @@ export function Pagination({
     } else {
       pages.push(1);
       if (currentPage > 3) pages.push('ellipsis');
-      
+
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         if (!pages.includes(i)) pages.push(i);
       }
-      
+
       if (currentPage < totalPages - 2) pages.push('ellipsis');
       if (!pages.includes(totalPages)) pages.push(totalPages);
     }
@@ -57,7 +55,7 @@ export function Pagination({
         <p className="text-sm text-muted-foreground font-medium">
           Mostrando <span className="font-bold text-foreground">{totalCount === 0 ? 0 : startItem}-{endItem}</span> de <span className="font-bold text-foreground">{totalCount}</span>
         </p>
-        
+
         {totalCount > 5 && (
           <div className="flex items-center gap-2 animate-in zoom-in-95 duration-300">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Filas:</span>
@@ -101,11 +99,10 @@ export function Pagination({
               <Button
                 key={`page-${page}`}
                 variant={currentPage === page ? "default" : "ghost"}
-                className={`h-9 w-9 font-bold transition-all duration-300 ${
-                  currentPage === page 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" 
+                className={`h-9 w-9 font-bold transition-all duration-300 ${currentPage === page
+                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110"
                     : "bg-muted/10 hover:bg-primary/10 hover:text-primary"
-                } cursor-pointer`}
+                  } cursor-pointer`}
                 onClick={() => onPageChange(page as number)}
               >
                 {page}

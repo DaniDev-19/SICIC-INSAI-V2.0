@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { bitacoraService } from '../services/bitacora.service';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { bitacoraService } from '@/services/bitacora.service';
+import type { PaginationData } from '@/types/pagination';
 
 export function useBitacora() {
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(5);
   const [modulo, setModulo] = useState('all');
   const [accion, setAccion] = useState('all');
   const [username, setUsername] = useState('');
@@ -28,7 +29,7 @@ export function useBitacora() {
       accion: accion === 'all' ? '' : accion,
       username: debouncedUsername
     }),
-    placeholderData: (previousData) => previousData,
+    placeholderData: keepPreviousData,
     staleTime: 30000,
   });
 
@@ -38,14 +39,17 @@ export function useBitacora() {
     staleTime: 3600000,
   });
 
+  const pagination: PaginationData = {
+    totalCount: response?.pagination?.total || 0,
+    totalPages: response?.pagination?.pages || 1,
+    currentPage: response?.pagination?.page || 1,
+    limit,
+  };
+
   return {
     logs: response?.data || [],
     modulos,
-    pagination: {
-      totalCount: response?.pagination?.total || 0,
-      totalPages: response?.pagination?.pages || 1,
-      currentPage: response?.pagination?.page || 1,
-    },
+    pagination,
     isLoading,
     isError,
     page,

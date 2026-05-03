@@ -51,7 +51,7 @@ export function RolesTable({
   };
 
   return (
-    <div className="bg-card rounded-2xl border shadow-xl overflow-x-auto custom-scrollbar glass-effect">
+    <>
 
       <Table>
         <TableHeader className="bg-muted/30 border-b">
@@ -164,6 +164,6 @@ export function RolesTable({
           )}
         </TableBody>
       </Table>
-    </div>
+    </>
   );
 }

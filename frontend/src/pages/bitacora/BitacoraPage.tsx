@@ -6,7 +6,8 @@ import {
   User as UserIcon,
   ChevronLeft,
   Users,
-  Terminal
+  Terminal,
+  ListFilter as Filter
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBitacora } from '@/hooks/use-bitacora';
@@ -46,7 +47,6 @@ const BitacoraPage: React.FC = () => {
     modulos,
     pagination,
     isLoading,
-    limit,
     modulo,
     accion,
     username,
@@ -82,9 +82,17 @@ const BitacoraPage: React.FC = () => {
     }
   };
 
+  const filterType = [
+    { id: 1, value: "ACTUALIZAR", nombre: "Actualizar" },
+    { id: 2, value: "CREAR", nombre: "Crear" },
+    { id: 3, value: "ELIMINAR", nombre: "Eliminar" },
+    { id: 4, value: "INICIO_SESION", nombre: "Login" },
+    { id: 4, value: "CIERRE_SESION", nombre: "Logout" }
+  ];
+
   return (
-    <div className="p-6 lg:p-10 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-      <div className="space-y-6">
+    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Button
@@ -105,37 +113,45 @@ const BitacoraPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 pl-0 md:pl-12">
+        <div className="flex items-center gap-3">
           <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
             <Select value={modulo} onValueChange={setModulo}>
-              <SelectTrigger className="w-[140px] lg:w-[180px] bg-background/80 border-border h-10 rounded-xl focus:ring-primary/20 text-xs transition-all hover:bg-background hover:shadow-sm">
-                <SelectValue placeholder="Módulo" />
+              <SelectTrigger
+                title="Filtrar por Módulo"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+              >
+                <Database className={`size-4 ${modulo !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="sr-only">
+                  <SelectValue placeholder="Módulo" />
+                </span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border">
-                <SelectItem value="all">Todos los módulos</SelectItem>
-                {modulos.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              <SelectContent className="glass-effect border-border top-9 right-15">
+                <SelectItem value="all" className='cursor-pointer' >Todos los Módulos</SelectItem>
+                {modulos.map(m => <SelectItem key={m} value={m} className='cursor-pointer'>{m}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <Select value={accion} onValueChange={setAccion}>
-              <SelectTrigger className="w-[140px] lg:w-[180px] bg-background/80 border-border h-10 rounded-xl focus:ring-primary/20 text-xs transition-all hover:bg-background hover:shadow-sm">
-                <SelectValue placeholder="Acción" />
+              <SelectTrigger
+                title="Filtrar por Acción"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+              >
+                <Filter className={`size-4 ${accion !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="sr-only">
+                  <SelectValue placeholder="Acción" />
+                </span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border">
-                <SelectItem value="all">Todas las acciones</SelectItem>
-                <SelectItem value="CREAR">CREAR</SelectItem>
-                <SelectItem value="ACTUALIZAR">ACTUALIZAR</SelectItem>
-                <SelectItem value="ELIMINAR">ELIMINAR</SelectItem>
-                <SelectItem value="INICIO_SESION">INICIO SESIÓN</SelectItem>
-                <SelectItem value="CIERRE_SESION">CIERRE SESIÓN</SelectItem>
+              <SelectContent className="glass-effect border-border top-9 right-15">
+                <SelectItem value="all">Todas las Acciones</SelectItem>
+                {filterType.map((t) => <SelectItem key={t.id} value={t.value}>{t.nombre}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <div className="w-[200px] lg:w-[300px]">
+            <div className="w-[200px] lg:w-[280px]">
               <SearchInput
-                placeholder="Filtrar vista actual..."
+                placeholder="Buscar usuario..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onClear={() => setUsername('')}
@@ -146,108 +162,108 @@ const BitacoraPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-xl overflow-x-auto custom-scrollbar glass-effect min-h-[400px]">
-        <Table>
-          <TableHeader className="bg-muted/30 border-b border-border">
-            <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Fecha</TableHead>
-              <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Módulo</TableHead>
-              <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Acción</TableHead>
-              <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Usuario</TableHead>
-              <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground text-right border-none">Detalles</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-border/50">
-            {isLoading && filteredLogs.length === 0 ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i} className="border-none">
-                  <TableCell colSpan={5} className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <Skeleton className="h-12 w-12 rounded-xl" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-[250px]" />
-                        <Skeleton className="h-3 w-[150px]" />
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : filteredLogs.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-[400px] text-center">
-                  <div className="flex flex-col items-center justify-center space-y-3 opacity-40">
-                    <Terminal className="size-12" />
-                    <p className="text-sm font-medium italic">No se encontraron registros de auditoría</p>
-                  </div>
-                </TableCell>
+      <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+        <div className="overflow-x-auto custom-scrollbar">
+          <Table>
+            <TableHeader className="bg-muted/30 border-b border-border">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Fecha</TableHead>
+                <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Módulo</TableHead>
+                <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Acción</TableHead>
+                <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Usuario</TableHead>
+                <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground text-right border-none">Detalles</TableHead>
               </TableRow>
-            ) : (
-              filteredLogs.map((log) => (
-                <TableRow
-                  key={log.id}
-                  className="group hover:bg-primary/5 transition-all duration-300 border-none"
-                >
-                  <TableCell className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-foreground">
-                        {new Date(log.fecha).toLocaleDateString()}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {new Date(log.fecha).toLocaleTimeString()}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border transition-all group-hover:bg-primary group-hover:text-white group-hover:border-primary/50 shadow-inner">
-                        <Database className="w-4 h-4 text-muted-foreground group-hover:text-white" />
+            </TableHeader>
+            <TableBody className="divide-y divide-border/50">
+              {isLoading && filteredLogs.length === 0 ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-none">
+                    <TableCell colSpan={5} className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-12 w-12 rounded-xl" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-[250px]" />
+                          <Skeleton className="h-3 w-[150px]" />
+                        </div>
                       </div>
-                      <span className="text-foreground font-bold group-hover:translate-x-1 transition-transform">{log.modulo}</span>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-[400px] text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3 opacity-40">
+                      <Terminal className="size-12" />
+                      <p className="text-sm font-medium italic">No se encontraron registros de auditoría</p>
                     </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${getActionColor(log.accion)} shadow-sm`}>
-                      <div className="size-1.5 rounded-full bg-current animate-pulse" />
-                      {log.accion.replace('_', ' ')}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner">
-                        <UserIcon className="size-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-foreground block group-hover:translate-x-1 transition-transform">{log.username_log}</span>
-                        {log.empleados && (
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-tighter font-semibold">
-                            {log.empleados.nombre} {log.empleados.apellido}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedLog(log)}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all group-hover:scale-110 cursor-pointer"
-                    >
-                      <Eye className="w-5 h-5" />
-                    </Button>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredLogs.map((log) => (
+                  <TableRow
+                    key={log.id}
+                    className="group hover:bg-primary/5 transition-all duration-300 border-none"
+                  >
+                    <TableCell className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-foreground">
+                          {new Date(log.fecha).toLocaleDateString()}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {new Date(log.fecha).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border transition-all group-hover:bg-primary group-hover:text-white group-hover:border-primary/50 shadow-inner">
+                          <Database className="w-4 h-4 text-muted-foreground group-hover:text-white" />
+                        </div>
+                        <span className="text-foreground font-bold group-hover:translate-x-1 transition-transform">{log.modulo}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-5">
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${getActionColor(log.accion)} shadow-sm`}>
+                        <div className="size-1.5 rounded-full bg-current animate-pulse" />
+                        {log.accion.replace('_', ' ')}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-inner">
+                          <UserIcon className="size-5" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-foreground block group-hover:translate-x-1 transition-transform">{log.username_log}</span>
+                          {log.empleados && (
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-tighter font-semibold">
+                              {log.empleados.nombre} {log.empleados.apellido}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-5 text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title='Ver Historico'
+                        onClick={() => setSelectedLog(log)}
+                        className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all group-hover:scale-110 cursor-pointer"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalCount={pagination.totalCount}
-            limit={limit}
+            pagination={pagination}
             onPageChange={setPage}
             onLimitChange={(l) => { setLimit(l); setPage(1); }}
           />
