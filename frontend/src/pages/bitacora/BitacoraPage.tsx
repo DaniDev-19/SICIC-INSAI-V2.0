@@ -41,6 +41,52 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const PayloadViewer = ({ data, color }: { data: any, color: 'rose' | 'emerald' }) => {
+  if (data === null || data === undefined) {
+    return <span className="text-muted-foreground/50 italic text-xs">Nulo</span>;
+  }
+
+  if (typeof data !== 'object') {
+    return <span className="font-mono">{String(data)}</span>;
+  }
+
+  const colorClass = color === 'rose'
+    ? "text-rose-700 dark:text-rose-300"
+    : "text-emerald-700 dark:text-emerald-300";
+
+  const keyColorClass = color === 'rose'
+    ? "text-rose-900/70 dark:text-rose-200/50"
+    : "text-emerald-900/70 dark:text-emerald-200/50";
+
+  if (Array.isArray(data)) {
+    if (data.length === 0) return <span className="text-muted-foreground/50 italic text-[11px] bg-background/50 px-2 py-0.5 rounded-md">Lista vacía</span>;
+    return (
+      <ul className="space-y-2 mt-1">
+        {data.map((item, index) => (
+          <li key={index} className={`pl-3 border-l-2 ${color === 'rose' ? 'border-rose-500/20' : 'border-emerald-500/20'}`}>
+            <PayloadViewer data={item} color={color} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <div className="space-y-2 w-full bg-background/30 p-3 rounded-xl border border-white/5">
+      {Object.entries(data).map(([key, value]) => (
+        <div key={key} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 border-b border-border/10 last:border-0 pb-2 last:pb-0">
+          <span className={`text-[10px] font-black uppercase tracking-widest ${keyColorClass} sm:w-1/3 shrink-0 pt-0.5`}>
+            {key.replace(/_/g, ' ')}
+          </span>
+          <div className={`text-[13px] font-medium ${colorClass} wrap-break-words flex-1`}>
+            <PayloadViewer data={value} color={color} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const BitacoraPage: React.FC = () => {
   const {
     logs,
@@ -305,9 +351,9 @@ const BitacoraPage: React.FC = () => {
                     </div>
                     <div className="bg-secondary/30 dark:bg-zinc-950 border border-border p-5 rounded-2xl min-h-[250px] overflow-auto custom-scrollbar shadow-inner ring-1 ring-white/5 group transition-all hover:border-rose-500/30">
                       {selectedLog.payload_previo ? (
-                        <pre className="text-[12px] text-rose-700 dark:text-rose-300/80 whitespace-pre-wrap font-mono leading-relaxed transition-colors">
-                          {JSON.stringify(selectedLog.payload_previo, null, 2)}
-                        </pre>
+                        <div className="w-full">
+                          <PayloadViewer data={selectedLog.payload_previo} color="rose" />
+                        </div>
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground/40 italic text-xs gap-2 py-10">
                           <Terminal className="size-6 opacity-20" />
@@ -326,9 +372,9 @@ const BitacoraPage: React.FC = () => {
                     </div>
                     <div className="bg-secondary/30 dark:bg-zinc-950 border border-border p-5 rounded-2xl min-h-[250px] overflow-auto custom-scrollbar shadow-inner ring-1 ring-white/5 group transition-all hover:border-emerald-500/30">
                       {selectedLog.payload_nuevo ? (
-                        <pre className="text-[12px] text-emerald-700 dark:text-emerald-300/80 whitespace-pre-wrap font-mono leading-relaxed transition-colors">
-                          {JSON.stringify(selectedLog.payload_nuevo, null, 2)}
-                        </pre>
+                        <div className="w-full">
+                          <PayloadViewer data={selectedLog.payload_nuevo} color="emerald" />
+                        </div>
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground/40 italic text-xs gap-2 py-10">
                           <Terminal className="size-6 opacity-20" />

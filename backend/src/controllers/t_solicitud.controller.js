@@ -15,7 +15,7 @@ export const getTSolicitud = async () => {
         tenantPrisma.t_solicitud.count()
     ]);
 
-    resizeBy.status(200).json({
+    res.status(200).json({
         status: 'success',
         data: t_solicitud,
         pagination: {
@@ -50,9 +50,9 @@ export const getTSolicitudById = async (req, res) => {
 
 export const createTSolicitud = async (req, res) => {
     const tenantPrisma = req.db;
-    const { nombre } = res.body;
+    const { nombre } = req.body;
 
-    const existingTSolicitud = await tenantPrisma.t_solicitud.findUnique({
+    const existingTSolicitud = await tenantPrisma.t_solicitud.findFirst({
         where: { nombre },
     });
 
@@ -69,7 +69,7 @@ export const createTSolicitud = async (req, res) => {
         },
     });
 
-    bitacoraService.resgistrar({
+    bitacoraService.registrar({
         req,
         accion: 'CREAR',
         modulo: 'Tipo de Solicitud',
@@ -99,7 +99,7 @@ export const updateTSolicitud = async (req, res) => {
     }
 
     if (nombre && nombre !== existingTSolicitud.nombre) {
-        const nameDuplicate = await tenantPrisma.t_solicitud.findUnique({
+        const nameDuplicate = await tenantPrisma.t_solicitud.findFirst({
             where: { nombre }
         });
 
@@ -111,7 +111,7 @@ export const updateTSolicitud = async (req, res) => {
         }
     }
 
-    const response = await tenantPrisma.t_solicitud.findUnique({
+    const response = await tenantPrisma.t_solicitud.update({
         where: { id: Number(id) },
         data: {
             nombre,
@@ -138,11 +138,11 @@ export const deleteTSolicitud = async (req, res) => {
     const { id } = req.params;
 
     const inUse = await tenantPrisma.solicitudes.findFirst({
-        where: { tipo_solitud_id: Number(id) }
+        where: { tipo_solicitud_id: Number(id) }
     });
 
     if (inUse) {
-        return res.status(400), json({
+        return res.status(400).json({
             status: 'Error',
             message: 'No se puede eliminar el tipo de solicitud ya que esta siendo utilizada por una solicitud',
         });

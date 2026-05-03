@@ -53,7 +53,7 @@ export const createTEvento = async (req, res) => {
     const tenantPrisma = req.db;
     const { nombre } = req.body;
 
-    const existingTEvento = await tenantPrisma.t_evento.findUnique({
+    const existingTEvento = await tenantPrisma.t_evento.findFirst({
         where: { nombre },
     });
 
@@ -100,7 +100,7 @@ export const updateTEvento = async (req, res) => {
     }
 
     if (nombre && nombre !== existingTEvento.nombre) {
-        const nameDuplicate = await tenantPrisma.t_evento.findUnique({
+        const nameDuplicate = await tenantPrisma.t_evento.findFirst({
             where: { nombre },
         });
 

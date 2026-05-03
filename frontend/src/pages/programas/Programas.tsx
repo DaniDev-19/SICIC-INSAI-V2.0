@@ -4,19 +4,9 @@ import {
     ChevronLeft,
     Plus,
     Loader2,
-    Database,
+    ClipboardList,
     AlertTriangle
 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -27,15 +17,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useCultivos } from '@/hooks/use-cultivos';
-import { CultivosTable } from './components/CultivosTable';
-import { CultivoModal } from './components/CultivoModal';
-import type { Cultivo } from '@/types/cultivos';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useProgramas } from '@/hooks/use-programas';
+import { ProgramasTable } from './components/ProgramasTable';
+import { ProgramaModal } from './components/ProgramaModal';
+import { ProgramaAsociaciones } from './components/ProgramaAsociaciones';
+import type { Programa } from '@/types/programas';
 
-const Cultivos: React.FC = () => {
+const Programas: React.FC = () => {
     const navigate = useNavigate();
     const {
-        cultivos,
+        programas,
         tipos,
         pagination,
         isLoading,
@@ -45,50 +46,54 @@ const Cultivos: React.FC = () => {
         setLimit,
         setSearch,
         setTipoId,
-        createCultivo,
-        updateCultivo,
-        deleteCultivo,
+        createPrograma,
+        updatePrograma,
+        deletePrograma,
         createTipo,
         updateTipo,
         deleteTipo,
         isCreating,
         isUpdating
-    } = useCultivos();
+    } = useProgramas();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCultivo, setSelectedCultivo] = useState<Cultivo | null>(null);
+    const [selectedPrograma, setSelectedPrograma] = useState<Programa | null>(null);
+    const [selectedProgramaForDetails, setSelectedProgramaForDetails] = useState<Programa | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
-        setSelectedCultivo(null);
+        setSelectedPrograma(null);
         setIsModalOpen(true);
     };
 
-    const handleOpenEdit = (cultivo: Cultivo) => {
-        setSelectedCultivo(cultivo);
+    const handleOpenEdit = (programa: Programa) => {
+        setSelectedPrograma(programa);
         setIsModalOpen(true);
+    };
+
+    const handleSave = async (data: any) => {
+        if (selectedPrograma) {
+            await updatePrograma({ id: selectedPrograma.id, data });
+        } else {
+            await createPrograma(data);
+        }
     };
 
     const confirmDelete = async () => {
         if (deleteId) {
-            await deleteCultivo(deleteId);
+            await deletePrograma(deleteId);
             setDeleteId(null);
-        }
-    };
-
-    const handleSubmit = async (data: any) => {
-        if (selectedCultivo) {
-            await updateCultivo({ id: selectedCultivo.id, data });
-        } else {
-            await createCultivo(data);
+            if (selectedProgramaForDetails?.id === deleteId) {
+                setSelectedProgramaForDetails(null);
+            }
         }
     };
 
     return (
-        <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+        <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3">
                         <Button
                             variant="ghost"
                             size="icon"
@@ -98,11 +103,11 @@ const Cultivos: React.FC = () => {
                             <ChevronLeft className="size-5" />
                         </Button>
                         <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
-                            Catálogo de Cultivos
+                            Programas de Control
                         </h1>
                     </div>
                     <p className="text-muted-foreground font-medium pl-12">
-                        Administra los tipos de cultivos disponibles para las inspecciones y avales.
+                        Gestiona los programas de vigilancia y control fitosanitario del sistema.
                     </p>
                 </div>
 
@@ -113,12 +118,12 @@ const Cultivos: React.FC = () => {
                                 title="Filtrar por Tipo"
                                 className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
                             >
-                                <Database className={`size-4 ${tipoId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                <ClipboardList className={`size-4 ${tipoId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                                 <span className="sr-only">
                                     <SelectValue placeholder="Tipo" />
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border top-9 right-15">
+                            <SelectContent className="glass-effect border-border">
                                 <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
                                 {tipos.map(t => (
                                     <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">
@@ -132,7 +137,7 @@ const Cultivos: React.FC = () => {
 
                         <div className="w-[200px] lg:w-[280px]">
                             <SearchInput
-                                placeholder="Buscar cultivo..."
+                                placeholder="Buscar programa..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 onClear={() => setSearch('')}
@@ -141,8 +146,8 @@ const Cultivos: React.FC = () => {
                         </div>
                     </div>
 
-                    <Button onClick={handleOpenCreate} title='crea un nuevo cultivo' variant={"primary"}>
-                        <Plus className="size-5 text-white" /> <span className="text-white">Nuevo cultivo</span>
+                    <Button onClick={handleOpenCreate} title='crea un nuevo programa' variant={"primary"}>
+                        <Plus className="size-5 text-white" /> <span className="text-white">Nuevo Programa</span>
                     </Button>
                 </div>
             </div>
@@ -154,16 +159,18 @@ const Cultivos: React.FC = () => {
                             <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
                             <Loader2 className="size-10 text-primary animate-spin" />
                         </div>
-                        <p className="text-muted-foreground font-medium animate-pulse">Cargando catálogo...</p>
+                        <p className="text-muted-foreground font-medium animate-pulse">Cargando programas...</p>
                     </div>
                 ) : (
                     <>
                         <div className="overflow-x-auto custom-scrollbar">
-                                <CultivosTable
-                                    cultivos={cultivos}
-                                    onEdit={handleOpenEdit}
-                                    onDelete={setDeleteId}
-                                />
+                            <ProgramasTable
+                                programas={programas}
+                                onEdit={handleOpenEdit}
+                                onDelete={(id) => setDeleteId(id)}
+                                onSelect={(prog) => setSelectedProgramaForDetails(prog.id === selectedProgramaForDetails?.id ? null : prog)}
+                                selectedId={selectedProgramaForDetails?.id}
+                            />
                         </div>
 
                         <div className="px-6 py-4 border-t border-border bg-muted/20">
@@ -177,11 +184,18 @@ const Cultivos: React.FC = () => {
                 )}
             </div>
 
-            <CultivoModal
+            {selectedProgramaForDetails && (
+                <ProgramaAsociaciones
+                    programaId={selectedProgramaForDetails.id}
+                    programaNombre={selectedProgramaForDetails.nombre}
+                />
+            )}
+
+            <ProgramaModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-                cultivo={selectedCultivo}
+                onSave={handleSave}
+                programa={selectedPrograma}
                 tipos={tipos}
                 isLoading={isCreating || isUpdating}
                 onCreateTipo={createTipo}
@@ -196,10 +210,10 @@ const Cultivos: React.FC = () => {
                             <AlertTriangle className="size-8 text-rose-500" />
                         </div>
                         <AlertDialogTitle className="text-2xl font-black text-center italic uppercase leading-tight">
-                            ¿ELIMINAR CULTIVO?
+                            ¿Eliminar Programa?
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-center font-medium px-4">
-                            Esta acción borrará permanentemente este cultivo. Los datos asociados podrían verse afectados.
+                            Esta acción borrará permanentemente este programa y desvinculará todas sus asociaciones estratégicas.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
@@ -208,7 +222,7 @@ const Cultivos: React.FC = () => {
                             onClick={confirmDelete}
                             className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg cursor-pointer shadow-rose-500/20"
                         >
-                            Destruir Cultivo
+                            Destruir Programa
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -217,4 +231,4 @@ const Cultivos: React.FC = () => {
     );
 };
 
-export default Cultivos;
+export default Programas;

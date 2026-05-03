@@ -1,12 +1,28 @@
 import {
   Home,
-  Settings,
-  LogOut,
+  FileText,
+  CalendarDays,
+  Eye,
+  Warehouse,
+  FileCheck,
+  Activity,
+  ClipboardList,
+  PawPrint,
+  Sprout,
+  Bug,
+  Stethoscope,
   Users,
-  ShieldCheck,
+  Building2,
+  Briefcase,
   Package,
   BarChart3,
-  ClipboardList,
+  History,
+  Settings,
+  UsersRound,
+  ShieldCheck,
+  Server,
+  User,
+  LogOut,
   Leaf
 } from "lucide-react"
 
@@ -31,68 +47,64 @@ const navigationGroups = [
   {
     label: "Panel Principal",
     items: [
-      {
-        title: "Inicio",
-        url: "/home",
-        icon: Home,
-        screen: "home",
-      },
+      { title: "Inicio", url: "/home", icon: Home, screen: "home" },
     ]
   },
   {
-    label: "Seguridad y acceso",
+    label: "Registro y Control",
     items: [
-      {
-        title: "Roles",
-        url: "/home/roles",
-        icon: ShieldCheck,
-        screen: "roles",
-      },
-      {
-        title: "Cargos",
-        url: "/home/cargos",
-        icon: Users,
-        screen: "user",
-      },
+      { title: "Productores", url: "/home/clientes", icon: Users, screen: "clientes" },
+      { title: "Propiedades", url: "/home/propiedades", icon: Building2, screen: "propiedades" },
+      { title: "Empleados", url: "/home/empleados", icon: Briefcase, screen: "empleados" },
     ]
   },
   {
-    label: "Inventario y Insumos",
+    label: "Operaciones de Campo",
     items: [
-      {
-        title: "Inventario",
-        url: "#",
-        icon: Package,
-        screen: "inventario",
-      },
+      { title: "Solicitudes", url: "/home/solicitudes", icon: FileText, screen: "solicitudes" },
+      { title: "Planificación", url: "/home/planificacion", icon: CalendarDays, screen: "planificacion" },
+      { title: "Inspecc. Generales", url: "/home/inspecciones", icon: Eye, screen: "inspecciones" },
+      { title: "Inspecc. de Silos", url: "/home/inspecciones-silos", icon: Warehouse, screen: "inspecciones_silos" },
+      { title: "Avales", url: "/home/avales", icon: FileCheck, screen: "avales" },
+      { title: "Seguimiento", url: "/home/seguimientos", icon: Activity, screen: "seguimientos" },
     ]
   },
   {
-    label: "Reportes y Control",
+    label: "Inventario y Logística",
     items: [
-      {
-        title: "Reportes",
-        url: "#",
-        icon: BarChart3,
-        screen: "reportes",
-      },
-      {
-        title: "Auditoría",
-        url: "/home/bitacora",
-        icon: ClipboardList,
-        screen: "bitacora",
-      },
+      { title: "Inventario de Insumos", url: "/home/inventario", icon: Package, screen: "inventario" },
     ]
   },
   {
-    label: "Sistema",
+    label: "Vigilancia Epidemiológica",
     items: [
-      {
-        title: "Configuración",
-        url: "#",
-        icon: Settings,
-        screen: "configuracion",
-      },
+      { title: "Programas", url: "/home/programas", icon: ClipboardList, screen: "programas" },
+      { title: "Cultivos", url: "/home/cultivos", icon: Sprout, screen: "cultivos" },
+      { title: "Animales", url: "/home/animales", icon: PawPrint, screen: "animales" },
+      { title: "Plagas", url: "/home/plagas", icon: Bug, screen: "plagas" },
+      { title: "Enfermedades", url: "/home/enfermedades", icon: Stethoscope, screen: "enfermedades" },
+    ]
+  },
+  {
+    label: "Reportes y Auditoría",
+    items: [
+      { title: "Reportes", url: "/home/reportes", icon: BarChart3, screen: "reportes" },
+      { title: "Bitácora", url: "/home/bitacora", icon: History, screen: "bitacora" },
+    ]
+  },
+  {
+    label: "Administración",
+    items: [
+      { title: "Configuraciones", url: "/home/configuraciones", icon: Settings, screen: "configuraciones" },
+      { title: "Usuarios", url: "/home/usuarios", icon: UsersRound, screen: "usuarios" },
+      { title: "Roles y Permisos", url: "/home/roles", icon: ShieldCheck, screen: "roles" },
+      { title: "Instancias", url: "/home/instancias", icon: Server, screen: "instancias" },
+    ]
+  },
+  {
+    label: "Mi Cuenta",
+    items: [
+      { title: "Perfil de Usuario", url: "/home/perfil", icon: User, screen: "perfil" },
     ]
   }
 ]
@@ -176,7 +188,7 @@ export function AppSidebar() {
               onClick={handleLogout}
               variant="ghost"
               style={{ color: '#f43f5e', backgroundColor: 'transparent' }}
-              className="w-full justify-start gap-3 h-10 px-4 hover:!text-rose-600 hover:!bg-rose-500/10 transition-all duration-200 rounded-xl cursor-pointer group/logout active:!bg-transparent"
+              className="w-full justify-start gap-3 h-10 px-4 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-200 rounded-xl cursor-pointer group/logout active:bg-transparent"
               title="Cerrar Sesión"
             >
               <LogOut className="size-4.5 transition-transform duration-200 group-hover/logout:-translate-x-1" style={{ color: '#f43f5e' }} />

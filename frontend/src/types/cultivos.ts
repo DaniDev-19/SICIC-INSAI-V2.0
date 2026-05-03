@@ -11,7 +11,7 @@ export interface Cultivo {
     nombre_cientifico: string | null;
     descripcion: string | null;
     tipo_cultivo_id: number | null;
-    tipo_cultivo?: TipoCultivo;
+    t_cultivo?: TipoCultivo;
 }
 
 export interface CreateCultivoDto {

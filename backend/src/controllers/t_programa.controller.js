@@ -53,7 +53,7 @@ export const createTPrograma = async (req, res) => {
     const tenantPrisma = req.db;
     const { nombre } = req.body;
 
-    const existingTPrograma = await tenantPrisma.t_programa.findUnique({
+    const existingTPrograma = await tenantPrisma.t_programa.findFirst({
         where: { nombre },
     });
 
@@ -100,7 +100,7 @@ export const updateTPrograma = async (req, res) => {
     }
 
     if (nombre && nombre !== existingTPrograma.nombre) {
-        const nameDuplicate = await tenantPrisma.t_programa.findUnique({
+        const nameDuplicate = await tenantPrisma.t_programa.findFirst({
             where: { nombre },
         });
 

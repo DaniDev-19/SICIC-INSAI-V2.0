@@ -7,12 +7,12 @@ export const getTEnfermedades = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [t_enfermedad, totalCount] = await Promise.all([
-        tenantPrisma.t_enfermedadades.findMany({
+        tenantPrisma.t_enfermedades.findMany({
             skip,
             take: limit,
             orderBy: { nombre: 'asc' },
         }),
-        tenantPrisma.t_enfermedadades.conunt()
+        tenantPrisma.t_enfermedades.count()
     ]);
 
     res.status(200).json({
@@ -52,7 +52,7 @@ export const createTEnfermedad = async (req, res) => {
     const tenantPrisma = req.db;
     const { nombre } = req.body;
 
-    const existingTEnfermedad = await tenantPrisma.t_enfermedades.findUnique({
+    const existingTEnfermedad = await tenantPrisma.t_enfermedades.findFirst({
         where: { nombre },
     });
 
@@ -63,7 +63,7 @@ export const createTEnfermedad = async (req, res) => {
         });
     }
 
-    const response = await tenantPrisma.t_enfermedadades.create({
+    const response = await tenantPrisma.t_enfermedades.create({
         data: {
             nombre,
         },
@@ -99,7 +99,7 @@ export const updateTEnfermedad = async (req, res) => {
     }
 
     if (nombre && nombre !== existingTEnfermedad.nombre) {
-        const nameDuplicate = await tenantPrisma.t_enfermedadades.findUnique({
+        const nameDuplicate = await tenantPrisma.t_enfermedades.findFirst({
             where: { nombre },
         });
 
@@ -111,7 +111,7 @@ export const updateTEnfermedad = async (req, res) => {
         }
     }
 
-    const response = await tenantPrisma.t_enfermedadades.update({
+    const response = await tenantPrisma.t_enfermedades.update({
         where: { id: Number(id) },
         data: {
             nombre,
