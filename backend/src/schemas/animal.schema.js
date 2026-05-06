@@ -9,8 +9,12 @@ export const createAnimalSchema = z.object({
         dieta: z.string().max(100).optional(),
         esperanza_vida: z.string().max(100).optional(),
         habitat_principal: z.string().max(100).optional(),
-        peso_promedio_kg: z.number().min(0, 'El peso no puede ser negativo').optional(),
-        longitud_promedio_mt: z.number().min(0, 'La longitud no puede ser negativa').optional(),
+        peso_promedio_kg: z.number({
+            invalid_type_error: 'El peso debe ser un valor numérico',
+        }).min(0, 'El peso no puede ser negativo').nullable().optional(),
+        longitud_promedio_mt: z.number({
+            invalid_type_error: 'La longitud debe ser un valor numérico',
+        }).min(0, 'La longitud no puede ser negativa').nullable().optional(),
         descripcion: z.string().optional(),
         tipo_animal_id: z.number().int().positive('El tipo_animal_id debe ser un número positivo').optional(),
     })
@@ -23,8 +27,12 @@ export const updateAnimalSchema = z.object({
         dieta: z.string().max(100).optional(),
         esperanza_vida: z.string().max(100).optional(),
         habitat_principal: z.string().max(100).optional(),
-        peso_promedio_kg: z.number().min(0).optional(),
-        longitud_promedio_mt: z.number().min(0).optional(),
+        peso_promedio_kg: z.number({
+            invalid_type_error: 'El peso debe ser un valor numérico',
+        }).min(0).nullable().optional(),
+        longitud_promedio_mt: z.number({
+            invalid_type_error: 'La longitud debe ser un valor numérico',
+        }).min(0).nullable().optional(),
         descripcion: z.string().optional(),
         tipo_animal_id: z.number().int().positive().optional(),
     })

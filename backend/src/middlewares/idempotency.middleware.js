@@ -5,7 +5,6 @@ import { masterPrisma } from '../config/prisma.js';
  * Garantiza que una operación no se ejecute múltiples veces si se recibe la misma llave.
  */
 export const idempotencyMiddleware = async (req, res, next) => {
-  // Solo aplicamos a métodos que no son GET
   if (req.method === 'GET' || req.method === 'HEAD') {
     return next();
   }
@@ -16,22 +15,17 @@ export const idempotencyMiddleware = async (req, res, next) => {
   }
 
   try {
-    // 1. Buscar si la llave ya existe
     const existing = await masterPrisma.idempotency_keys.findUnique({
       where: { key_value: key }
     });
 
     if (existing) {
-      // Si la llave ya existe, devolvemos la respuesta guardada
       return res.status(existing.response_status).json(existing.response_body);
     }
 
-    // 2. Si no existe, interceptamos la respuesta original para guardarla
     const originalJson = res.json;
     res.json = function (body) {
-      // Solo guardamos respuestas exitosas o errores del cliente que queramos cachear (opcional)
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        // Guardar de forma asíncrona para no bloquear la respuesta
         masterPrisma.idempotency_keys.create({
           data: {
             key_value: key,
@@ -42,7 +36,7 @@ export const idempotencyMiddleware = async (req, res, next) => {
           }
         }).catch(err => console.error('Error guardando idempotency key:', err));
       }
-      
+
       return originalJson.call(this, body);
     };
 
