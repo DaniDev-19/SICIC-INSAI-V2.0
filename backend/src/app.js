@@ -54,6 +54,7 @@ import instanceRoutes from './routes/instance.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
+app.set('trust proxy', 1);
 
 const authLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
@@ -64,6 +65,7 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
 });
 
 app.use(helmet());

@@ -15,7 +15,7 @@ export const writeLimiter = rateLimit({
   legacyHeaders: false,
   // Opcional: Podríamos personalizar el keyGenerator para usar req.user.id si está autenticado
   keyGenerator: (req) => {
-    return req.user?.id ? `user_${req.user.id}` : req.ip;
+    return req.user?.id ? `user_${req.user.id}` : (req.ip || req.headers['x-forwarded-for'] || '127.0.0.1');
   }
 });
 
