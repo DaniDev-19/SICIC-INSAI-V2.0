@@ -11,9 +11,14 @@ export interface RawPagination {
   pages: number;
 }
 
-export interface PaginatedResponse<T> {
+export interface ApiResponse<T> {
   status: 'success' | 'error' | 'warning';
   message?: string;
-  data: T[];
-  pagination: PaginationData;
+  data: T;
+  pagination?: PaginationData;
+}
+
+export interface SimpleResponse {
+  status: 'success' | 'error' | 'warning';
+  message: string;
 }

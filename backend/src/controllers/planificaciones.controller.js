@@ -97,62 +97,82 @@ export const createPlanificacion = async (req, res) => {
     aseguramiento, vehiculo_id, solicitud_id, status, empleados
   } = req.body;
 
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      const existingPlan = await tx.planificaciones.findUnique({ where: { solicitud_id } });
+      if (existingPlan) {
+        const error = new Error('Esta solicitud ya tiene una planificación asociada.');
+        error.statusCode = 400;
+        throw error;
+      }
 
-  const existingPlan = await tenantPrisma.planificaciones.findUnique({ where: { solicitud_id } });
-  if (existingPlan) {
-    return res.status(400).json({ status: 'error', message: 'Esta solicitud ya tiene una planificación asociada.' });
-  }
-
-  let finalCodigo = codigo;
-  if (!finalCodigo) {
-    const lastRecord = await tenantPrisma.planificaciones.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true }
-    });
-    const nextId = (lastRecord?.id || 0) + 1;
-    finalCodigo = `PLAN-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
-  }
-
-  const response = await tenantPrisma.$transaction(async (tx) => {
-    const plan = await tx.planificaciones.create({
-      data: {
-        codigo: finalCodigo,
-        fecha_programada: new Date(fecha_programada),
-        hora_inicio: hora_inicio ? new Date(`1970-01-01T${hora_inicio}`) : null,
-        hora_fin: hora_fin ? new Date(`1970-01-01T${hora_fin}`) : null,
-        prioridad: prioridad || 'MEDIA',
-        actividad,
-        objetivo,
-        convocatoria,
-        punto_encuentro,
-        ubicacion,
-        aseguramiento,
-        vehiculo_id,
-        solicitud_id,
-        status: status || 'PENDIENTE',
-        planificacion_empleados: {
-          create: empleados.map(empId => ({ empleado_id: empId }))
+      if (codigo) {
+        const existingByCode = await tx.planificaciones.findUnique({ where: { codigo } });
+        if (existingByCode) {
+          const error = new Error('Ya existe una planificación con ese código.');
+          error.statusCode = 400;
+          throw error;
         }
       }
+
+      let finalCodigo = codigo;
+      if (!finalCodigo) {
+        const lastRecord = await tx.planificaciones.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextId = (lastRecord?.id || 0) + 1;
+        finalCodigo = `PLAN-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
+      }
+
+      const plan = await tx.planificaciones.create({
+        data: {
+          codigo: finalCodigo,
+          fecha_programada: new Date(fecha_programada),
+          hora_inicio: hora_inicio ? new Date(`1970-01-01T${hora_inicio}`) : null,
+          hora_fin: hora_fin ? new Date(`1970-01-01T${hora_fin}`) : null,
+          prioridad: prioridad || 'MEDIA',
+          actividad,
+          objetivo,
+          convocatoria,
+          punto_encuentro,
+          ubicacion,
+          aseguramiento,
+          vehiculo_id,
+          solicitud_id,
+          status: status || 'PENDIENTE',
+          planificacion_empleados: {
+            create: empleados.map(empId => ({ empleado_id: empId }))
+          }
+        }
+      });
+
+      await tx.solicitudes.update({
+        where: { id: solicitud_id },
+        data: { estatus: 'PLANIFICADA' }
+      });
+
+      return plan;
+    }, {
+      isolationLevel: 'Serializable'
     });
 
-    await tx.solicitudes.update({
-      where: { id: solicitud_id },
-      data: { estatus: 'PLANIFICADA' }
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Planificaciones',
+      payload_nuevo: response
     });
 
-    return plan;
-  });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Planificaciones',
-    payload_nuevo: response
-  });
-
-  res.status(201).json({ status: 'success', data: response });
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ status: 'error', message: error.message });
+    }
+    throw error;
+  }
 };
+
 
 export const updatePlanificacion = async (req, res) => {
   const tenantPrisma = req.db;

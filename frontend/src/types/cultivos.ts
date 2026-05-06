@@ -1,4 +1,4 @@
-import type { PaginationData } from "./pagination";
+import type { ApiResponse, SimpleResponse } from "./pagination";
 
 export interface TipoCultivo {
     id: number;
@@ -14,25 +14,9 @@ export interface Cultivo {
     t_cultivo?: TipoCultivo;
 }
 
-export interface CreateCultivoDto {
-    nombre: string;
-    nombre_cientifico?: string | null;
-    descripcion?: string | null;
-    tipo_cultivo_id?: number | null;
-}
+export type CreateCultivoDto = Omit<Cultivo, 'id' | 't_cultivo'>;
+export type UpdateCultivoDto = Partial<CreateCultivoDto>;
 
-export interface UpdateCultivoDto extends Partial<CreateCultivoDto> { }
-
-
-
-export interface CultivoResponse {
-    status: 'success' | 'error' | 'warning';
-    message?: string;
-    data: Cultivo | Cultivo[];
-    pagination?: PaginationData;
-}
-
-export interface TipoCultivoResponse {
-    status: 'success' | 'error';
-    data: TipoCultivo[];
-}
+export type CultivoResponse = ApiResponse<Cultivo | Cultivo[]>;
+export type TipoCultivoResponse = ApiResponse<TipoCultivo[]>;
+export type { SimpleResponse };

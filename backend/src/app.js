@@ -5,10 +5,11 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import { writeLimiter } from './middlewares/rate.middleware.js';
+import { idempotencyMiddleware } from './middlewares/idempotency.middleware.js';
 
 import authRoutes from './routes/auth.routes.js';
 import roleRoutes from './routes/role.routes.js';
-
 import bitacoraRoutes from './routes/bitacora.routes.js';
 import cargoRoutes from './routes/cargo.routes.js';
 import profesionRoutes from './routes/profesion.routes.js';
@@ -70,6 +71,15 @@ app.use(corsConfig);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
+
+app.use('/api', idempotencyMiddleware);
+
+app.use('/api', (req, res, next) => {
+  if (req.method !== 'GET' && !req.path.startsWith('/auth')) {
+    return writeLimiter(req, res, next);
+  }
+  next();
+});
 
 app.use('/uploads', express.static(path.resolve('uploads')));
 

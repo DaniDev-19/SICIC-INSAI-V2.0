@@ -8,6 +8,19 @@ const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  // Solo agregar llave de idempotencia para métodos que modifican estado
+  const methods = ['post', 'put', 'patch', 'delete'];
+  if (methods.includes(config.method?.toLowerCase() || '')) {
+    // Generar un UUID si no existe ya en los headers
+    if (!config.headers['X-Idempotency-Key']) {
+      config.headers['X-Idempotency-Key'] = crypto.randomUUID();
+    }
+  }
+  return config;
+});
+
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

@@ -38,7 +38,7 @@ export const getCInsumosById = async (req, res) => {
 
     if (!cInsumos) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error categoria de Insumos no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createCInsumos = async (req, res) => {
 
     if (existingCInsumos) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe una categoria de insumos con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateCInsumos = async (req, res) => {
 
     if (!existingCInsumos) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Categoria de insumos no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateCInsumos = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe una categoria de insumos con este nombre',
             });
         }
@@ -144,7 +144,7 @@ export const deleteCInsumos = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar la Categoria porque esta siendo utilizada por un Insumo',
         });
     }

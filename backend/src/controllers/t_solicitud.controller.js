@@ -37,7 +37,7 @@ export const getTSolicitudById = async (req, res) => {
 
     if (!response) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'El tipo de solicitud no se encuentra o es inexistente'
         });
     }
@@ -58,7 +58,7 @@ export const createTSolicitud = async (req, res) => {
 
     if (existingTSolicitud) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un tipo de solicitud con este nombre'
         });
     }
@@ -93,7 +93,7 @@ export const updateTSolicitud = async (req, res) => {
 
     if (!existingTSolicitud) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Solicitud no encontrada',
         });
     }
@@ -105,7 +105,7 @@ export const updateTSolicitud = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un Tipo de Solicitud con el mismo nombre'
             });
         }
@@ -143,7 +143,7 @@ export const deleteTSolicitud = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar el tipo de solicitud ya que esta siendo utilizada por una solicitud',
         });
 

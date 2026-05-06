@@ -1,3 +1,5 @@
+import type { ApiResponse, SimpleResponse } from "./pagination";
+
 export interface TipoPrograma {
   id: number;
   nombre: string;
@@ -15,6 +17,7 @@ export interface Programa {
   programa_enfermedades?: { enfermedades: { id: number; nombre: string } }[];
 }
 
+// DTOs
 export interface CreateProgramaDto {
   nombre: string;
   descripcion?: string;
@@ -25,15 +28,9 @@ export interface CreateProgramaDto {
   enfermedades_ids?: number[];
 }
 
-export interface UpdateProgramaDto extends Partial<CreateProgramaDto> {}
+export type UpdateProgramaDto = Partial<CreateProgramaDto>;
 
-export interface ProgramaResponse {
-  status: string;
-  data: Programa[];
-  pagination: {
-    totalCount: number;
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-  };
-}
+// Responses
+export type ProgramaResponse = ApiResponse<Programa | Programa[]>;
+export type TipoProgramaResponse = ApiResponse<TipoPrograma[]>;
+export type { SimpleResponse };

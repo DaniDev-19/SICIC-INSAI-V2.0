@@ -1,65 +1,62 @@
 import apiClient from '@/lib/api-client';
-import type { Enfermedad, CreateEnfermedadDto, UpdateEnfermedadDto, TipoEnfermedad } from '@/types/enfermedades';
-
-export interface EnfermedadesResponse {
-  status: string;
-  data: Enfermedad[];
-  pagination: {
-    totalCount: number;
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-  };
-}
+import type { 
+  Enfermedad, 
+  CreateEnfermedadDto, 
+  UpdateEnfermedadDto, 
+  EnfermedadResponse, 
+  TipoEnfermedadResponse, 
+  SimpleResponse 
+} from '@/types/enfermedades';
+import type { ApiResponse } from '@/types/pagination';
 
 export const enfermedadesService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<EnfermedadesResponse> => {
-    const response = await apiClient.get<EnfermedadesResponse>('/enfermedades', { params });
+  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<EnfermedadResponse> => {
+    const response = await apiClient.get<EnfermedadResponse>('/enfermedades', { params });
     return response.data;
   },
 
-  getById: async (id: number): Promise<{ status: string, data: Enfermedad }> => {
-    const response = await apiClient.get<{ status: string, data: Enfermedad }>(`/enfermedades/${id}`);
+  getById: async (id: number): Promise<ApiResponse<Enfermedad>> => {
+    const response = await apiClient.get<ApiResponse<Enfermedad>>(`/enfermedades/${id}`);
     return response.data;
   },
 
-  getTipos: async (): Promise<{ status: string, data: TipoEnfermedad[] }> => {
-    const response = await apiClient.get<{ status: string, data: TipoEnfermedad[] }>('/t_enfermedades');
+  getTipos: async (): Promise<TipoEnfermedadResponse> => {
+    const response = await apiClient.get<TipoEnfermedadResponse>('/t_enfermedades');
     return response.data;
   },
 
-  createTipo: async (nombre: string): Promise<any> => {
-    const response = await apiClient.post('/t_enfermedades', { nombre });
+  createTipo: async (nombre: string): Promise<TipoEnfermedadResponse> => {
+    const response = await apiClient.post<TipoEnfermedadResponse>('/t_enfermedades', { nombre });
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<any> => {
-    const response = await apiClient.put(`/t_enfermedades/${id}`, { nombre });
+  updateTipo: async (id: number, nombre: string): Promise<TipoEnfermedadResponse> => {
+    const response = await apiClient.put<TipoEnfermedadResponse>(`/t_enfermedades/${id}`, { nombre });
     return response.data;
   },
 
-  deleteTipo: async (id: number): Promise<any> => {
-    const response = await apiClient.delete(`/t_enfermedades/${id}`);
+  deleteTipo: async (id: number): Promise<SimpleResponse> => {
+    const response = await apiClient.delete<SimpleResponse>(`/t_enfermedades/${id}`);
     return response.data;
   },
 
-  create: async (enfermedad: CreateEnfermedadDto): Promise<{ status: string, data: Enfermedad }> => {
-    const response = await apiClient.post<{ status: string, data: Enfermedad }>('/enfermedades', enfermedad);
+  create: async (enfermedad: CreateEnfermedadDto): Promise<ApiResponse<Enfermedad>> => {
+    const response = await apiClient.post<ApiResponse<Enfermedad>>('/enfermedades', enfermedad);
     return response.data;
   },
 
-  update: async (id: number, enfermedad: UpdateEnfermedadDto): Promise<{ status: string, data: Enfermedad }> => {
-    const response = await apiClient.put<{ status: string, data: Enfermedad }>(`/enfermedades/${id}`, enfermedad);
+  update: async (id: number, enfermedad: UpdateEnfermedadDto): Promise<ApiResponse<Enfermedad>> => {
+    const response = await apiClient.put<ApiResponse<Enfermedad>>(`/enfermedades/${id}`, enfermedad);
     return response.data;
   },
 
-  delete: async (id: number): Promise<{ status: string, message: string }> => {
-    const response = await apiClient.delete<{ status: string, message: string }>(`/enfermedades/${id}`);
+  delete: async (id: number): Promise<SimpleResponse> => {
+    const response = await apiClient.delete<SimpleResponse>(`/enfermedades/${id}`);
     return response.data;
   },
 
-  deleteMany: async (ids: number[]): Promise<{ status: string, message: string }> => {
-    const response = await apiClient.post<{ status: string, message: string }>('/enfermedades/bulk-delete', { ids });
+  deleteMany: async (ids: number[]): Promise<SimpleResponse> => {
+    const response = await apiClient.post<SimpleResponse>('/enfermedades/bulk-delete', { ids });
     return response.data;
   }
 };

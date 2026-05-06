@@ -38,7 +38,7 @@ export const getTAnimalesById = async (req, res) => {
 
     if (!tAnimales) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de animal no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTAnimales = async (req, res) => {
 
     if (existingTAnimales) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Animal con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTAnimales = async (req, res) => {
 
     if (!existingTAnimales) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Animales no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTAnimales = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de animal con este nombre',
             });
         }
@@ -144,7 +144,7 @@ export const deleteTAnimal = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar el Tipo de Animal porque esta siendo utilizada por un Animal',
         });
     }

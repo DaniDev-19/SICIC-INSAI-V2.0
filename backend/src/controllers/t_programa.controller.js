@@ -38,7 +38,7 @@ export const getTProgramaById = async (req, res) => {
 
     if (!tPrograma) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de Programa no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTPrograma = async (req, res) => {
 
     if (existingTPrograma) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Programa con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTPrograma = async (req, res) => {
 
     if (!existingTPrograma) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Programa no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTPrograma = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de programa con este nombre',
             });
         }

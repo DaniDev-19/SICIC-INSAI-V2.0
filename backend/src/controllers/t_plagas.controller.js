@@ -38,7 +38,7 @@ export const getTPlagaById = async (req, res) => {
 
     if (!tPlaga) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de Plaga no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTPlaga = async (req, res) => {
 
     if (existingTPlaga) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Plaga con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTPlaga = async (req, res) => {
 
     if (!existingTPlaga) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Plaga no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTPlaga = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de plaga con este nombre',
             });
         }

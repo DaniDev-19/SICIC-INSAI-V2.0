@@ -38,7 +38,7 @@ export const getTCultivoById = async (req, res) => {
 
     if (!tCultivo) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de Cultivo no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTCultivo = async (req, res) => {
 
     if (existingTCultivo) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Cultivo con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTCultivo = async (req, res) => {
 
     if (!existingTCultivo) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Cultivo no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTCultivo = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un cultivo con este nombre',
             });
         }
@@ -144,7 +144,7 @@ export const deleteTCultivo = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar el Tipo de Cultivo porque esta siendo utilizada por un Cultivo',
         });
     }
