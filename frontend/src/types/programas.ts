@@ -31,6 +31,6 @@ export interface CreateProgramaDto {
 export type UpdateProgramaDto = Partial<CreateProgramaDto>;
 
 // Responses
-export type ProgramaResponse = ApiResponse<Programa | Programa[]>;
+export type ProgramaResponse = ApiResponse<Programa[]>;
 export type TipoProgramaResponse = ApiResponse<TipoPrograma[]>;
 export type { SimpleResponse };

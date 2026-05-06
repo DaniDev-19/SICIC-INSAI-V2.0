@@ -22,6 +22,6 @@ export interface Animal {
 export type CreateAnimalDto = Omit<Animal, 'id' | 't_animales'>;
 export type UpdateAnimalDto = Partial<CreateAnimalDto>;
 
-export type AnimalResponse = ApiResponse<Animal | Animal[]>;
+export type AnimalResponse = ApiResponse<Animal[]>;
 export type TipoAnimalResponse = ApiResponse<TipoAnimal[]>;
 export type { SimpleResponse };

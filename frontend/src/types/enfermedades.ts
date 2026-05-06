@@ -20,6 +20,6 @@ export type CreateEnfermedadDto = Omit<Enfermedad, 'id' | 't_enfermedades'>;
 export type UpdateEnfermedadDto = Partial<CreateEnfermedadDto>;
 
 // Response types
-export type EnfermedadResponse = ApiResponse<Enfermedad | Enfermedad[]>;
+export type EnfermedadResponse = ApiResponse<Enfermedad[]>;
 export type TipoEnfermedadResponse = ApiResponse<TipoEnfermedad[]>;
 export type { SimpleResponse };
