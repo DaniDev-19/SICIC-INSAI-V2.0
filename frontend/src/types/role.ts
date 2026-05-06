@@ -23,6 +23,6 @@ import type { PaginationData } from "./pagination";
 export interface RoleResponse {
   status: 'success' | 'error';
   message?: string;
-  data: Role | Role[];
+  data: Role[];
   pagination?: PaginationData;
 }

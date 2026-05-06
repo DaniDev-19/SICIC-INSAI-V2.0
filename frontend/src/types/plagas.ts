@@ -17,6 +17,6 @@ export interface Plaga {
 export type CreatePlagaDto = Omit<Plaga, 'id' | 't_plagas'>;
 export type UpdatePlagaDto = Partial<CreatePlagaDto>;
 
-export type PlagaResponse = ApiResponse<Plaga | Plaga[]>;
+export type PlagaResponse = ApiResponse<Plaga[]>;
 export type TipoPlagaResponse = ApiResponse<TipoPlaga[]>;
 export type { SimpleResponse };

@@ -17,6 +17,6 @@ export interface Cultivo {
 export type CreateCultivoDto = Omit<Cultivo, 'id' | 't_cultivo'>;
 export type UpdateCultivoDto = Partial<CreateCultivoDto>;
 
-export type CultivoResponse = ApiResponse<Cultivo | Cultivo[]>;
+export type CultivoResponse = ApiResponse<Cultivo[]>;
 export type TipoCultivoResponse = ApiResponse<TipoCultivo[]>;
 export type { SimpleResponse };
