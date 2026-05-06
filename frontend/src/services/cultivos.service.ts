@@ -4,8 +4,10 @@ import type {
   CreateCultivoDto, 
   UpdateCultivoDto, 
   CultivoResponse, 
-  TipoCultivoResponse 
+  TipoCultivoResponse, 
+  SimpleResponse
 } from "@/types/cultivos";
+import type { ApiResponse } from "@/types/pagination";
 
 export const cultivosService = {
   getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<CultivoResponse> => {
@@ -18,36 +20,38 @@ export const cultivosService = {
     return data;
   },
 
-  createTipo: async (nombre: string): Promise<any> => {
-    const response = await apiClient.post('/t_cultivo', { nombre });
+  createTipo: async (nombre: string): Promise<TipoCultivoResponse> => {
+    const response = await apiClient.post<TipoCultivoResponse>('/t_cultivo', { nombre });
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<any> => {
-    const response = await apiClient.put(`/t_cultivo/${id}`, { nombre });
+  updateTipo: async (id: number, nombre: string): Promise<TipoCultivoResponse> => {
+    const response = await apiClient.put<TipoCultivoResponse>(`/t_cultivo/${id}`, { nombre });
     return response.data;
   },
 
-  deleteTipo: async (id: number): Promise<any> => {
-    const response = await apiClient.delete(`/t_cultivo/${id}`);
+  deleteTipo: async (id: number): Promise<SimpleResponse> => {
+    const response = await apiClient.delete<SimpleResponse>(`/t_cultivo/${id}`);
     return response.data;
   },
 
-  create: async (data: CreateCultivoDto): Promise<Cultivo> => {
-    const response = await apiClient.post<CultivoResponse>('/cultivos', data);
-    return response.data.data as Cultivo;
+  create: async (data: CreateCultivoDto): Promise<ApiResponse<Cultivo>> => {
+    const response = await apiClient.post<ApiResponse<Cultivo>>('/cultivos', data);
+    return response.data;
   },
 
-  update: async (id: number, data: UpdateCultivoDto): Promise<Cultivo> => {
-    const response = await apiClient.put<CultivoResponse>(`/cultivos/${id}`, data);
-    return response.data.data as Cultivo;
+  update: async (id: number, data: UpdateCultivoDto): Promise<ApiResponse<Cultivo>> => {
+    const response = await apiClient.put<ApiResponse<Cultivo>>(`/cultivos/${id}`, data);
+    return response.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/cultivos/${id}`);
+  delete: async (id: number): Promise<SimpleResponse> => {
+    const response = await apiClient.delete<SimpleResponse>(`/cultivos/${id}`);
+    return response.data;
   },
 
-  deleteMany: async (ids: number[]): Promise<void> => {
-    await apiClient.post('/cultivos/bulk-delete', { ids });
+  deleteMany: async (ids: number[]): Promise<SimpleResponse> => {
+    const response = await apiClient.post<SimpleResponse>('/cultivos/bulk-delete', { ids });
+    return response.data;
   }
 };

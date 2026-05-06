@@ -12,6 +12,9 @@ Para profundizar en el funcionamiento técnico del frontend, consulta los siguie
 *   [**Guía de Modernización UI**](./docs/guia-ui-modernizacion.md): Documentación funcional de la nueva arquitectura de componentes (Dialogs, Matrix y Tematización).
 *   [**Arquitectura de Auditoría e Interfaz de Bitácora**](./docs/bitacora-arquitectura-frontend.md): Manual técnico sobre la implementación del hook `useBitacora`, búsqueda híbrida y sincronización visual.
 *   [**Manual de Navegación, Búsqueda y UX V2**](./docs/modernizacion-sidebar-v2.md): Guía completa sobre la arquitectura de dominios, motores de búsqueda (Global/Local) y gestión masiva de datos.
+*   [**Integración de Seguridad y Robustez**](./docs/integracion_seguridad_frontend.md): Guía sobre el manejo de idempotencia y límites de tasa en el cliente API.
+*   [**Gestión de Tipos y Estructura de Archivos**](./docs/gestion_tipos_y_archivos.md): Manual sobre la organización de interfaces TypeScript y jerarquía del proyecto.
+
 
 ---
 

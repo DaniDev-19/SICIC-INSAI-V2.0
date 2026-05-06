@@ -37,7 +37,7 @@ export const getCargoById = async (req, res) => {
 
     if (!cargo) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Cargo no encontrado',
         });
     }
@@ -93,7 +93,7 @@ export const updateCargo = async (req, res) => {
 
     if (!existingCargo) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Cargo no encontrado',
         });
     }

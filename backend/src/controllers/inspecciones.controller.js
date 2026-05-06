@@ -106,27 +106,35 @@ export const createInspeccion = async (req, res) => {
 
   const empleado_id = req.user?.empleado_id || null;
 
-
-  let finalNControl = n_control;
-  if (!finalNControl) {
-    const lastRecord = await tenantPrisma.inspecciones.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true }
-    });
-    const nextId = (lastRecord?.id || 0) + 1;
-    finalNControl = `INSP-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
-  }
-
-  let photoUrls = [];
-  if (req.files && req.files.length > 0) {
-    const uploadPromises = req.files.map((file, index) =>
-      storageService.uploadImage(file.buffer, `${finalNControl}-foto-${index}`, 'inspecciones')
-    );
-    photoUrls = await Promise.all(uploadPromises);
-  }
-
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
+      if (n_control) {
+        const existingByControl = await tx.inspecciones.findUnique({ where: { n_control } });
+        if (existingByControl) {
+          const error = new Error('Ya existe una inspección con este número de control.');
+          error.statusCode = 400;
+          throw error;
+        }
+      }
+
+      let finalNControl = n_control;
+      if (!finalNControl) {
+        const lastRecord = await tx.inspecciones.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextId = (lastRecord?.id || 0) + 1;
+        finalNControl = `INSP-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
+      }
+
+      let photoUrls = [];
+      if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map((file, index) =>
+          storageService.uploadImage(file.buffer, `${finalNControl}-foto-${index}`, 'inspecciones')
+        );
+        photoUrls = await Promise.all(uploadPromises);
+      }
+
       const insp = await tx.inspecciones.create({
         data: {
           n_control: finalNControl,
@@ -194,6 +202,8 @@ export const createInspeccion = async (req, res) => {
       }
 
       return insp;
+    }, {
+      isolationLevel: 'Serializable'
     });
 
     bitacoraService.registrar({
@@ -205,9 +215,10 @@ export const createInspeccion = async (req, res) => {
 
     res.status(201).json({ status: 'success', data: response });
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message });
+    res.status(error.statusCode || 400).json({ status: 'error', message: error.message });
   }
 };
+
 
 export const updateInspeccion = async (req, res) => {
   const tenantPrisma = req.db;

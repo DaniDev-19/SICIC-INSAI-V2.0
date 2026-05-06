@@ -1,3 +1,4 @@
+import type { ApiResponse, SimpleResponse } from "./pagination";
 
 export interface TipoEnfermedad {
     id: number;
@@ -14,12 +15,11 @@ export interface Enfermedad {
     t_enfermedades?: TipoEnfermedad;
 }
 
-export interface CreateEnfermedadDto {
-    nombre: string;
-    nombre_cientifico?: string | null;
-    zoonatica?: string | null;
-    descripcion?: string | null;
-    tipo_enfermedad_id?: number | null;
-}
+// DTOs using utility types
+export type CreateEnfermedadDto = Omit<Enfermedad, 'id' | 't_enfermedades'>;
+export type UpdateEnfermedadDto = Partial<CreateEnfermedadDto>;
 
-export interface UpdateEnfermedadDto extends Partial<CreateEnfermedadDto> { }
+// Response types
+export type EnfermedadResponse = ApiResponse<Enfermedad | Enfermedad[]>;
+export type TipoEnfermedadResponse = ApiResponse<TipoEnfermedad[]>;
+export type { SimpleResponse };

@@ -89,40 +89,61 @@ export const createSolicitud = async (req, res) => {
     medio_recepcion, tipo_solicitud_id, solicitante_id, atendido_por_id, propiedad_id
   } = req.body;
 
-  let finalCodigo = codigo;
-  if (!finalCodigo) {
-    const lastRecord = await tenantPrisma.solicitudes.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true }
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      if (codigo) {
+        const existing = await tx.solicitudes.findUnique({ where: { codigo } });
+        if (existing) {
+          const error = new Error('Ya existe una solicitud con este código');
+          error.statusCode = 400;
+          throw error;
+        }
+      }
+
+      let finalCodigo = codigo;
+      if (!finalCodigo) {
+        const lastRecord = await tx.solicitudes.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextId = (lastRecord?.id || 0) + 1;
+        finalCodigo = `SOL-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
+      }
+
+      return await tx.solicitudes.create({
+        data: {
+          codigo: finalCodigo,
+          descripcion,
+          fecha_resolucion: fecha_resolucion ? new Date(fecha_resolucion) : null,
+          estatus: estatus || 'CREADA',
+          prioridad: prioridad || 'MEDIA',
+          medio_recepcion: medio_recepcion || 'PRESENCIAL',
+          tipo_solicitud_id,
+          solicitante_id,
+          atendido_por_id: atendido_por_id || null,
+          propiedad_id
+        }
+      });
+    }, {
+      isolationLevel: 'Serializable'
     });
-    const nextId = (lastRecord?.id || 0) + 1;
-    finalCodigo = `SOL-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
-  }
 
-  const response = await tenantPrisma.solicitudes.create({
-    data: {
-      codigo: finalCodigo,
-      descripcion,
-      fecha_resolucion: fecha_resolucion ? new Date(fecha_resolucion) : null,
-      estatus: estatus || 'CREADA',
-      prioridad: prioridad || 'MEDIA',
-      medio_recepcion: medio_recepcion || 'PRESENCIAL',
-      tipo_solicitud_id,
-      solicitante_id,
-      atendido_por_id: atendido_por_id || null,
-      propiedad_id
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Solicitudes',
+      payload_nuevo: response
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ status: 'error', message: error.message });
     }
-  });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Solicitudes',
-    payload_nuevo: response
-  });
-
-  res.status(201).json({ status: 'success', data: response });
+    throw error;
+  }
 };
+
 
 export const updateSolicitud = async (req, res) => {
   const tenantPrisma = req.db;

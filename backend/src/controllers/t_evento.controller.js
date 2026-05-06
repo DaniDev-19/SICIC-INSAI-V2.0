@@ -38,7 +38,7 @@ export const getTEventoById = async (req, res) => {
 
     if (!tEvento) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de Evento no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTEvento = async (req, res) => {
 
     if (existingTEvento) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Evento con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTEvento = async (req, res) => {
 
     if (!existingTEvento) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Evento no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTEvento = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de evento con este nombre',
             });
         }
@@ -144,7 +144,7 @@ export const deleteTEvento = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar el Tipo de Evento porque esta siendo utilizada por una acta de silos',
         });
     }

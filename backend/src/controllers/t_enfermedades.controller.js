@@ -37,7 +37,7 @@ export const getTEnfermedadById = async (req, res) => {
 
     if (!tEnfermedad) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de enfermedad no encontrado',
         });
     }
@@ -58,7 +58,7 @@ export const createTEnfermedad = async (req, res) => {
 
     if (existingTEnfermedad) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Enfermedad con este nombre',
         });
     }
@@ -93,7 +93,7 @@ export const updateTEnfermedad = async (req, res) => {
 
     if (!existingTEnfermedad) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Enfermedad no encontrada'
         });
     }
@@ -105,7 +105,7 @@ export const updateTEnfermedad = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de enfermedad con este nombre',
             });
         }

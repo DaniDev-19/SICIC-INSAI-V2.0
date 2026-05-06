@@ -48,3 +48,14 @@ model usuarios {
   updated_at        DateTime?           @default(now()) @db.Timestamp(6)
   usuario_instancia usuario_instancia[]
 }
+
+model idempotency_keys {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key_value       String   @unique
+  response_status Int
+  response_body   Json
+  user_id         Int?
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  expires_at      DateTime @db.Timestamp(6)
+}
+

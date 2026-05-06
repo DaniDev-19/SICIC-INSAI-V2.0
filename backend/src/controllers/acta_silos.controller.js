@@ -94,16 +94,26 @@ export const createActaSilo = async (req, res) => {
 
   const empleado_id = req.user?.empleado_id || null;
 
-  let photoUrls = [];
-  if (req.files && req.files.length > 0) {
-    const uploadPromises = req.files.map((file, index) =>
-      storageService.uploadImage(file.buffer, `silo-acta-${Date.now()}-${index}`, 'silos')
-    );
-    photoUrls = await Promise.all(uploadPromises);
-  }
-
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
+      // Evitar duplicados de acta para la misma planificación
+      const existing = await tx.acta_silos.findFirst({
+        where: { planificacion_id: Number(planificacion_id) }
+      });
+      if (existing) {
+        const error = new Error('Esta planificación ya tiene un acta de silo registrada.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      let photoUrls = [];
+      if (req.files && req.files.length > 0) {
+        const uploadPromises = req.files.map((file, index) =>
+          storageService.uploadImage(file.buffer, `silo-acta-${Date.now()}-${index}`, 'silos')
+        );
+        photoUrls = await Promise.all(uploadPromises);
+      }
+
       const acta = await tx.acta_silos.create({
         data: {
           semana_epid,
@@ -165,6 +175,8 @@ export const createActaSilo = async (req, res) => {
       }
 
       return acta;
+    }, {
+      isolationLevel: 'Serializable'
     });
 
     bitacoraService.registrar({
@@ -176,9 +188,10 @@ export const createActaSilo = async (req, res) => {
 
     res.status(201).json({ status: 'success', data: response });
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message });
+    res.status(error.statusCode || 400).json({ status: 'error', message: error.message });
   }
 };
+
 
 export const updateActaSilo = async (req, res) => {
   const tenantPrisma = req.db;

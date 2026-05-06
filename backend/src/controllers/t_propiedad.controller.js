@@ -38,7 +38,7 @@ export const getTPropiedadById = async (req, res) => {
 
     if (!tPropiedad) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Error Tipo de Propiedad no encontrado',
         });
     }
@@ -59,7 +59,7 @@ export const createTPropiedad = async (req, res) => {
 
     if (existingTPropiedad) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'Ya existe un Tipo de Propiedad con este nombre',
         });
     }
@@ -94,7 +94,7 @@ export const updateTPropiedad = async (req, res) => {
 
     if (!existingTPropiedad) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Tipo de Propiedad no encontrada'
         });
     }
@@ -106,7 +106,7 @@ export const updateTPropiedad = async (req, res) => {
 
         if (nameDuplicate) {
             return res.status(409).json({
-                status: 'Error',
+                status: 'error',
                 message: 'Ya existe un tipo de propiedad con este nombre',
             });
         }
@@ -144,7 +144,7 @@ export const deleteTPropiedad = async (req, res) => {
 
     if (inUse) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'No se puede eliminar el Tipo de Propiedad porque esta siendo utilizada por una propiedad',
         });
     }
