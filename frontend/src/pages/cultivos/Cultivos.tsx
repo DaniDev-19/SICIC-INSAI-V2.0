@@ -28,9 +28,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useCultivos } from '@/hooks/use-cultivos';
+
 import { CultivosTable } from './components/CultivosTable';
 import { CultivoModal } from './components/CultivoModal';
-import type { Cultivo } from '@/types/cultivos';
 
 const Cultivos: React.FC = () => {
     const navigate = useNavigate();
@@ -45,18 +45,14 @@ const Cultivos: React.FC = () => {
         setLimit,
         setSearch,
         setTipoId,
-        createCultivo,
-        updateCultivo,
         deleteCultivo,
         createTipo,
         updateTipo,
         deleteTipo,
-        isCreating,
-        isUpdating
     } = useCultivos();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCultivo, setSelectedCultivo] = useState<Cultivo | null>(null);
+    const [selectedCultivo, setSelectedCultivo] = useState<typeof cultivos[0] | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
@@ -64,7 +60,7 @@ const Cultivos: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleOpenEdit = (cultivo: Cultivo) => {
+    const handleOpenEdit = (cultivo: typeof cultivos[0]) => {
         setSelectedCultivo(cultivo);
         setIsModalOpen(true);
     };
@@ -76,13 +72,7 @@ const Cultivos: React.FC = () => {
         }
     };
 
-    const handleSubmit = async (data: any) => {
-        if (selectedCultivo) {
-            await updateCultivo({ id: selectedCultivo.id, data });
-        } else {
-            await createCultivo(data);
-        }
-    };
+
 
     return (
         <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
@@ -180,10 +170,8 @@ const Cultivos: React.FC = () => {
             <CultivoModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
                 cultivo={selectedCultivo}
                 tipos={tipos}
-                isLoading={isCreating || isUpdating}
                 onCreateTipo={createTipo}
                 onUpdateTipo={updateTipo}
                 onDeleteTipo={deleteTipo}

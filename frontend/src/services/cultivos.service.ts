@@ -15,6 +15,11 @@ export const cultivosService = {
     return data;
   },
 
+  getById: async (id: number): Promise<ApiResponse<Cultivo>> => {
+    const { data } = await apiClient.get<ApiResponse<Cultivo>>(`/cultivos/${id}`);
+    return data;
+  },
+
   getTipos: async (): Promise<TipoCultivoResponse> => {
     const { data } = await apiClient.get<TipoCultivoResponse>('/t_cultivo');
     return data;
@@ -25,7 +30,7 @@ export const cultivosService = {
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<TipoCultivoResponse> => {
+  updateTipo: async ({ id, nombre }: { id: number; nombre: string }): Promise<TipoCultivoResponse> => {
     const response = await apiClient.put<TipoCultivoResponse>(`/t_cultivo/${id}`, { nombre });
     return response.data;
   },
@@ -40,7 +45,7 @@ export const cultivosService = {
     return response.data;
   },
 
-  update: async (id: number, data: UpdateCultivoDto): Promise<ApiResponse<Cultivo>> => {
+  update: async ({ id, data }: { id: number; data: UpdateCultivoDto }): Promise<ApiResponse<Cultivo>> => {
     const response = await apiClient.put<ApiResponse<Cultivo>>(`/cultivos/${id}`, data);
     return response.data;
   },

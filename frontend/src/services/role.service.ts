@@ -18,7 +18,7 @@ export const roleService = {
     return response.data.data;
   },
 
-  updateRole: async (id: number, data: UpdateRoleDto): Promise<Role> => {
+  updateRole: async ({ id, data }: { id: number; data: UpdateRoleDto }): Promise<Role> => {
     const response = await apiClient.patch<ApiResponse<Role>>(`/roles/${id}`, data);
     return response.data.data;
   },
@@ -32,7 +32,7 @@ export const roleService = {
     return response.data;
   },
 
-  updateRoleStatus: async (id: number, status: boolean): Promise<Role> => {
+  updateRoleStatus: async ({ id, status }: { id: number; status: boolean }): Promise<Role> => {
     const response = await apiClient.patch<ApiResponse<Role>>(`/roles/${id}/status`, { status });
     return response.data.data;
   },
