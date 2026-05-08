@@ -106,6 +106,7 @@ export function useRoles() {
     deleteManyRoles: deleteManyMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending || updateStatusMutation.isPending,
+    isDeleting: deleteManyMutation.isPending,
   };
 }
 

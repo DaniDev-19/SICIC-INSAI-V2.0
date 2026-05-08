@@ -46,7 +46,7 @@ export function ProgramaAsociaciones({ programaId, programaNombre }: ProgramaAso
     dataToSend[`${type}_ids`].push(id);
 
     try {
-      await programasService.update(programa.id, dataToSend);
+      await programasService.update({ id: programa.id, data: dataToSend });
       queryClient.invalidateQueries({ queryKey: ['programa', programa.id] });
       toast.success('Asociación agregada correctamente');
     } catch (error) {
@@ -65,7 +65,7 @@ export function ProgramaAsociaciones({ programaId, programaNombre }: ProgramaAso
     };
 
     try {
-      await programasService.update(programa.id, dataToSend);
+      await programasService.update({ id: programa.id, data: dataToSend });
       queryClient.invalidateQueries({ queryKey: ['programa', programa.id] });
       toast.success('Asociación removida correctamente');
     } catch (error) {
