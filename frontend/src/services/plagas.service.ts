@@ -30,7 +30,7 @@ export const plagasService = {
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<TipoPlagaResponse> => {
+  updateTipo: async ({ id, nombre }: { id: number; nombre: string }): Promise<TipoPlagaResponse> => {
     const response = await apiClient.put<TipoPlagaResponse>(`/t_plaga/${id}`, { nombre });
     return response.data;
   },
@@ -45,7 +45,7 @@ export const plagasService = {
     return response.data;
   },
 
-  update: async (id: number, plaga: UpdatePlagaDto): Promise<ApiResponse<Plaga>> => {
+  update: async ({ id, plaga }: { id: number; plaga: UpdatePlagaDto }): Promise<ApiResponse<Plaga>> => {
     const response = await apiClient.put<ApiResponse<Plaga>>(`/plagas/${id}`, plaga);
     return response.data;
   },

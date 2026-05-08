@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AxiosError } from 'axios';
-import { programasService } from '../services/programas.service';
+import { programasService } from '@/services/programas.service';
 import { toast } from 'sonner';
-import { useDebounce } from './use-debounce';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function useProgramas() {
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export function useProgramas() {
 
   const { data: tiposResponse } = useQuery({
     queryKey: ['tipos-programas'],
-    queryFn: () => programasService.getTipos(),
+    queryFn: programasService.getTipos,
   });
 
   const createMutation = useMutation({
@@ -41,7 +41,7 @@ export function useProgramas() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => programasService.update(id, data),
+    mutationFn: programasService.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programas'] });
       toast.success('Programa actualizado correctamente');
@@ -85,7 +85,7 @@ export function useProgramas() {
   });
 
   const updateTipoMutation = useMutation({
-    mutationFn: ({ id, nombre }: { id: number; nombre: string }) => programasService.updateTipo(id, nombre),
+    mutationFn: programasService.updateTipo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-programas'] });
       toast.success('Tipo de programa actualizado');

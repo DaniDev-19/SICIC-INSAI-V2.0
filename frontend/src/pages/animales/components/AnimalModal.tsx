@@ -19,40 +19,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Cultivo, TipoCultivo } from '@/types/cultivos';
-import { Sprout, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import type { Animal, TipoAnimal } from '@/types/animales';
+import { Dog, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCultivos } from '@/hooks/use-cultivos';
+import { useAnimales } from '@/hooks/use-animales';
 
-const cultivoSchema = z.object({
+const numericString = z.string()
+  .regex(/^[0-9]*([.,][0-9]+)?$/, 'Debe ser un número válido')
+  .optional()
+  .or(z.literal(''))
+  .nullable();
+
+const animalSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   nombre_cientifico: z.string().nullable().optional(),
+  dieta: z.string().nullable().optional(),
+  esperanza_vida: z.string().nullable().optional(),
+  habitat_principal: z.string().nullable().optional(),
+  peso_promedio_kg: numericString,
+  longitud_promedio_mt: numericString,
   descripcion: z.string().nullable().optional(),
-  tipo_cultivo_id: z.string().min(1, 'El tipo de cultivo es requerido'),
+  tipo_animal_id: z.string().min(1, 'El tipo de animal es requerido'),
 });
 
-type CultivoFormValues = z.infer<typeof cultivoSchema>;
+type AnimalFormValues = z.infer<typeof animalSchema>;
 
-interface CultivoModalProps {
+interface AnimalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cultivo?: Cultivo | null;
-  tipos: TipoCultivo[];
+  animal?: Animal | null;
+  tipos: TipoAnimal[];
   onCreateTipo?: (nombre: string) => Promise<any>;
   onUpdateTipo?: (args: { id: number; nombre: string }) => Promise<any>;
   onDeleteTipo?: (id: number) => Promise<any>;
 }
 
-export function CultivoModal({
+export function AnimalModal({
   isOpen,
   onClose,
-  cultivo,
+  animal,
   tipos,
   onCreateTipo,
   onUpdateTipo,
   onDeleteTipo,
-}: CultivoModalProps) {
-  const { createCultivo, updateCultivo, isCreating, isUpdating } = useCultivos();
+}: AnimalModalProps) {
+  const { createAnimal, updateAnimal, isCreating, isUpdating } = useAnimales();
 
   const {
     register,
@@ -62,12 +73,17 @@ export function CultivoModal({
     watch,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(cultivoSchema),
+    resolver: zodResolver(animalSchema),
     defaultValues: {
       nombre: '',
       nombre_cientifico: '',
+      dieta: '',
+      esperanza_vida: '',
+      habitat_principal: '',
+      peso_promedio_kg: '',
+      longitud_promedio_mt: '',
       descripcion: '',
-      tipo_cultivo_id: '',
+      tipo_animal_id: '',
     },
   });
 
@@ -83,35 +99,54 @@ export function CultivoModal({
   const [deletingTipoId, setDeletingTipoId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (cultivo) {
+    if (animal) {
       reset({
-        nombre: cultivo.nombre,
-        nombre_cientifico: cultivo.nombre_cientifico || '',
-        descripcion: cultivo.descripcion || '',
-        tipo_cultivo_id: cultivo.tipo_cultivo_id?.toString() || '',
+        nombre: animal.nombre,
+        nombre_cientifico: animal.nombre_cientifico || '',
+        dieta: animal.dieta || '',
+        esperanza_vida: animal.esperanza_vida || '',
+        habitat_principal: animal.habitat_principal || '',
+        peso_promedio_kg: animal.peso_promedio_kg?.toString() || '',
+        longitud_promedio_mt: animal.longitud_promedio_mt?.toString() || '',
+        descripcion: animal.descripcion || '',
+        tipo_animal_id: animal.tipo_animal_id?.toString() || '',
       });
     } else {
       reset({
         nombre: '',
         nombre_cientifico: '',
+        dieta: '',
+        esperanza_vida: '',
+        habitat_principal: '',
+        peso_promedio_kg: '',
+        longitud_promedio_mt: '',
         descripcion: '',
-        tipo_cultivo_id: '',
+        tipo_animal_id: '',
       });
     }
     setShowNewTipo(false);
     setEditingTipoId(null);
-  }, [cultivo, reset, isOpen]);
+  }, [animal, reset, isOpen]);
 
-  const handleFormSubmit = async (values: CultivoFormValues) => {
-    const cleanData = {
-      ...values,
-      tipo_cultivo_id: parseInt(values.tipo_cultivo_id),
+  const handleFormSubmit = async (values: AnimalFormValues) => {
+    const cleanNumeric = (val: string | number | null | undefined) => {
+      if (!val) return null;
+      const cleaned = val.toString().replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? null : parsed;
     };
 
-    if (cultivo) {
-      await updateCultivo({ id: cultivo.id, data: cleanData as any });
+    const cleanData = {
+      ...values,
+      tipo_animal_id: parseInt(values.tipo_animal_id),
+      peso_promedio_kg: cleanNumeric(values.peso_promedio_kg),
+      longitud_promedio_mt: cleanNumeric(values.longitud_promedio_mt),
+    };
+
+    if (animal) {
+      await updateAnimal({ id: animal.id, data: cleanData });
     } else {
-      await createCultivo(cleanData as any);
+      await createAnimal(cleanData as any);
     }
     onClose();
   };
@@ -152,32 +187,32 @@ export function CultivoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-125 border-none shadow-2xl glass-effect p-0 overflow-hidden">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Sprout className="size-6" />
+              <Dog className="size-6" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold">
-                {cultivo ? 'Editar Cultivo' : 'Nuevo Cultivo'}
+                {animal ? 'Editar Animal' : 'Nuevo Animal'}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {cultivo ? 'Modifica la información del cultivo' : 'Registra un nuevo cultivo en el sistema'}
+                {animal ? 'Modifica la información del animal' : 'Registra un nuevo animal en el sistema'}
               </p>
             </div>
           </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
-          <div className="space-y-5">
+          <div className="space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
-                Nombre del Cultivo <span className="text-rose-500">*</span>
+                Nombre del Animal <span className="text-rose-500">*</span>
               </label>
               <Input
                 {...register('nombre')}
-                placeholder="Ej. Maíz Amarillo"
+                placeholder="Ej. Ganado Vacuno"
                 className={cn(
                   "h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
                   errors.nombre && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500 ring-rose-500/20"
@@ -187,22 +222,21 @@ export function CultivoModal({
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Nombre Científico (opcional)</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Nombre Científico</label>
               <Input
                 {...register('nombre_cientifico')}
-                placeholder="Ej. Zea mays"
+                placeholder="Ej. Bos taurus"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all italic"
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
-                Tipo de Cultivo <span className="text-rose-500">*</span>
+                Tipo de Animal <span className="text-rose-500">*</span>
               </label>
-
-              {/* Inline crear nuevo tipo */}
+              
               {showNewTipo && (
-                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                   <Input
                     value={newTipoNombre}
                     onChange={(e) => setNewTipoNombre(e.target.value)}
@@ -232,9 +266,8 @@ export function CultivoModal({
                 </div>
               )}
 
-              {/* Inline editar tipo */}
               {editingTipoId !== null && (
-                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                   <Input
                     value={editingTipoNombre}
                     onChange={(e) => setEditingTipoNombre(e.target.value)}
@@ -269,16 +302,16 @@ export function CultivoModal({
 
               <div className="flex items-center gap-2">
                 <Select
-                  onValueChange={(val) => setValue('tipo_cultivo_id', val, { shouldValidate: true })}
-                  value={watch('tipo_cultivo_id')}
+                  onValueChange={(val) => setValue('tipo_animal_id', val, { shouldValidate: true })}
+                  value={watch('tipo_animal_id')}
                 >
                   <SelectTrigger className={cn(
                     "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
-                    errors.tipo_cultivo_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
+                    errors.tipo_animal_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
                   )}>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-[250px] min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
@@ -327,7 +360,52 @@ export function CultivoModal({
                   <Plus className="size-5" />
                 </Button>
               </div>
-              {errors.tipo_cultivo_id && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.tipo_cultivo_id.message}</p>}
+              {errors.tipo_animal_id && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.tipo_animal_id.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Dieta</label>
+              <Input
+                {...register('dieta')}
+                placeholder="Ej. Herbívoro"
+                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Esperanza de Vida</label>
+              <Input
+                {...register('esperanza_vida')}
+                placeholder="Ej. 15-20 años"
+                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Hábitat Principal</label>
+              <Input
+                {...register('habitat_principal')}
+                placeholder="Ej. Llanuras, Granjas"
+                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Peso Promedio (kg)</label>
+              <Input
+                {...register('peso_promedio_kg')}
+                placeholder="0.00"
+                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Longitud Promedio (m)</label>
+              <Input
+                {...register('longitud_promedio_mt')}
+                placeholder="0.00"
+                className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
+              />
             </div>
 
             <div className="space-y-2">
@@ -335,7 +413,7 @@ export function CultivoModal({
               <Textarea
                 {...register('descripcion')}
                 placeholder="Breve descripción..."
-                className="min-h-[100px] rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none"
+                className="min-h-25 rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none"
               />
             </div>
           </div>
@@ -351,7 +429,7 @@ export function CultivoModal({
                   Procesando...
                 </>
               ) : (
-                cultivo ? 'Guardar Cambios' : 'Registrar Cultivo'
+                animal ? 'Guardar Cambios' : 'Registrar Animal'
               )}
             </Button>
           </DialogFooter>

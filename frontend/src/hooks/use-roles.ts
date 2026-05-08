@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AxiosError } from 'axios';
-import { roleService } from '../services/role.service';
+import { roleService } from '@/services/role.service';
 import { toast } from 'sonner';
-import { useDebounce } from './use-debounce';
-import type { UpdateRoleDto } from '../types/role';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function useRoles() {
   const queryClient = useQueryClient();
@@ -37,8 +36,7 @@ export function useRoles() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateRoleDto }) =>
-      roleService.updateRole(id, data),
+    mutationFn: roleService.updateRole,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Rol actualizado correctamente');
@@ -77,8 +75,7 @@ export function useRoles() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: boolean }) =>
-      roleService.updateRoleStatus(id, status),
+    mutationFn: roleService.updateRoleStatus,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success(data.status ? 'Rol activado correctamente' : 'Rol desactivado correctamente');
@@ -109,7 +106,20 @@ export function useRoles() {
     deleteManyRoles: deleteManyMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending || updateStatusMutation.isPending,
-    isDeleting: deleteMutation.isPending || deleteManyMutation.isPending,
+  };
+}
+
+export function useRole(id: number | null) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['role', id],
+    queryFn: () => roleService.getRoleById(id!),
+    enabled: !!id,
+  });
+
+  return {
+    role: data,
+    isLoading,
+    error,
   };
 }
 

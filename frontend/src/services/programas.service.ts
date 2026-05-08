@@ -30,7 +30,7 @@ export const programasService = {
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<TipoProgramaResponse> => {
+  updateTipo: async ({ id, nombre }: { id: number; nombre: string }): Promise<TipoProgramaResponse> => {
     const response = await apiClient.put<TipoProgramaResponse>(`/t_programa/${id}`, { nombre });
     return response.data;
   },
@@ -45,8 +45,8 @@ export const programasService = {
     return response.data;
   },
 
-  update: async (id: number, programa: UpdateProgramaDto): Promise<ApiResponse<Programa>> => {
-    const response = await apiClient.put<ApiResponse<Programa>>(`/programas/${id}`, programa);
+  update: async ({ id, data }: { id: number; data: UpdateProgramaDto }): Promise<ApiResponse<Programa>> => {
+    const response = await apiClient.put<ApiResponse<Programa>>(`/programas/${id}`, data);
     return response.data;
   },
 

@@ -30,7 +30,7 @@ export const enfermedadesService = {
     return response.data;
   },
 
-  updateTipo: async (id: number, nombre: string): Promise<TipoEnfermedadResponse> => {
+  updateTipo: async ({ id, nombre }: { id: number; nombre: string }): Promise<TipoEnfermedadResponse> => {
     const response = await apiClient.put<TipoEnfermedadResponse>(`/t_enfermedades/${id}`, { nombre });
     return response.data;
   },
@@ -45,7 +45,7 @@ export const enfermedadesService = {
     return response.data;
   },
 
-  update: async (id: number, enfermedad: UpdateEnfermedadDto): Promise<ApiResponse<Enfermedad>> => {
+  update: async ({ id, enfermedad }: { id: number; enfermedad: UpdateEnfermedadDto }): Promise<ApiResponse<Enfermedad>> => {
     const response = await apiClient.put<ApiResponse<Enfermedad>>(`/enfermedades/${id}`, enfermedad);
     return response.data;
   },

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AxiosError } from 'axios';
 import { cultivosService } from '@/services/cultivos.service';
 import { toast } from 'sonner';
-import type { UpdateCultivoDto } from '@/types/cultivos';
 import { useDebounce } from '@/hooks/use-debounce';
 
 export function useCultivos() {
@@ -42,8 +41,7 @@ export function useCultivos() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCultivoDto }) =>
-      cultivosService.update(id, data),
+    mutationFn: cultivosService.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cultivos'] });
       toast.success('Cultivo actualizado correctamente');
@@ -77,7 +75,7 @@ export function useCultivos() {
 
   // --- Tipo CRUD ---
   const createTipoMutation = useMutation({
-    mutationFn: (nombre: string) => cultivosService.createTipo(nombre),
+    mutationFn: cultivosService.createTipo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
       toast.success('Tipo de cultivo creado');
@@ -88,7 +86,7 @@ export function useCultivos() {
   });
 
   const updateTipoMutation = useMutation({
-    mutationFn: ({ id, nombre }: { id: number; nombre: string }) => cultivosService.updateTipo(id, nombre),
+    mutationFn: cultivosService.updateTipo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
       queryClient.invalidateQueries({ queryKey: ['cultivos'] });
@@ -100,7 +98,7 @@ export function useCultivos() {
   });
 
   const deleteTipoMutation = useMutation({
-    mutationFn: (id: number) => cultivosService.deleteTipo(id),
+    mutationFn: cultivosService.deleteTipo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cultivos-tipos'] });
       toast.success('Tipo de cultivo eliminado');
@@ -133,7 +131,20 @@ export function useCultivos() {
     deleteTipo: deleteTipoMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending || deleteManyMutation.isPending,
+  };
+}
+
+export function useCultivo(id: number | null) {
+  const { data: response, isLoading, error } = useQuery({
+    queryKey: ['cultivo', id],
+    queryFn: () => cultivosService.getById(id!),
+    enabled: !!id,
+  });
+
+  return {
+    cultivo: response?.data,
+    isLoading,
+    error,
   };
 }
 

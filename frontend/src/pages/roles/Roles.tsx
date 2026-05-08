@@ -1,8 +1,4 @@
 import { useState } from 'react';
-import { z } from 'zod';
-import { useRoles } from '@/hooks/use-roles';
-import { toast } from 'sonner';
-import { PANTALLAS } from '@/lib/permisusers';
 import {
   Users,
   Plus,
@@ -34,7 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from 'react-router-dom';
-import type { Role, CreateRoleDto, UpdateRoleDto } from '@/types/role';
+import { useRoles } from '@/hooks/use-roles';
+
 
 import { RolesTable } from './components/RolesTable';
 import { RoleDialog } from './components/RoleDialog';
@@ -51,127 +48,28 @@ function Roles() {
     setLimit,
     setSearch,
     setStatus,
-    createRole,
-    updateRole,
     updateRoleStatus,
     deleteRole,
     deleteManyRoles,
-    isCreating,
-    isUpdating,
     isDeleting
   } = useRoles();
-
 
   const [isOpen, setIsOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-
-  const [formData, setFormData] = useState<UpdateRoleDto>({
-    nombre: '',
-    descripcion: '',
-    permisos: {},
-    status: true
-  });
-
+  const [editingRole, setEditingRole] = useState<typeof roles[0] | null>(null);
 
   const handleOpenCreate = () => {
     setEditingRole(null);
-    setFormData({
-      nombre: '',
-      descripcion: '',
-      permisos: {},
-      status: true
-    });
     setIsOpen(true);
   };
 
-  const handleOpenEdit = (role: Role) => {
+  const handleOpenEdit = (role: typeof roles[0]) => {
     setEditingRole(role);
-    setFormData({
-      nombre: role.nombre,
-      descripcion: role.descripcion,
-      permisos: role.permisos || {},
-      status: role.status ?? true,
-    });
     setIsOpen(true);
   };
 
-  const handleTogglePermission = (screen: string, action: string) => {
-    setFormData((prev) => {
-      const currentPermissions = prev.permisos?.[screen] || [];
-      const newPermissions = currentPermissions.includes(action)
-        ? currentPermissions.filter((a) => a !== action)
-        : [...currentPermissions, action];
-
-      return {
-        ...prev,
-        permisos: {
-          ...prev.permisos,
-          [screen]: newPermissions,
-        },
-      };
-    });
-  };
-
-  const handleToggleAllPermissions = (checked: boolean) => {
-    if (checked) {
-      const allPerms: Record<string, string[]> = {};
-      PANTALLAS.forEach(p => {
-        allPerms[p.key] = [...p.ACCIONES];
-      });
-      setFormData(prev => ({ ...prev, permisos: allPerms }));
-    } else {
-      setFormData(prev => ({ ...prev, permisos: {} }));
-    }
-  };
-
-  const handleToggleScopePermissions = (screen: string, checked: boolean) => {
-    setFormData(prev => {
-      const newPerms = { ...prev.permisos };
-      if (checked) {
-        const screenDef = PANTALLAS.find(p => p.key === screen);
-        if (screenDef) {
-          newPerms[screen] = [...screenDef.ACCIONES];
-        }
-      } else {
-        delete newPerms[screen];
-      }
-      return { ...prev, permisos: newPerms };
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const roleSchema = z.object({
-      nombre: z.string()
-        .min(3, 'El nombre debe tener al menos 3 caracteres')
-        .max(50, 'El nombre es demasiado largo'),
-      descripcion: z.string().optional(),
-    });
-
-    const validation = roleSchema.safeParse(formData);
-
-    if (!validation.success) {
-      validation.error.issues.forEach((issue) => {
-        toast.error(issue.message);
-      });
-      return;
-    }
-
-
-    try {
-      if (editingRole) {
-        await updateRole({ id: editingRole.id, data: formData });
-      } else {
-        await createRole(formData as CreateRoleDto);
-      }
-      setIsOpen(false);
-    } catch {
-    }
-  };
 
 
   const confirmDelete = async () => {
@@ -199,8 +97,6 @@ function Roles() {
       console.error(error);
     }
   };
-
-
 
   return (
     <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
@@ -341,16 +237,8 @@ function Roles() {
 
       <RoleDialog
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        editingRole={editingRole}
-        formData={formData}
-        setFormData={setFormData}
-        isCreating={isCreating}
-        isUpdating={isUpdating}
-        onSubmit={handleSubmit}
-        onTogglePermission={handleTogglePermission}
-        onToggleAll={handleToggleAllPermissions}
-        onToggleScope={handleToggleScopePermissions}
+        onClose={() => setIsOpen(false)}
+        role={editingRole}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
