@@ -8,6 +8,7 @@ import Cultivos from './pages/cultivos/Cultivos';
 import Animales from './pages/animales/Animales';
 import Programas from './pages/programas/Programas';
 import Plagas from './pages/plagas/Plagas';
+import Enfermedades from './pages/enfermedades/Enfermedades';
 import HelpMe from './pages/help/Help';
 import Login from './pages/login/Login';
 import { ProtectedRoute } from './components/auth/protected-route';
@@ -46,6 +47,7 @@ function App() {
               <Route path='animales' element={<Animales />} />
               <Route path='programas' element={<Programas />} />
               <Route path='plagas' element={<Plagas />} />
+              <Route path='enfermedades' element={<Enfermedades />} />
               <Route path='help' element={<HelpMe />} />
 
             </Route>
