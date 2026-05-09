@@ -114,5 +114,53 @@ export const propiedadesService = {
     document.body.appendChild(link);
     link.click();
     link.remove();
+  },
+
+  // Inventario
+  getInventario: async (propiedadId: number) => {
+    const { data } = await apiClient.get(`/propiedades/${propiedadId}/inventario`);
+    return data;
+  },
+
+  addCultivo: async (propiedadId: number, payload: any) => {
+    const { data } = await apiClient.post(`/propiedades/${propiedadId}/inventario/cultivos`, payload);
+    return data;
+  },
+
+  removeCultivo: async (propiedadId: number, inventarioId: number) => {
+    const { data } = await apiClient.delete(`/propiedades/${propiedadId}/inventario/cultivos/${inventarioId}`);
+    return data;
+  },
+
+  addAnimal: async (propiedadId: number, payload: any) => {
+    const { data } = await apiClient.post(`/propiedades/${propiedadId}/inventario/animales`, payload);
+    return data;
+  },
+
+  removeAnimal: async (propiedadId: number, inventarioId: number) => {
+    const { data } = await apiClient.delete(`/propiedades/${propiedadId}/inventario/animales/${inventarioId}`);
+    return data;
+  },
+
+  addHierro: async (propiedadId: number, payload: { num_reg_hierro?: string, num_reg_ganadero?: string, hierro_img?: File }) => {
+    if (!payload.hierro_img) {
+      const { data } = await apiClient.post(`/propiedades/${propiedadId}/inventario/hierros`, payload);
+      return data;
+    }
+    
+    const formData = new FormData();
+    if (payload.num_reg_hierro) formData.append('num_reg_hierro', payload.num_reg_hierro);
+    if (payload.num_reg_ganadero) formData.append('num_reg_ganadero', payload.num_reg_ganadero);
+    formData.append('hierro_img', payload.hierro_img);
+    
+    const { data } = await apiClient.post(`/propiedades/${propiedadId}/inventario/hierros`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return data;
+  },
+
+  removeHierro: async (propiedadId: number, inventarioId: number) => {
+    const { data } = await apiClient.delete(`/propiedades/${propiedadId}/inventario/hierros/${inventarioId}`);
+    return data;
   }
 };

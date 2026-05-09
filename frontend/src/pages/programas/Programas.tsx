@@ -107,7 +107,7 @@ const Programas: React.FC = () => {
                                     <SelectValue placeholder="Tipo" />
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border">
+                            <SelectContent className="glass-effect border-border top-9 right-15">
                                 <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
                                 {tipos.map(t => (
                                     <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">

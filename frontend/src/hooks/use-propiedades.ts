@@ -33,6 +33,7 @@ export function usePropiedades(initialSearch = '', initialLimit = 10) {
     mutationFn: (data: any) => propiedadesService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['propiedades'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast.success('Propiedad registrada correctamente');
     },
     onError: (error: AxiosError<{ message?: string }>) => {

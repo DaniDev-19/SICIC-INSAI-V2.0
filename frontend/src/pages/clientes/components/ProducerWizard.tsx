@@ -20,12 +20,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/Stepper';
-import { MapPin, Loader2, ChevronRight, ChevronLeft, Check, Fingerprint, Activity, Image as ImageIcon, Plus, Pencil, Trash2, X, Upload, AlertCircle } from 'lucide-react';
+import { MapPin, AlertCircle, Loader2, ChevronRight, ChevronLeft, Check, Fingerprint, Activity, Image as ImageIcon, Plus, Pencil, Trash2, X, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { useClientes } from '@/hooks/use-clientes';
 import { usePropiedades } from '@/hooks/use-propiedades';
 import { clientesService } from '@/services/clientes.service';
+import { propiedadesService } from '@/services/propiedades.service';
 import { ubicacionService, type UbicacionBase } from '@/services/ubicacion.service';
 
 const wizardSchema = z.object({
@@ -73,7 +73,6 @@ const STEPS = [
 
 export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const { createCliente } = useClientes();
   const { createPropiedad, tipos, createTipo, updateTipo, deleteTipo } = usePropiedades();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -115,7 +114,11 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
   const [updatingTipoId, setUpdatingTipoId] = useState<number | null>(null);
   const [deletingTipoId, setDeletingTipoId] = useState<number | null>(null);
   const [existingProducer, setExistingProducer] = useState<any>(null);
+  const [runsaiConflict, setRunsaiConflict] = useState<any>(null);
+  const [emailConflict, setEmailConflict] = useState<any>(null);
+  const [rifConflict, setRifConflict] = useState<any>(null);
   const [isCheckingProducer, setIsCheckingProducer] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [hierroPreview, setHierroPreview] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,9 +153,25 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
 
   // Limpiar error de duplicado al cambiar la cédula
   const cedulaValue = watch('cedula_rif');
+  const runsaiValue = watch('codigo_runsai');
+  const emailValue = watch('email');
+  const rifValue = watch('rif_propiedad');
+
   useEffect(() => {
     if (existingProducer) setExistingProducer(null);
   }, [cedulaValue]);
+
+  useEffect(() => {
+    if (runsaiConflict) setRunsaiConflict(null);
+  }, [runsaiValue]);
+
+  useEffect(() => {
+    if (emailConflict) setEmailConflict(null);
+  }, [emailValue]);
+
+  useEffect(() => {
+    if (rifConflict) setRifConflict(null);
+  }, [rifValue]);
 
   const isStepValid = () => {
     const values = watch();
@@ -163,6 +182,8 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
         return !!values.nombre_propiedad && !!values.tipo_propiedad_id;
       case 2:
         return !!values.estado_id && !!values.municipio_id && !!values.parroquia_id && !!values.sector_id;
+      case 3:
+        return true;
       default:
         return true;
     }
@@ -170,10 +191,10 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
 
   const handleNext = async () => {
     const fieldsByStep: (keyof WizardValues)[][] = [
-      ['cedula_rif', 'nombre_productor'],
-      ['nombre_propiedad', 'tipo_propiedad_id'],
-      ['estado_id', 'municipio_id', 'parroquia_id', 'sector_id'],
-      ['num_reg_hierro']
+      ['cedula_rif', 'nombre_productor', 'email', 'telefono', 'codigo_runsai', 'direccion_fiscal'],
+      ['nombre_propiedad', 'tipo_propiedad_id', 'rif_propiedad', 'hectareas_totales', 'punto_referencia'],
+      ['estado_id', 'municipio_id', 'parroquia_id', 'sector_id', 'google_maps_url'],
+      ['num_reg_hierro', 'num_reg_ganadero']
     ];
 
     const isStepValidRes = await trigger(fieldsByStep[currentStep]);
@@ -181,8 +202,10 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
       if (currentStep === 0) {
         // Al pasar del paso 1, verificamos si el productor existe
         const cedula = watch('cedula_rif');
+        const runsai = watch('codigo_runsai');
         setIsCheckingProducer(true);
         try {
+          // 1. Verificar Cédula/RIF
           const { data: res } = await clientesService.getAll({ q: cedula });
           const found = res.find((c: any) => c.cedula_rif === cedula);
           if (found) {
@@ -193,18 +216,78 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
             setValue('email', found.email || '');
             setValue('direccion_fiscal', found.direccion_fiscal || '');
             setValue('codigo_runsai', found.codigo_runsai || '');
-            
+
             toast.info(`Productor encontrado: ${found.nombre}. Puedes continuar con el registro de su propiedad.`);
           } else {
             setExistingProducer(null);
           }
+
+          // 2. Verificar Código RUNSAI (debe ser único)
+          if (runsai) {
+            const { data: resRunsai } = await clientesService.getAll({ q: runsai });
+            const foundRunsai = resRunsai.find((c: any) => c.codigo_runsai === runsai);
+
+            // Si el RUNSAI existe pero pertenece a OTRA cédula, bloqueamos
+            if (foundRunsai && foundRunsai.cedula_rif !== cedula) {
+              setRunsaiConflict(foundRunsai);
+              toast.error(`Conflicto de RUNSAI: Este código ya pertenece a ${foundRunsai.nombre}`);
+              setIsCheckingProducer(false);
+              return; // Bloqueamos el avance
+            }
+          }
+          setRunsaiConflict(null);
+
+          // 3. Verificar Correo Electrónico (debe ser único)
+          const email = watch('email');
+          if (email) {
+            const { data: resEmail } = await clientesService.getAll({ q: email });
+            const foundEmail = resEmail.find((c: any) => c.email === email);
+
+            if (foundEmail && foundEmail.cedula_rif !== cedula) {
+              setEmailConflict(foundEmail);
+              toast.error(`Conflicto de Correo: Este email ya está registrado por ${foundEmail.nombre}`);
+              setIsCheckingProducer(false);
+              return; // Bloqueamos el avance
+            }
+          }
+          setEmailConflict(null);
         } catch (error) {
-          console.error('Error checking producer:', error);
+          console.error('Error checking producer/runsai/email:', error);
         } finally {
           setIsCheckingProducer(false);
         }
       }
+
+      if (currentStep === 1) {
+        // Al pasar del paso 2, verificamos si el RIF de la propiedad existe
+        const rif = watch('rif_propiedad');
+        if (rif) {
+          setIsCheckingProducer(true); // Reutilizamos el loader
+          try {
+            const { data: res } = await propiedadesService.getAll({ q: rif });
+            const found = res.find((p: any) => p.rif === rif);
+            if (found) {
+              setRifConflict(found);
+              toast.error(`Conflicto de RIF: Este RIF ya pertenece a la propiedad ${found.nombre}`);
+              setIsCheckingProducer(false);
+              return; // Bloqueamos el avance
+            }
+          } catch (error) {
+            console.error('Error checking property RIF:', error);
+          } finally {
+            setIsCheckingProducer(false);
+          }
+        }
+        setRifConflict(null);
+      }
+
+      setIsAdvancing(true);
+      console.log('handleNext: Advancing from step', currentStep, 'to', Math.min(currentStep + 1, STEPS.length - 1));
       setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
+      // Prevenir doble clic accidental
+      setTimeout(() => setIsAdvancing(false), 400);
+    } else {
+      console.log('handleNext: Step validation failed for step', currentStep);
     }
   };
 
@@ -312,16 +395,22 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
         <div className="p-8 pb-12">
           <Stepper steps={STEPS} currentStep={currentStep} />
 
-          <form 
-            onSubmit={handleSubmit(onFinalSubmit)}
+          <form
+            onSubmit={(e) => e.preventDefault()}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+              if (e.key === 'Enter') {
                 e.preventDefault();
+                // Si presionan enter, avanzamos de paso o guardamos si es el último
+                if (currentStep < STEPS.length - 1 && !isCheckingProducer && !isAdvancing) {
+                  handleNext();
+                } else if (currentStep === STEPS.length - 1 && !isSubmitting) {
+                  handleSubmit(onFinalSubmit)();
+                }
               }
             }}
             className="mt-8"
           >
-            <div 
+            <div
               key={currentStep}
               className="min-h-[350px] animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
@@ -360,11 +449,31 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                   </div>
 
                   {existingProducer && (
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                      <Check className="size-5 text-indigo-500" />
+                      <div>
+                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider">Productor Registrado</p>
+                        <p className="text-[11px] text-indigo-500/80">Este productor ya está en el sistema como <strong>{existingProducer.nombre}</strong>. Puedes continuar para registrar una nueva propiedad asociada a su perfil.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {runsaiConflict && (
                     <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                       <AlertCircle className="size-5 text-rose-500" />
                       <div>
-                        <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">Inscripción Duplicada</p>
-                        <p className="text-[11px] text-rose-500/80">Este productor ya está registrado a nombre de <strong>{existingProducer.nombre}</strong>. Por seguridad, no se permiten múltiples registros para la misma identificación.</p>
+                        <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">Código RUNSAI Duplicado</p>
+                        <p className="text-[11px] text-rose-500/80">El código <strong>{watch('codigo_runsai')}</strong> ya está asignado a <strong>{runsaiConflict.nombre}</strong>. Por favor, verifique el código o asigne uno distinto.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {emailConflict && (
+                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                      <AlertCircle className="size-5 text-rose-500" />
+                      <div>
+                        <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">Correo Electrónico Duplicado</p>
+                        <p className="text-[11px] text-rose-500/80">El correo <strong>{watch('email')}</strong> ya está registrado por <strong>{emailConflict.nombre}</strong>. Por favor, verifique el email para evitar suplantaciones.</p>
                       </div>
                     </div>
                   )}
@@ -373,6 +482,16 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
 
               {currentStep === 1 && (
                 <div className="space-y-6">
+                  {rifConflict && (
+                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                      <AlertCircle className="size-5 text-rose-500" />
+                      <div>
+                        <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">RIF de Propiedad Duplicado</p>
+                        <p className="text-[11px] text-rose-500/80">El RIF <strong>{watch('rif_propiedad')}</strong> ya está registrado por la propiedad <strong>{rifConflict.nombre}</strong> (Duenio: {rifConflict.clientes?.nombre}). Por favor, verifique el RIF.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Nombre del Predio <span className="text-rose-500">*</span></label>
@@ -438,7 +557,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                           )}>
                             <SelectValue placeholder="Seleccione..." />
                           </SelectTrigger>
-                          <SelectContent className="glass-effect border-border max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                          <SelectContent className="glass-effect border-border max-h-[250px] min-w-(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                             {tipos.map((tipo) => (
                               <div key={tipo.id} className="group relative flex items-center">
                                 <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
@@ -632,9 +751,9 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
               </Button>
 
               <Button
-                type={currentStep < STEPS.length - 1 ? "button" : "submit"}
-                onClick={currentStep < STEPS.length - 1 ? handleNext : undefined}
-                disabled={isSubmitting || !isStepValid() || isCheckingProducer}
+                type="button"
+                onClick={currentStep < STEPS.length - 1 ? handleNext : handleSubmit(onFinalSubmit)}
+                disabled={isSubmitting || !isStepValid() || isCheckingProducer || isAdvancing}
                 className={cn(
                   "h-12 px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed",
                   currentStep < STEPS.length - 1 ? "shadow-primary/20" : "px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40"
@@ -642,8 +761,8 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
               >
                 {isSubmitting ? (
                   <><Loader2 className="mr-2 size-4 animate-spin" /> Procesando...</>
-                ) : isCheckingProducer ? (
-                  <><Loader2 className="mr-2 size-4 animate-spin" /> Verificando...</>
+                ) : isCheckingProducer || isAdvancing ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> {isCheckingProducer ? 'Verificando...' : 'Cargando...'}</>
                 ) : currentStep < STEPS.length - 1 ? (
                   <>Siguiente <ChevronRight className="ml-2 size-4" /></>
                 ) : (
