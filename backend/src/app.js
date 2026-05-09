@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import corsConfig from './config/cors.js';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import path from 'path';
 import { writeLimiter } from './middlewares/rate.middleware.js';
 import { idempotencyMiddleware } from './middlewares/idempotency.middleware.js';
@@ -65,10 +65,12 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
+  keyGenerator: (req) => ipKeyGenerator(req),
 });
 
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(corsConfig);
 app.use(morgan('dev'));
 app.use(express.json());

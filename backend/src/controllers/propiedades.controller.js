@@ -76,7 +76,8 @@ export const createPropiedad = async (req, res) => {
   const tenantPrisma = req.db;
   const {
     codigo_insai, nombre, rif, punto_referencia, hectareas_totales, status,
-    tipo_propiedad_id, due_o_id, hierro, ubicacion, cultivos, animales
+    tipo_propiedad_id, due_o_id, hierro, ubicacion, cultivos, animales,
+    productor
   } = req.body;
 
   let finalHierroImgUrl = null;
@@ -84,31 +85,167 @@ export const createPropiedad = async (req, res) => {
     finalHierroImgUrl = await storageService.uploadImage(req.file.buffer, `hierro-${nombre}`, 'propiedades');
   }
 
-  const response = await tenantPrisma.propiedades.create({
-    data: {
-      codigo_insai, nombre, rif, punto_referencia, hectareas_totales, status,
-      tipo_propiedad_id, due_o_id,
-      propiedad_hierro: hierro || finalHierroImgUrl ? {
-        create: {
-          num_reg_hierro: hierro?.num_reg_hierro,
-          num_reg_ganadero: hierro?.num_reg_ganadero,
-          hierro_img_url: finalHierroImgUrl
+  try {
+    const response = await tenantPrisma.$transaction(async (tx) => {
+      let finalDueoId = due_o_id;
+
+      if (productor) {
+        const existingClient = await tx.clientes.findUnique({
+          where: { cedula_rif: productor.cedula_rif }
+        });
+
+        if (existingClient) {
+          if (productor.codigo_runsai && productor.codigo_runsai !== existingClient.codigo_runsai) {
+            const runsaiConflict = await tx.clientes.findFirst({
+              where: {
+                codigo_runsai: productor.codigo_runsai,
+                id: { not: existingClient.id }
+              }
+            });
+            if (runsaiConflict) {
+              const error = new Error('El código RUNSAI ya está registrado por otro cliente');
+              error.statusCode = 400;
+              throw error;
+            }
+          }
+
+          if (productor.email && productor.email !== existingClient.email) {
+            const emailConflict = await tx.clientes.findFirst({
+              where: {
+                email: productor.email,
+                id: { not: existingClient.id }
+              }
+            });
+            if (emailConflict) {
+              const error = new Error('El correo electrónico ya está registrado por otro cliente');
+              error.statusCode = 400;
+              throw error;
+            }
+          }
+
+          const updatedClient = await tx.clientes.update({
+            where: { id: existingClient.id },
+            data: {
+              nombre: productor.nombre,
+              codigo_runsai: productor.codigo_runsai,
+              telefono: productor.telefono,
+              email: productor.email,
+              direccion_fiscal: productor.direccion_fiscal,
+            }
+          });
+          finalDueoId = updatedClient.id;
+        } else {
+          if (productor.codigo_runsai) {
+            const runsaiExists = await tx.clientes.findFirst({ where: { codigo_runsai: productor.codigo_runsai } });
+            if (runsaiExists) {
+              const error = new Error('El código RUNSAI ya está registrado por otro cliente');
+              error.statusCode = 400;
+              throw error;
+            }
+          }
+
+          if (productor.email) {
+            const emailExists = await tx.clientes.findFirst({ where: { email: productor.email } });
+            if (emailExists) {
+              const error = new Error('El correo electrónico ya está registrado por otro cliente');
+              error.statusCode = 400;
+              throw error;
+            }
+          }
+
+          const newClient = await tx.clientes.create({
+            data: {
+              cedula_rif: productor.cedula_rif,
+              nombre: productor.nombre,
+              codigo_runsai: productor.codigo_runsai,
+              telefono: productor.telefono,
+              email: productor.email,
+              direccion_fiscal: productor.direccion_fiscal,
+            }
+          });
+          finalDueoId = newClient.id;
         }
-      } : undefined,
-      propiedad_ubicacion: ubicacion ? { create: ubicacion } : undefined,
-      propiedad_cultivo: cultivos ? { create: cultivos } : undefined,
-      propiedad_animales: animales ? { create: animales } : undefined,
+      }
+
+      if (!finalDueoId) {
+        const error = new Error('Se requiere un dueño (cliente) para la propiedad');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      if (rif) {
+        const existingRif = await tx.propiedades.findFirst({ where: { rif } });
+        if (existingRif) {
+          const error = new Error('Ya existe una propiedad con este RIF');
+          error.statusCode = 400;
+          throw error;
+        }
+      }
+
+      if (codigo_insai) {
+        const existing = await tx.propiedades.findUnique({ where: { codigo_insai } });
+        if (existing) {
+          const error = new Error('Ya existe una propiedad con este código INSAI');
+          error.statusCode = 400;
+          throw error;
+        }
+      }
+
+      let finalCodigo = codigo_insai;
+      if (!finalCodigo) {
+        const lastRecord = await tx.propiedades.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextId = (lastRecord?.id || 0) + 1;
+        finalCodigo = `PRO-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
+      }
+
+      return await tx.propiedades.create({
+        data: {
+          codigo_insai: finalCodigo,
+          nombre,
+          rif,
+          punto_referencia,
+          hectareas_totales,
+          status: status || 'ACTIVA',
+          tipo_propiedad_id,
+          due_o_id: finalDueoId,
+          propiedad_hierro: hierro || finalHierroImgUrl ? {
+            create: {
+              num_reg_hierro: hierro?.num_reg_hierro,
+              num_reg_ganadero: hierro?.num_reg_ganadero,
+              hierro_img_url: finalHierroImgUrl
+            }
+          } : undefined,
+          propiedad_ubicacion: ubicacion ? { create: ubicacion } : undefined,
+          propiedad_cultivo: cultivos ? { create: cultivos } : undefined,
+          propiedad_animales: animales ? { create: animales } : undefined,
+        }
+      });
+    }, {
+      isolationLevel: 'Serializable'
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Propiedades',
+      payload_nuevo: response
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    if (finalHierroImgUrl) {
+      await storageService.deleteFile(finalHierroImgUrl);
     }
-  });
 
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Propiedades',
-    payload_nuevo: response
-  });
-
-  res.status(201).json({ status: 'success', data: response });
+    if (error.statusCode === 400) {
+      return res.status(400).json({ status: 'error', message: error.message });
+    }
+    console.error('Error creando propiedad:', error);
+    res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
+  }
 };
 
 export const updatePropiedad = async (req, res) => {
@@ -128,6 +265,13 @@ export const updatePropiedad = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Propiedad no encontrada' });
   }
 
+  if (rif && rif !== existing.rif) {
+    const duplicate = await tenantPrisma.propiedades.findFirst({ where: { rif } });
+    if (duplicate) {
+      return res.status(400).json({ status: 'error', message: 'El RIF ya está registrado por otra propiedad' });
+    }
+  }
+
   let finalHierroImgUrl = undefined;
   if (req.file) {
     finalHierroImgUrl = await storageService.uploadImage(req.file.buffer, `hierro-${nombre || existing.nombre}`, 'propiedades');
@@ -139,7 +283,7 @@ export const updatePropiedad = async (req, res) => {
   const response = await tenantPrisma.propiedades.update({
     where: { id: Number(id) },
     data: {
-      codigo_insai, nombre, rif, punto_referencia, hectareas_totales, status,
+      nombre, rif, punto_referencia, hectareas_totales, status,
       tipo_propiedad_id, due_o_id,
       propiedad_hierro: (hierro || finalHierroImgUrl) ? {
         deleteMany: {},
@@ -209,7 +353,76 @@ export const deletePropiedad = async (req, res) => {
   res.status(200).json({ status: 'success', message: 'Propiedad eliminada exitosamente' });
 };
 
+export const deleteManyPropiedades = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Se requiere un arreglo de IDs no vacío para el borrado masivo',
+    });
+  }
+
+  if (ids.length >= 50) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'No se pueden eliminar más de 50 registros a la vez por motivos de seguridad',
+    });
+  }
+
+  const numericIds = ids.map(id => Number(id));
+
+  const toDelete = await tenantPrisma.propiedades.findMany({
+    where: { id: { in: numericIds } },
+    include: { solicitudes: true, propiedad_hierro: true }
+  });
+
+  const withSolicitudes = toDelete.filter(p => p.solicitudes && p.solicitudes.length > 0);
+  const deletableIds = numericIds.filter(id => !withSolicitudes.some(p => p.id === id));
+
+  if (deletableIds.length > 0) {
+    const imagesToDelete = toDelete
+      .filter(p => deletableIds.includes(p.id) && p.propiedad_hierro?.[0]?.hierro_img_url)
+      .map(p => p.propiedad_hierro[0].hierro_img_url);
+
+    await tenantPrisma.propiedades.deleteMany({
+      where: { id: { in: deletableIds } },
+    });
+
+    for (const img of imagesToDelete) {
+      await storageService.deleteFile(img);
+    }
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR_MASIVO',
+      modulo: 'Propiedades',
+      payload_previo: toDelete.filter(p => deletableIds.includes(p.id))
+    });
+  }
+
+  if (withSolicitudes.length > 0) {
+    return res.status(200).json({
+      status: 'warning',
+      message: `Se eliminaron ${deletableIds.length} propiedades. ${withSolicitudes.length} no se pudieron eliminar por tener solicitudes asociadas.`,
+      data: {
+        deletedCount: deletableIds.length,
+        skippedCount: withSolicitudes.length,
+        skippedNames: withSolicitudes.map(p => p.nombre)
+      }
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: `Se eliminaron ${deletableIds.length} propiedades exitosamente.`,
+    data: { deletedCount: deletableIds.length }
+  });
+};
+
 export const exportPropiedades = async (req, res) => {
+
   const tenantPrisma = req.db;
   const propiedades = await tenantPrisma.propiedades.findMany({
     include: {

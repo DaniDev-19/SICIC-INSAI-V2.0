@@ -15,6 +15,8 @@ router.get('/', checkPermission('solicitudes', 'see'), solicitudesController.get
 router.get('/:id', checkPermission('solicitudes', 'see'), solicitudesController.getSolicitudById);
 router.post('/', checkPermission('solicitudes', 'create'), validateSchema(createSolicitudSchema), solicitudesController.createSolicitud);
 router.put('/:id', checkPermission('solicitudes', 'update'), validateSchema(updateSolicitudSchema), solicitudesController.updateSolicitud);
+router.post('/bulk-delete', checkPermission('solicitudes', 'delete'), solicitudesController.deleteManySolicitudes);
 router.delete('/:id', checkPermission('solicitudes', 'delete'), solicitudesController.deleteSolicitud);
+
 
 export default router;

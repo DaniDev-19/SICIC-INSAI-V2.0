@@ -16,6 +16,8 @@ router.get('/export', checkPermission('clientes', 'export'), clientesController.
 router.get('/:id', checkPermission('clientes', 'see'), clientesController.getClienteById);
 router.post('/', checkPermission('clientes', 'create'), validateSchema(createClientesSchema), clientesController.createCliente);
 router.put('/:id', checkPermission('clientes', 'update'), validateSchema(updateClientesSchema), clientesController.updateCliente);
+router.post('/bulk-delete', checkPermission('clientes', 'delete'), clientesController.deleteManyClientes);
 router.delete('/:id', checkPermission('clientes', 'delete'), clientesController.deleteCliente);
+
 
 export default router;
