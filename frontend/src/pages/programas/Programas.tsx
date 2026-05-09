@@ -18,14 +18,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useProgramas } from '@/hooks/use-programas';
 import { ProgramasTable } from './components/ProgramasTable';
@@ -74,7 +74,7 @@ const Programas: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+        <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
