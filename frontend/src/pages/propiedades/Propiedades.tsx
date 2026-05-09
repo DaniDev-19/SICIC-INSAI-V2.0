@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/select';
 import { usePropiedades } from '@/hooks/use-propiedades';
 import { PropertyTable } from './components/PropertyTable';
+import { PropertyModal } from './components/PropertyModal';
+import type { Propiedad } from '@/types/propiedades';
 
 const Propiedades: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +51,7 @@ const Propiedades: React.FC = () => {
   } = usePropiedades();
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editingPropiedad, setEditingPropiedad] = useState<Propiedad | null>(null);
 
   const confirmDelete = async () => {
     if (deleteId) {
@@ -133,7 +136,7 @@ const Propiedades: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <PropertyTable
                 propiedades={propiedades}
-                onEdit={(p) => console.log('Edit', p)}
+                onEdit={setEditingPropiedad}
                 onDelete={setDeleteId}
               />
             </div>
@@ -173,6 +176,12 @@ const Propiedades: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PropertyModal
+        isOpen={!!editingPropiedad}
+        onClose={() => setEditingPropiedad(null)}
+        propiedad={editingPropiedad}
+      />
     </div>
   );
 };
