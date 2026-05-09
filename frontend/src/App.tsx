@@ -11,6 +11,11 @@ import Plagas from './pages/plagas/Plagas';
 import Enfermedades from './pages/enfermedades/Enfermedades';
 import HelpMe from './pages/help/Help';
 import Login from './pages/login/Login';
+import Solicitudes from './pages/solicitudes/Solicitudes';
+import Clientes from './pages/clientes/Clientes';
+import Propiedades from './pages/propiedades/Propiedades';
+
+
 import { ProtectedRoute } from './components/auth/protected-route';
 import { PublicRoute } from './components/auth/public-route';
 import Error from './pages/error/Error';
@@ -48,6 +53,9 @@ function App() {
               <Route path='programas' element={<Programas />} />
               <Route path='plagas' element={<Plagas />} />
               <Route path='enfermedades' element={<Enfermedades />} />
+              <Route path='solicitudes' element={<Solicitudes />} />
+              <Route path='clientes' element={<Clientes />} />
+              <Route path='propiedades' element={<Propiedades />} />
               <Route path='help' element={<HelpMe />} />
 
             </Route>
