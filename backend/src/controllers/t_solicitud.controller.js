@@ -1,6 +1,6 @@
 import bitacoraService from "../services/bitacora.service.js";
 
-export const getTSolicitud = async () => {
+export const getTSolicitud = async (req, res) => {
     const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;

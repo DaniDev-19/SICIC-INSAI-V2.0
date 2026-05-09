@@ -63,7 +63,9 @@ class StorageService {
 
     await fs.writeFile(fullPath, buffer);
 
-    return `${process.env.UPLOAD_URL_BASE}/${fileName}`;
+    const baseUrl = process.env.UPLOAD_URL_BASE || '/uploads';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return `${cleanBaseUrl}/${fileName}`;
   }
 
   /**

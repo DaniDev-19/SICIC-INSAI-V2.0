@@ -204,3 +204,62 @@ export const deleteSolicitud = async (req, res) => {
 
   res.status(200).json({ status: 'success', message: 'Solicitud eliminada exitosamente' });
 };
+
+export const deleteManySolicitudes = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Se requiere un arreglo de IDs no vacío para el borrado masivo',
+    });
+  }
+
+  if (ids.length >= 50) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'No se pueden eliminar más de 50 registros a la vez por motivos de seguridad',
+    });
+  }
+
+  const numericIds = ids.map(id => Number(id));
+
+  const toDelete = await tenantPrisma.solicitudes.findMany({
+    where: { id: { in: numericIds } },
+    include: { planificaciones: true }
+  });
+
+  const withPlanificaciones = toDelete.filter(s => s.planificaciones);
+  const deletableIds = numericIds.filter(id => !withPlanificaciones.some(s => s.id === id));
+
+  if (deletableIds.length > 0) {
+    await tenantPrisma.solicitudes.deleteMany({
+      where: { id: { in: deletableIds } },
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR_MASIVO',
+      modulo: 'Solicitudes',
+      payload_previo: toDelete.filter(s => deletableIds.includes(s.id))
+    });
+  }
+
+  if (withPlanificaciones.length > 0) {
+    return res.status(200).json({
+      status: 'warning',
+      message: `Se eliminaron ${deletableIds.length} solicitudes. ${withPlanificaciones.length} no se pudieron eliminar por tener planificaciones asociadas.`,
+      data: {
+        deletedCount: deletableIds.length,
+        skippedCount: withPlanificaciones.length
+      }
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: `Se eliminaron ${deletableIds.length} solicitudes exitosamente.`,
+    data: { deletedCount: deletableIds.length }
+  });
+};

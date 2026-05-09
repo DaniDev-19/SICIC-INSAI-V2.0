@@ -12,5 +12,8 @@ export const loginSchema = z.object({
         required_error: 'La contraseña es obligatoria',
       })
       .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    instanceId: z.string({
+      required_error: 'Debe seleccionar una instancia para continuar',
+    }).min(1, 'Debe seleccionar una instancia para continuar'),
   }),
 });
