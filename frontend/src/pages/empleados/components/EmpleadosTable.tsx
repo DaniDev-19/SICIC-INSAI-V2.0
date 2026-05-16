@@ -1,6 +1,7 @@
 import type { Empleado } from '@/types/empleados';
 import { User, Mail, Phone, Edit, Trash2, BadgeCheck, Building2, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -16,6 +17,8 @@ interface EmpleadosTableProps {
   onDelete: (id: number) => void;
   onSelect?: (empleado: Empleado) => void;
   selectedId?: number | null;
+  selectedIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
 }
 
 export function EmpleadosTable({
@@ -24,11 +27,29 @@ export function EmpleadosTable({
   onDelete,
   onSelect,
   selectedId,
+  selectedIds = [],
+  onSelectionChange,
 }: EmpleadosTableProps) {
+  const allSelected = empleados.length > 0 && selectedIds.length === empleados.length;
+
+  const toggleAll = () => {
+    if (!onSelectionChange) return;
+    onSelectionChange(allSelected ? [] : empleados.map(e => e.id));
+  };
+
+  const toggleOne = (id: number) => {
+    if (!onSelectionChange) return;
+    onSelectionChange(
+      selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id]
+    );
+  };
   return (
     <Table>
       <TableHeader className="bg-muted/30 border-b">
         <TableRow>
+          <TableHead className="w-12 px-4">
+            <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="translate-y-[2px]" />
+          </TableHead>
           <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Empleado</TableHead>
           <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Contacto</TableHead>
           <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Departamento / Cargo</TableHead>
@@ -39,7 +60,7 @@ export function EmpleadosTable({
       <TableBody className="divide-y divide-border/50">
         {empleados.length === 0 ? (
           <TableRow className="hover:bg-transparent border-none">
-            <TableCell colSpan={5} className="px-6 py-20 text-center text-muted-foreground font-medium italic">
+            <TableCell colSpan={6} className="px-6 py-20 text-center text-muted-foreground font-medium italic">
               <div className="flex flex-col items-center gap-3">
                 <div className="size-16 rounded-full bg-muted/30 flex items-center justify-center">
                   <User className="size-8 text-muted-foreground/50" />
@@ -56,14 +77,22 @@ export function EmpleadosTable({
             <TableRow
               key={empleado.id}
               onClick={() => onSelect?.(empleado)}
-              className={`group transition-all duration-300 cursor-pointer ${selectedId === empleado.id ? 'bg-primary/10 border-l-4 border-l-primary' : 'hover:bg-primary/5'}`}
+              className={`group transition-all duration-300 cursor-pointer ${selectedIds.includes(empleado.id) ? 'bg-primary/5' : selectedId === empleado.id ? 'bg-primary/10 border-l-4 border-l-primary' : 'hover:bg-primary/5'}`}
             >
+              <TableCell className="px-4">
+                <Checkbox
+                  checked={selectedIds.includes(empleado.id)}
+                  onCheckedChange={() => toggleOne(empleado.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="translate-y-[2px]"
+                />
+              </TableCell>
               <TableCell className="px-6 py-5">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     {empleado.empleado_foto && empleado.empleado_foto.length > 0 ? (
-                      <img 
-                        src={empleado.empleado_foto[0].foto_url} 
+                      <img
+                        src={empleado.empleado_foto[0].foto_url}
                         alt={empleado.nombre}
                         className="size-12 rounded-xl object-cover border-2 border-primary/20 shadow-sm"
                       />
@@ -84,7 +113,7 @@ export function EmpleadosTable({
                   </div>
                 </div>
               </TableCell>
-              
+
               <TableCell className="px-6 py-5">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -112,11 +141,10 @@ export function EmpleadosTable({
               </TableCell>
 
               <TableCell className="px-6 py-5">
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
-                  empleado.status_laboral === 'ACTIVO' 
-                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${empleado.status_laboral === 'ACTIVO'
+                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                   : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-                }`}>
+                  }`}>
                   <BadgeCheck className={`size-3 ${empleado.status_laboral === 'ACTIVO' ? 'text-emerald-500' : 'text-rose-500'}`} />
                   {empleado.status_laboral}
                 </div>

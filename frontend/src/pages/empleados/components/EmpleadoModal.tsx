@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -19,10 +20,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Camera, User, MapPin, Briefcase, ClipboardList, X, Plus, Pencil, Trash2, Check } from 'lucide-react';
+import { Loader2, Camera, User, MapPin, Briefcase, ClipboardList, X, Plus, Pencil, Trash2, Check, Mail, Phone } from 'lucide-react';
 import { useEmpleados } from '@/hooks/use-empleados';
 import { useProgramas } from '@/hooks/use-programas';
 import type { Empleado } from '@/types/empleados';
+import { empleadosService } from '@/services/empleados.service';
+import { cn } from '@/lib/utils';
 
 const empleadoSchema = z.object({
   cedula: z.string().min(5, 'Cédula muy corta').max(20),
@@ -55,10 +58,10 @@ export function EmpleadoModal({
   onClose,
   empleado,
 }: EmpleadoModalProps) {
-  const { 
-    createEmpleado, 
-    updateEmpleado, 
-    isCreating, 
+  const {
+    createEmpleado,
+    updateEmpleado,
+    isCreating,
     isUpdating,
     catalogos,
     createCargo,
@@ -74,9 +77,17 @@ export function EmpleadoModal({
     updateContrato,
     deleteContrato
   } = useEmpleados();
-  
+
   const { programas } = useProgramas();
-  
+
+  // Fetch completo del empleado para edición (incluye residencia y programas)
+  const { data: fullEmpleadoResp } = useQuery({
+    queryKey: ['empleado-detail', empleado?.id],
+    queryFn: () => empleadosService.getById(empleado!.id),
+    enabled: !!empleado?.id && isOpen,
+  });
+  const fullEmpleado = fullEmpleadoResp?.data;
+
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -140,36 +151,54 @@ export function EmpleadoModal({
 
   useEffect(() => {
     if (isOpen) {
-      if (empleado) {
+      if (empleado && fullEmpleado) {
         reset({
-          cedula: empleado.cedula,
-          nombre: empleado.nombre,
-          apellido: empleado.apellido,
-          telefono: empleado.telefono || '',
-          email: empleado.email || '',
-          fechas_ingreso: empleado.fechas_ingreso ? new Date(empleado.fechas_ingreso).toISOString().split('T')[0] : '',
-          status_laboral: empleado.status_laboral || 'ACTIVO',
-          contrato_id: empleado.contrato_id?.toString() || '',
-          cargo_id: empleado.cargo_id?.toString() || '',
-          departamento_id: empleado.departamento_id?.toString() || '',
-          profesion_id: empleado.profesion_id?.toString() || '',
-          oficina_id: empleado.oficina_id?.toString() || '',
+          cedula: fullEmpleado.cedula,
+          nombre: fullEmpleado.nombre,
+          apellido: fullEmpleado.apellido,
+          telefono: fullEmpleado.telefono || '',
+          email: fullEmpleado.email || '',
+          fechas_ingreso: fullEmpleado.fechas_ingreso ? new Date(fullEmpleado.fechas_ingreso).toISOString().split('T')[0] : '',
+          status_laboral: fullEmpleado.status_laboral || 'ACTIVO',
+          contrato_id: fullEmpleado.contrato_id?.toString() || '',
+          cargo_id: fullEmpleado.cargo_id?.toString() || '',
+          departamento_id: fullEmpleado.departamento_id?.toString() || '',
+          profesion_id: fullEmpleado.profesion_id?.toString() || '',
+          oficina_id: fullEmpleado.oficina_id?.toString() || '',
           residencia: {
-            direccion_detallada: empleado.empleado_residencia?.[0]?.direccion_detallada || '',
-            punto_referencia: empleado.empleado_residencia?.[0]?.punto_referencia || '',
-            google_maps_url: empleado.empleado_residencia?.[0]?.google_maps_url || '',
+            direccion_detallada: fullEmpleado.empleado_residencia?.[0]?.direccion_detallada || '',
+            punto_referencia: fullEmpleado.empleado_residencia?.[0]?.punto_referencia || '',
+            google_maps_url: fullEmpleado.empleado_residencia?.[0]?.google_maps_url || '',
           },
         });
-        setFotoPreview(empleado.empleado_foto?.[0]?.foto_url || null);
-        setSelectedProgramas(empleado.empleados_programas?.map((ep) => ep.programas.id) || []);
-      } else {
-        reset();
+        setFotoPreview(fullEmpleado.empleado_foto?.[0]?.foto_url || null);
+        setSelectedProgramas(fullEmpleado.empleados_programas?.map((ep) => ep.programas.id) || []);
+      } else if (!empleado) {
+        reset({
+          cedula: '',
+          nombre: '',
+          apellido: '',
+          telefono: '',
+          email: '',
+          fechas_ingreso: '',
+          status_laboral: 'ACTIVO',
+          contrato_id: '',
+          cargo_id: '',
+          departamento_id: '',
+          profesion_id: '',
+          oficina_id: '',
+          residencia: {
+            direccion_detallada: '',
+            punto_referencia: '',
+            google_maps_url: '',
+          },
+        });
         setFotoPreview(null);
         setSelectedProgramas([]);
       }
       setFotoFile(null);
     }
-  }, [empleado, reset, isOpen]);
+  }, [empleado, fullEmpleado, reset, isOpen]);
 
   // Handlers para catálogos en línea
   const handleCreateCargo = async () => {
@@ -234,7 +263,7 @@ export function EmpleadoModal({
 
   const onFormSubmit = async (values: z.infer<typeof empleadoSchema>) => {
     const formData = new FormData();
-    
+
     // Flatten values and append to FormData
     (Object.keys(values) as Array<keyof typeof values>).forEach(key => {
       const value = values[key];
@@ -274,7 +303,7 @@ export function EmpleadoModal({
   };
 
   const togglePrograma = (id: number) => {
-    setSelectedProgramas(prev => 
+    setSelectedProgramas(prev =>
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     );
   };
@@ -299,7 +328,7 @@ export function EmpleadoModal({
             {/* Sección de Foto y Datos Básicos */}
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex flex-col items-center gap-4 shrink-0">
-                <div 
+                <div
                   className="relative group cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -313,12 +342,12 @@ export function EmpleadoModal({
                   <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
                     <Camera className="size-8 text-white" />
                   </div>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleFotoChange} 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFotoChange}
                   />
                 </div>
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Foto de Perfil</Label>
@@ -326,17 +355,17 @@ export function EmpleadoModal({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Cédula de Identidad</Label>
-                  <Input {...register('cedula')} placeholder="V-12345678" className="h-11 rounded-xl bg-background/50" />
-                  {errors.cedula && <span className="text-[10px] text-rose-500 font-bold ml-1">{errors.cedula.message as string}</span>}
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Cédula de Identidad <span className="text-rose-500">*</span></Label>
+                  <Input {...register('cedula')} placeholder="V-12345678" className={cn("h-11 rounded-xl bg-background/50", errors.cedula && "border-rose-500/50 bg-rose-500/5")} />
+                  {errors.cedula && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.cedula.message as string}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Estatus Laboral</Label>
-                  <Select 
-                    value={watch('status_laboral')} 
+                  <Select
+                    value={watch('status_laboral')}
                     onValueChange={(v) => setValue('status_laboral', v)}
                   >
-                    <SelectTrigger className="h-11 rounded-xl bg-background/50">
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-background/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="glass-effect rounded-xl border-border">
@@ -349,12 +378,33 @@ export function EmpleadoModal({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Nombres</Label>
-                  <Input {...register('nombre')} placeholder="Juan Alberto" className="h-11 rounded-xl bg-background/50" />
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Nombres <span className="text-rose-500">*</span></Label>
+                  <Input {...register('nombre')} placeholder="Juan Alberto" className={cn("h-11 rounded-xl bg-background/50", errors.nombre && "border-rose-500/50 bg-rose-500/5")} />
+                  {errors.nombre && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.nombre.message as string}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Apellidos</Label>
-                  <Input {...register('apellido')} placeholder="Pérez García" className="h-11 rounded-xl bg-background/50" />
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Apellidos <span className="text-rose-500">*</span></Label>
+                  <Input {...register('apellido')} placeholder="Pérez García" className={cn("h-11 rounded-xl bg-background/50", errors.apellido && "border-rose-500/50 bg-rose-500/5")} />
+                  {errors.apellido && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.apellido.message as string}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Contacto */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Teléfono</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input {...register('telefono')} placeholder="+58 412 000 0000" className="h-11 rounded-xl bg-background/50 pl-9" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input {...register('email')} type="email" placeholder="correo@insai.gob.ve" className={cn("h-11 rounded-xl bg-background/50 pl-9", errors.email && "border-rose-500/50 bg-rose-500/5")} />
+                  {errors.email && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.email.message as string}</p>}
                 </div>
               </div>
             </div>
@@ -494,11 +544,11 @@ export function EmpleadoModal({
                   </div>
                 </div>
 
-                {/* Oficina (Sigue igual - compleja) */}
+
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Oficina / Sede</Label>
                   <Select value={watch('oficina_id') || ''} onValueChange={(v) => setValue('oficina_id', v)}>
-                    <SelectTrigger className="h-10 rounded-xl bg-background/50">
+                    <SelectTrigger className="w-full h-10 rounded-xl bg-background/50">
                       <SelectValue placeholder="Seleccione..." />
                     </SelectTrigger>
                     <SelectContent className="glass-effect rounded-xl border-border">
@@ -673,17 +723,16 @@ export function EmpleadoModal({
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-foreground/80">Programas Asignados</h3>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1 rounded-xl">
                 {programas.map(prog => (
                   <button
                     key={prog.id}
                     type="button"
                     onClick={() => togglePrograma(prog.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 flex items-center gap-2 ${
-                      selectedProgramas.includes(prog.id)
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 flex items-center gap-2 ${selectedProgramas.includes(prog.id)
                       ? 'bg-amber-500/10 text-amber-600 border-amber-500/30 ring-2 ring-amber-500/20'
                       : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50'
-                    }`}
+                      }`}
                   >
                     <ClipboardList className={`size-3 ${selectedProgramas.includes(prog.id) ? 'text-amber-500' : 'text-muted-foreground/50'}`} />
                     {prog.nombre}

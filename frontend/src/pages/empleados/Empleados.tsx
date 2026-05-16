@@ -7,9 +7,11 @@ import {
     Users,
     AlertTriangle,
     FileDown,
-    Building2,
-    Filter
+    Filter,
+    Trash2,
+    X
 } from 'lucide-react';
+import type { Empleado } from '@/types/empleados';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -33,6 +35,7 @@ import {
 import { useEmpleados } from '@/hooks/use-empleados';
 import { EmpleadosTable } from './components/EmpleadosTable';
 import { EmpleadoModal } from './components/EmpleadoModal';
+import { EmpleadoDetalles } from './components/EmpleadoDetalles';
 
 const Empleados: React.FC = () => {
     const navigate = useNavigate();
@@ -51,12 +54,16 @@ const Empleados: React.FC = () => {
         setStatusLaboral,
         deleteEmpleado,
         exportEmpleados,
-        isExporting
+        isExporting,
+        isDeleting
     } = useEmpleados();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+    const [selectedEmpleadoForDetails, setSelectedEmpleadoForDetails] = useState<Empleado | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     const handleOpenCreate = () => {
         setSelectedEmpleado(null);
@@ -71,7 +78,24 @@ const Empleados: React.FC = () => {
     const confirmDelete = async () => {
         if (deleteId) {
             await deleteEmpleado(deleteId);
+            setSelectedIds(prev => prev.filter(id => id !== deleteId));
+            if (selectedEmpleadoForDetails?.id === deleteId) {
+                setSelectedEmpleadoForDetails(null);
+            }
             setDeleteId(null);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        try {
+            // Por ahora eliminamos uno a uno hasta implementar el endpoint masivo en empleados
+            for (const id of selectedIds) {
+                await deleteEmpleado(id);
+            }
+            setSelectedIds([]);
+            setIsBulkDeleteOpen(false);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -105,7 +129,7 @@ const Empleados: React.FC = () => {
                     <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
                         {/* Filtro por Departamento */}
                         <Select value={departamentoId} onValueChange={setDepartamentoId}>
-                            <SelectTrigger 
+                            <SelectTrigger
                                 title="Filtrar por Departamento"
                                 className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
                             >
@@ -114,7 +138,7 @@ const Empleados: React.FC = () => {
                                     <SelectValue placeholder="Depto" />
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border rounded-xl">
+                            <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
                                 <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS DEPTOS</SelectItem>
                                 {catalogos.departamentos.map(d => (
                                     <SelectItem key={d.id} value={d.id.toString()} className="cursor-pointer">
@@ -126,7 +150,7 @@ const Empleados: React.FC = () => {
 
                         {/* Filtro por Estatus */}
                         <Select value={statusLaboral} onValueChange={setStatusLaboral}>
-                            <SelectTrigger 
+                            <SelectTrigger
                                 title="Filtrar por Estatus"
                                 className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
                             >
@@ -135,7 +159,7 @@ const Empleados: React.FC = () => {
                                     <SelectValue placeholder="Estatus" />
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border rounded-xl">
+                            <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
                                 <SelectItem value="all" className="cursor-pointer font-bold">CUALQUIER ESTATUS</SelectItem>
                                 <SelectItem value="ACTIVO" className="cursor-pointer text-emerald-600 font-bold">ACTIVO</SelectItem>
                                 <SelectItem value="VACACIONES" className="cursor-pointer">VACACIONES</SelectItem>
@@ -158,10 +182,10 @@ const Empleados: React.FC = () => {
 
                         <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             size="icon"
-                            onClick={handleExport} 
+                            onClick={handleExport}
                             disabled={isExporting}
                             title="Exportar a Excel"
                             className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
@@ -177,8 +201,6 @@ const Empleados: React.FC = () => {
             </div>
 
             <div className="bg-card rounded-3xl border border-border shadow-2xl overflow-hidden glass-effect relative">
-                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary/50 via-primary to-primary/50" />
-                
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed m-6">
                         <div className="relative">
@@ -194,6 +216,10 @@ const Empleados: React.FC = () => {
                                 empleados={empleados}
                                 onEdit={handleOpenEdit}
                                 onDelete={(id) => setDeleteId(id)}
+                                onSelect={(empleado) => setSelectedEmpleadoForDetails(empleado.id === selectedEmpleadoForDetails?.id ? null : empleado)}
+                                selectedId={selectedEmpleadoForDetails?.id}
+                                selectedIds={selectedIds}
+                                onSelectionChange={setSelectedIds}
                             />
                         </div>
 
@@ -208,11 +234,52 @@ const Empleados: React.FC = () => {
                 )}
             </div>
 
+            {selectedEmpleadoForDetails && (
+                <EmpleadoDetalles
+                    empleadoId={selectedEmpleadoForDetails.id}
+                    empleadoNombre={selectedEmpleadoForDetails.nombre}
+                />
+            )}
+
             <EmpleadoModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 empleado={selectedEmpleado}
             />
+
+            {/* Floating bulk delete bar - igual que en Roles */}
+            {selectedIds.length > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
+                    <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
+                        <div className="flex items-center gap-3 pr-8 border-r border-background/10 dark:border-foreground/10">
+                            <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+                                {selectedIds.length}
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Eliminar seleccionados"
+                                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                                onClick={() => setIsBulkDeleteOpen(true)}
+                            >
+                                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Limpiar selección"
+                                className="rounded-full hover:bg-white/10 dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                                onClick={() => setSelectedIds([])}
+                            >
+                                <X className="size-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md rounded-3xl">
@@ -234,6 +301,33 @@ const Empleados: React.FC = () => {
                             className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg cursor-pointer shadow-rose-500/20 rounded-xl h-11"
                         >
                             Eliminar Permanentemente
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Bulk delete confirmation */}
+            <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+                <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md rounded-3xl">
+                    <AlertDialogHeader>
+                        <div className="size-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                            <AlertTriangle className="size-8 text-rose-500" />
+                        </div>
+                        <AlertDialogTitle className="text-2xl font-black text-center italic uppercase leading-tight">
+                            ¿Eliminar {selectedIds.length} Empleados?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-center font-medium px-4">
+                            Se eliminarán permanentemente las fichas de los empleados seleccionados y todas sus relaciones históricas.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+                        <AlertDialogCancel className="font-bold border-none bg-muted/50 hover:bg-muted cursor-pointer">Abortar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleBulkDelete}
+                            disabled={isDeleting}
+                            className="bg-rose-500 hover:bg-rose-600 text-white font-black shadow-lg shadow-rose-500/20 cursor-pointer"
+                        >
+                            {isDeleting ? <Loader2 className="animate-spin size-4" /> : 'Confirmar Purga'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
