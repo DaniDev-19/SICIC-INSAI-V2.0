@@ -46,8 +46,9 @@ export function useEmpleados() {
 
   const updateMutation = useMutation({
     mutationFn: empleadosService.update,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['empleados'] });
+      queryClient.invalidateQueries({ queryKey: ['empleado-detail', variables.id] });
       toast.success('Empleado actualizado correctamente');
     },
     onError: (error: AxiosError<{ message?: string }>) => {
@@ -57,8 +58,9 @@ export function useEmpleados() {
 
   const deleteMutation = useMutation({
     mutationFn: empleadosService.delete,
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['empleados'] });
+      queryClient.invalidateQueries({ queryKey: ['empleado-detail', id] });
       toast.success('Empleado eliminado correctamente');
     },
     onError: (error: AxiosError<{ message?: string }>) => {

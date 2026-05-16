@@ -72,6 +72,7 @@ const navigationGroups = [
   {
     label: "Inventario y Logística",
     items: [
+      { title: "Oficinas", url: "/home/oficinas", icon: Building2, screen: "oficinas" },
       { title: "Inventario de Insumos", url: "/home/inventario", icon: Package, screen: "inventario" },
     ]
   },
