@@ -114,7 +114,7 @@ const Propiedades: React.FC = () => {
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <Button variant="ghost" size="icon" onClick={exportPropiedades} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
+            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportPropiedades} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
               <Download className="size-5" />
             </Button>
           </div>

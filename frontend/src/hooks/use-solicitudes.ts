@@ -43,7 +43,7 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (args: { id: number; data: any }) => solicitudesService.update({ id: args.id, solicitud: args.data }),
+    mutationFn: (args: { id: number; data: any }) => solicitudesService.update({ id: args.id, data: args.data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['solicitudes'] });
       toast.success('Solicitud actualizada correctamente');

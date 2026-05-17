@@ -32,6 +32,7 @@ export const getPropiedades = async (req, res) => {
       include: {
         clientes: { select: { id: true, nombre: true, cedula_rif: true } },
         t_propiedad: { select: { id: true, nombre: true } },
+        propiedad_ubicacion: { include: { sectores: true } },
       }
     }),
     tenantPrisma.propiedades.count({ where }),

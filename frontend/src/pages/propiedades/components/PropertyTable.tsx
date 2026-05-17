@@ -90,9 +90,9 @@ export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTablePr
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                       <MapPin className="size-3.5 text-primary" />
-                      {propiedad.propiedad_ubicacion?.[0]?.sectores?.nombre || 'Ubicación no especificada'}
+                      {propiedad.propiedad_ubicacion?.[0]?.sectores?.nombre || 'Sin sector asignado'}
                     </div>
-                    <p className="text-[10px] text-muted-foreground italic line-clamp-1 pl-5">
+                    <p className="text-[10px] text-muted-foreground italic line-clamp-2 pl-5">
                       Ref: {propiedad.punto_referencia || 'N/A'}
                     </p>
                   </div>
@@ -104,8 +104,18 @@ export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTablePr
                       <Scale className="size-3.5 text-emerald-600" />
                       <span className="text-xs font-bold text-emerald-700">{propiedad.hectareas_totales || 0} Ha</span>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border w-fit">
-                      {propiedad.t_propiedad?.nombre || 'General'}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-muted text-muted-foreground border border-border w-fit">
+                        {propiedad.t_propiedad?.nombre || 'General'}
+                      </div>
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border w-fit",
+                        propiedad.status === 'ACTIVA' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 
+                        propiedad.status?.includes('PROCESO') || propiedad.status?.includes('SOLICITUD') ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
+                        'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                      )}>
+                        {propiedad.status?.replace(/_/g, ' ') || 'ACTIVA'}
+                      </div>
                     </div>
                   </div>
                 </TableCell>

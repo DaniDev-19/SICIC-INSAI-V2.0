@@ -20,11 +20,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Solicitud, TipoSolicitud } from '@/types/solicitudes';
-import { FileText, Loader2, Plus, Pencil, Trash2, Check, X, User, Home, AlertCircle } from 'lucide-react';
+import { FileText, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSolicitudes } from '@/hooks/use-solicitudes';
-import { clientesService, type Cliente } from '@/services/clientes.service';
-import { propiedadesService, type Propiedad } from '@/services/propiedades.service';
+import { clientesService } from '@/services/clientes.service';
+import { propiedadesService } from '@/services/propiedades.service';
+import type { Cliente } from '@/types/clientes';
+import type { Propiedad } from '@/types/propiedades';
 
 const solicitudSchema = z.object({
   codigo: z.string().optional(),
@@ -98,15 +100,21 @@ export function SolicitudModal({
   const [creatingTipo, setCreatingTipo] = useState(false);
   const [editingTipoId, setEditingTipoId] = useState<number | null>(null);
   const [editingTipoNombre, setEditingTipoNombre] = useState('');
+  const [updatingTipoId, setUpdatingTipoId] = useState<number | null>(null);
+  const [deletingTipoId, setDeletingTipoId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchBaseData = async () => {
       try {
         setIsLoadingRelated(true);
-        const res = await clientesService.getAll({ limit: 100 });
-        setClientes(res.data || []);
+        const [clientesRes, propiedadesRes] = await Promise.all([
+          clientesService.getAll({ limit: 1000 }),
+          propiedadesService.getAll({ limit: 1000 })
+        ]);
+        setClientes(clientesRes.data || []);
+        setPropiedades(propiedadesRes.data || []);
       } catch (err) {
-        console.error('Error fetching clientes:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setIsLoadingRelated(false);
       }
@@ -116,29 +124,6 @@ export function SolicitudModal({
       fetchBaseData();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    const fetchPropiedades = async () => {
-      if (!selectedClienteId) {
-        setPropiedades([]);
-        return;
-      }
-      try {
-        setIsLoadingRelated(true);
-        const res = await propiedadesService.getAll({ 
-          cliente_id: parseInt(selectedClienteId), 
-          limit: 100 
-        });
-        setPropiedades(res.data || []);
-      } catch (err) {
-        console.error('Error fetching propiedades:', err);
-      } finally {
-        setIsLoadingRelated(false);
-      }
-    };
-
-    fetchPropiedades();
-  }, [selectedClienteId]);
 
   useEffect(() => {
     if (solicitud) {
@@ -168,6 +153,8 @@ export function SolicitudModal({
         atendido_por_id: '',
       });
     }
+    setShowNewTipo(false);
+    setEditingTipoId(null);
   }, [solicitud, reset, isOpen]);
 
   const handleFormSubmit = async (values: SolicitudFormValues) => {
@@ -200,9 +187,31 @@ export function SolicitudModal({
     }
   };
 
+  const handleUpdateTipo = async (id: number) => {
+    if (!editingTipoNombre.trim() || !onUpdateTipo) return;
+    setUpdatingTipoId(id);
+    try {
+      await onUpdateTipo({ id, nombre: editingTipoNombre.trim() });
+      setEditingTipoId(null);
+      setEditingTipoNombre('');
+    } catch { /* error handled by hook */ } finally {
+      setUpdatingTipoId(null);
+    }
+  };
+
+  const handleDeleteTipo = async (id: number) => {
+    if (!onDeleteTipo) return;
+    setDeletingTipoId(id);
+    try {
+      await onDeleteTipo(id);
+    } catch { /* error handled by hook */ } finally {
+      setDeletingTipoId(null);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-150 border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-160 border-none shadow-2xl glass-effect p-0 overflow-hidden">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
@@ -221,22 +230,27 @@ export function SolicitudModal({
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-            
+
             {/* Seccion 1: Identificación */}
             <div className="space-y-5">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
                   Solicitante <span className="text-rose-500">*</span>
                 </label>
-                <Select 
+                <Select
                   onValueChange={(val) => {
                     setValue('solicitante_id', val, { shouldValidate: true });
-                    setValue('propiedad_id', ''); // Reset propiedad when cliente changes
-                  }} 
+                    const props = propiedades.filter(p => p.due_o_id === parseInt(val));
+                    if (props.length === 1) {
+                      setValue('propiedad_id', props[0].id.toString(), { shouldValidate: true });
+                    } else if (props.length === 0) {
+                      setValue('propiedad_id', '', { shouldValidate: true });
+                    }
+                  }}
                   value={watch('solicitante_id')}
                 >
                   <SelectTrigger className={cn(
-                    "h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
+                    "cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
                     errors.solicitante_id && "border-rose-500/50"
                   )}>
                     <SelectValue placeholder="Seleccionar Cliente" />
@@ -259,19 +273,25 @@ export function SolicitudModal({
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
                   Propiedad / Predio <span className="text-rose-500">*</span>
                 </label>
-                <Select 
-                  onValueChange={(val) => setValue('propiedad_id', val, { shouldValidate: true })} 
+                <Select
+                  onValueChange={(val) => {
+                    setValue('propiedad_id', val, { shouldValidate: true });
+                    const prop = propiedades.find(p => p.id === parseInt(val));
+                    if (prop && prop.due_o_id) {
+                      setValue('solicitante_id', prop.due_o_id.toString(), { shouldValidate: true });
+                    }
+                  }}
                   value={watch('propiedad_id')}
-                  disabled={!selectedClienteId || propiedades.length === 0}
+                  disabled={propiedades.length === 0}
                 >
                   <SelectTrigger className={cn(
-                    "h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
+                    "cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
                     errors.propiedad_id && "border-rose-500/50"
                   )}>
-                    <SelectValue placeholder={!selectedClienteId ? "Primero elige un cliente" : propiedades.length === 0 ? "Sin propiedades registradas" : "Seleccionar Propiedad"} />
+                    <SelectValue placeholder={propiedades.length === 0 ? "Sin propiedades registradas" : "Seleccionar Propiedad"} />
                   </SelectTrigger>
                   <SelectContent className="glass-effect">
-                    {propiedades.map(p => (
+                    {(selectedClienteId ? propiedades.filter(p => p.due_o_id === parseInt(selectedClienteId)) : propiedades).map(p => (
                       <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">
                         <div className="flex flex-col">
                           <span className="font-bold">{p.nombre}</span>
@@ -288,37 +308,129 @@ export function SolicitudModal({
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
                   Tipo de Solicitud <span className="text-rose-500">*</span>
                 </label>
+
+                {showNewTipo && (
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                    <Input
+                      value={newTipoNombre}
+                      onChange={(e) => setNewTipoNombre(e.target.value)}
+                      placeholder="Nuevo tipo..."
+                      className="h-9 rounded-lg text-sm border-primary/30 focus:border-primary"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateTipo())}
+                      autoFocus
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      disabled={creatingTipo || !newTipoNombre.trim()}
+                      onClick={handleCreateTipo}
+                      className="size-9 shrink-0 rounded-lg bg-primary text-white hover:bg-primary/90 cursor-pointer"
+                    >
+                      {creatingTipo ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { setShowNewTipo(false); setNewTipoNombre(''); }}
+                      className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {editingTipoId !== null && (
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                    <Input
+                      value={editingTipoNombre}
+                      onChange={(e) => setEditingTipoNombre(e.target.value)}
+                      placeholder="Editar tipo..."
+                      className="h-9 rounded-lg text-sm border-blue-500/30 focus:border-blue-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); handleUpdateTipo(editingTipoId); }
+                        if (e.key === 'Escape') { setEditingTipoId(null); }
+                      }}
+                      autoFocus
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      disabled={!editingTipoNombre.trim() || updatingTipoId === editingTipoId}
+                      onClick={() => handleUpdateTipo(editingTipoId)}
+                      className="size-9 shrink-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
+                    >
+                      {updatingTipoId === editingTipoId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { setEditingTipoId(null); setEditingTipoNombre(''); }}
+                      className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Select onValueChange={(val) => setValue('tipo_solicitud_id', val, { shouldValidate: true })} value={watch('tipo_solicitud_id')}>
                     <SelectTrigger className={cn(
-                      "flex-1 h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
+                      "cursor-pointer flex-1 h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
                       errors.tipo_solicitud_id && "border-rose-500/50"
                     )}>
                       <SelectValue placeholder="Seleccionar Tipo" />
                     </SelectTrigger>
-                    <SelectContent className="glass-effect">
+                    <SelectContent className="glass-effect max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                       {tipos.map(t => (
-                        <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">{t.nombre}</SelectItem>
+                        <div key={t.id} className="group relative flex items-center">
+                          <SelectItem value={t.id.toString()} className="cursor-pointer flex-1 pr-20">
+                            {t.nombre}
+                          </SelectItem>
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <button
+                              type="button"
+                              disabled={deletingTipoId === t.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTipoId(t.id);
+                                setEditingTipoNombre(t.nombre);
+                                setShowNewTipo(false);
+                              }}
+                              className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50"
+                              title="Editar tipo"
+                            >
+                              <Pencil className="size-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deletingTipoId === t.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTipo(t.id);
+                              }}
+                              className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50"
+                              title="Eliminar tipo"
+                            >
+                              {deletingTipoId === t.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewTipo(!showNewTipo)} className="size-12 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
+                    className="size-12 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer"
+                    title="Crear nuevo tipo"
+                  >
                     <Plus className="size-5" />
                   </Button>
                 </div>
-                {showNewTipo && (
-                  <div className="flex gap-2 mt-2 animate-in fade-in slide-in-from-top-1">
-                    <Input 
-                      value={newTipoNombre} 
-                      onChange={(e) => setNewTipoNombre(e.target.value)} 
-                      placeholder="Nuevo tipo..."
-                      className="h-10 rounded-lg"
-                    />
-                    <Button type="button" size="sm" onClick={handleCreateTipo} disabled={creatingTipo || !newTipoNombre.trim()} className="h-10 rounded-lg cursor-pointer">
-                      {creatingTipo ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                    </Button>
-                  </div>
-                )}
                 {errors.tipo_solicitud_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.tipo_solicitud_id.message}</p>}
               </div>
             </div>
@@ -329,7 +441,7 @@ export function SolicitudModal({
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Prioridad</label>
                   <Select onValueChange={(val) => setValue('prioridad', val)} value={watch('prioridad')}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/10 border-border">
+                    <SelectTrigger className=" cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="glass-effect">
@@ -341,9 +453,9 @@ export function SolicitudModal({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Medio Recepción</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Recepción</label>
                   <Select onValueChange={(val) => setValue('medio_recepcion', val)} value={watch('medio_recepcion')}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/10 border-border">
+                    <SelectTrigger className="cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="glass-effect">
@@ -360,7 +472,7 @@ export function SolicitudModal({
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Estado Actual</label>
                 <Select onValueChange={(val) => setValue('estatus', val)} value={watch('estatus')}>
-                  <SelectTrigger className="h-12 rounded-xl bg-muted/10 border-border">
+                  <SelectTrigger className="cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="glass-effect max-h-48">
@@ -379,7 +491,7 @@ export function SolicitudModal({
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Fecha Estimada Resolución</label>
-                <Input 
+                <Input
                   type="date"
                   {...register('fecha_resolucion')}
                   className="h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all"
@@ -388,11 +500,11 @@ export function SolicitudModal({
             </div>
 
             {/* Descripcion full width */}
-            <div className="md:col-span-2 space-y-2">
+            <div className="md:col-span-2 space-y-2 p-1">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
                 Descripción Detallada <span className="text-rose-500">*</span>
               </label>
-              <Textarea 
+              <Textarea
                 {...register('descripcion')}
                 placeholder="Indique el motivo de la solicitud y detalles relevantes..."
                 className={cn(
