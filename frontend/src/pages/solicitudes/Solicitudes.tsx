@@ -4,9 +4,7 @@ import {
   ChevronLeft,
   Plus,
   Loader2,
-  FileText,
   AlertTriangle,
-  Filter,
   Activity,
   AlertCircle
 } from 'lucide-react';
@@ -28,7 +26,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { useSolicitudes } from '@/hooks/use-solicitudes';
 import { SolicitudTable } from './components/SolicitudTable';

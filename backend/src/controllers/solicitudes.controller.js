@@ -110,7 +110,7 @@ export const createSolicitud = async (req, res) => {
         finalCodigo = `SOL-${new Date().getFullYear()}-${nextId.toString().padStart(4, '0')}`;
       }
 
-      return await tx.solicitudes.create({
+      const nuevaSolicitud = await tx.solicitudes.create({
         data: {
           codigo: finalCodigo,
           descripcion,
@@ -124,6 +124,15 @@ export const createSolicitud = async (req, res) => {
           propiedad_id
         }
       });
+
+      if (propiedad_id) {
+        await tx.propiedades.update({
+          where: { id: propiedad_id },
+          data: { status: 'SOLICITUD_EN_PROCESO' }
+        });
+      }
+
+      return nuevaSolicitud;
     }, {
       isolationLevel: 'Serializable'
     });
@@ -150,59 +159,102 @@ export const updateSolicitud = async (req, res) => {
   const { id } = req.params;
   const { codigo, ...data } = req.body;
 
-  const existing = await tenantPrisma.solicitudes.findUnique({ where: { id: Number(id) } });
-  if (!existing) {
-    return res.status(404).json({ status: 'error', message: 'Solicitud no encontrada' });
+  try {
+    const { response, existing } = await tenantPrisma.$transaction(async (tx) => {
+      const existing = await tx.solicitudes.findUnique({ where: { id: Number(id) } });
+      if (!existing) {
+        const error = new Error('Solicitud no encontrada');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      if (data.fecha_resolucion) data.fecha_resolucion = new Date(data.fecha_resolucion);
+
+      const updated = await tx.solicitudes.update({
+        where: { id: Number(id) },
+        data,
+      });
+
+      // Update property status based on solicitud estatus
+      if (data.estatus && existing.propiedad_id) {
+        const isFinalState = ['FINALIZADA', 'RECHAZADA', 'CANCELADA'].includes(data.estatus.toUpperCase());
+        await tx.propiedades.update({
+          where: { id: existing.propiedad_id },
+          data: { status: isFinalState ? 'ACTIVA' : 'EN_PROCESO_INSPECCION' }
+        });
+      }
+
+      return { response: updated, existing };
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ACTUALIZAR',
+      modulo: 'Solicitudes',
+      payload_previo: existing,
+      payload_nuevo: response
+    });
+
+    res.status(200).json({ status: 'success', data: response });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      return res.status(404).json({ status: 'error', message: error.message });
+    }
+    console.error('Error actualizando solicitud:', error);
+    res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
   }
-
-  if (data.fecha_resolucion) data.fecha_resolucion = new Date(data.fecha_resolucion);
-
-  const response = await tenantPrisma.solicitudes.update({
-    where: { id: Number(id) },
-    data,
-  });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ACTUALIZAR',
-    modulo: 'Solicitudes',
-    payload_previo: existing,
-    payload_nuevo: response
-  });
-
-  res.status(200).json({ status: 'success', data: response });
 };
 
 export const deleteSolicitud = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
 
-  const toDelete = await tenantPrisma.solicitudes.findUnique({
-    where: { id: Number(id) },
-    include: { planificaciones: true }
-  });
+  try {
+    const toDelete = await tenantPrisma.$transaction(async (tx) => {
+      const existing = await tx.solicitudes.findUnique({
+        where: { id: Number(id) },
+        include: { planificaciones: true }
+      });
 
-  if (!toDelete) {
-    return res.status(404).json({ status: 'error', message: 'Solicitud no encontrada' });
-  }
+      if (!existing) {
+        const error = new Error('Solicitud no encontrada');
+        error.statusCode = 404;
+        throw error;
+      }
 
-  if (toDelete.planificaciones) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'No se puede eliminar la solicitud porque ya tiene una planificación asociada. Elimine la planificación primero.'
+      if (existing.planificaciones) {
+        const error = new Error('No se puede eliminar la solicitud porque ya tiene una planificación asociada. Elimine la planificación primero.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      await tx.solicitudes.delete({ where: { id: Number(id) } });
+
+      if (existing.propiedad_id) {
+        await tx.propiedades.update({
+          where: { id: existing.propiedad_id },
+          data: { status: 'ACTIVA' }
+        });
+      }
+
+      return existing;
     });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ELIMINAR',
+      modulo: 'Solicitudes',
+      payload_previo: toDelete
+    });
+
+    res.status(200).json({ status: 'success', message: 'Solicitud eliminada exitosamente' });
+  } catch (error) {
+    if (error.statusCode === 404 || error.statusCode === 400) {
+      return res.status(error.statusCode).json({ status: 'error', message: error.message });
+    }
+    console.error('Error eliminando solicitud:', error);
+    res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
   }
-
-  await tenantPrisma.solicitudes.delete({ where: { id: Number(id) } });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ELIMINAR',
-    modulo: 'Solicitudes',
-    payload_previo: toDelete
-  });
-
-  res.status(200).json({ status: 'success', message: 'Solicitud eliminada exitosamente' });
 };
 
 export const deleteManySolicitudes = async (req, res) => {
@@ -234,15 +286,27 @@ export const deleteManySolicitudes = async (req, res) => {
   const deletableIds = numericIds.filter(id => !withPlanificaciones.some(s => s.id === id));
 
   if (deletableIds.length > 0) {
-    await tenantPrisma.solicitudes.deleteMany({
-      where: { id: { in: deletableIds } },
+    const deletedSolicitudes = toDelete.filter(s => deletableIds.includes(s.id));
+    const propIdsToRestore = deletedSolicitudes.map(s => s.propiedad_id).filter(Boolean);
+
+    await tenantPrisma.$transaction(async (tx) => {
+      await tx.solicitudes.deleteMany({
+        where: { id: { in: deletableIds } },
+      });
+
+      if (propIdsToRestore.length > 0) {
+        await tx.propiedades.updateMany({
+          where: { id: { in: propIdsToRestore } },
+          data: { status: 'ACTIVA' }
+        });
+      }
     });
 
     bitacoraService.registrar({
       req,
       accion: 'ELIMINAR_MASIVO',
       modulo: 'Solicitudes',
-      payload_previo: toDelete.filter(s => deletableIds.includes(s.id))
+      payload_previo: deletedSolicitudes
     });
   }
 

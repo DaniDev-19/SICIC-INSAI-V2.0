@@ -6,7 +6,7 @@ import {
     Loader2,
     Users,
     AlertTriangle,
-    FileDown,
+    Download,
     Filter,
     Trash2,
     X
@@ -190,7 +190,7 @@ const Empleados: React.FC = () => {
                             title="Exportar a Excel"
                             className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
                         >
-                            {isExporting ? <Loader2 className="size-5 animate-spin" /> : <FileDown className="size-5" />}
+                            {isExporting ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
                         </Button>
                     </div>
 

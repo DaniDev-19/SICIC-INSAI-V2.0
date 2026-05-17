@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { useClientes } from '@/hooks/use-clientes';
+import type { Cliente } from '@/types/clientes';
 import { ProducerTable } from './components/ProducerTable';
 import { ProducerWizard } from './components/ProducerWizard';
 import { ProducerModal } from './components/ProducerModal';
@@ -39,7 +40,7 @@ const Clientes: React.FC = () => {
     exportClientes,
   } = useClientes();
 
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProducer, setEditingProducer] = useState<Cliente | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -92,7 +93,7 @@ const Clientes: React.FC = () => {
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <Button variant="ghost" size="icon" onClick={exportClientes} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
+            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportClientes} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
               <Download className="size-5" />
             </Button>
           </div>
