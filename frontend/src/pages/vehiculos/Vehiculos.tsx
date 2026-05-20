@@ -58,7 +58,6 @@ const Vehiculos: React.FC = () => {
   const [typeSelect, setTypeSelect] = useState<string>('all');
   const [statusSelect, setStatusSelect] = useState<string>('all');
 
-  // Client-side search in addition to server-side filtering
   const filteredVehiculos = vehiculos.filter((v) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
@@ -95,10 +94,8 @@ const Vehiculos: React.FC = () => {
     if (deleteId) {
       try {
         await deleteVehiculo(deleteId);
-        // Clear delete selection if it was checked in the bulk list
         setSelectedIds((prev) => prev.filter((id) => id !== deleteId));
       } catch {
-        // Handled by react-query mutation
       } finally {
         setDeleteId(null);
       }
@@ -110,7 +107,6 @@ const Vehiculos: React.FC = () => {
       try {
         await deleteManyVehiculos(selectedIds);
       } catch {
-        // Handled by react-query mutation
       } finally {
         setSelectedIds([]);
         setIsBulkDeleteOpen(false);
@@ -157,7 +153,6 @@ const Vehiculos: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
-            {/* Filter: Tipo */}
             <Select value={typeSelect} onValueChange={handleTipoChange}>
               <SelectTrigger
                 title="Filtrar por tipo"
@@ -166,7 +161,7 @@ const Vehiculos: React.FC = () => {
                 <Filter className={`size-4 ${typeSelect !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="sr-only"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border rounded-xl">
+              <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
                 <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS TIPOS</SelectItem>
                 <SelectItem value="CARRO" className="cursor-pointer font-medium">CARROS</SelectItem>
                 <SelectItem value="MOTO" className="cursor-pointer font-medium">MOTOS</SelectItem>
@@ -184,7 +179,7 @@ const Vehiculos: React.FC = () => {
                 <div className={`size-2.5 rounded-full ${statusSelect === 'all' ? 'bg-muted-foreground/60' : statusSelect === 'OPERATIVO' ? 'bg-emerald-500' : statusSelect === 'MANTENIMIENTO' ? 'bg-amber-500' : 'bg-rose-500'}`} />
                 <span className="sr-only"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border rounded-xl">
+              <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
                 <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS ESTATUS</SelectItem>
                 <SelectItem value="OPERATIVO" className="cursor-pointer text-emerald-600 font-bold">OPERATIVO</SelectItem>
                 <SelectItem value="MANTENIMIENTO" className="cursor-pointer text-amber-600 font-bold">MANTENIMIENTO</SelectItem>
@@ -211,7 +206,6 @@ const Vehiculos: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating bulk delete bar */}
       {selectedIds.length > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
           <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
@@ -284,7 +278,6 @@ const Vehiculos: React.FC = () => {
         vehiculo={selectedVehiculo}
       />
 
-      {/* Alert for individual delete */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
           <AlertDialogHeader>
@@ -310,7 +303,6 @@ const Vehiculos: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Alert for bulk delete */}
       <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
         <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
           <AlertDialogHeader>

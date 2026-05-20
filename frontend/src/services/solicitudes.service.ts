@@ -65,5 +65,16 @@ export const solicitudesService = {
   deleteMany: async (ids: number[]): Promise<SimpleResponse> => {
     const { data } = await apiClient.post<SimpleResponse>('/solicitudes/bulk-delete', { ids });
     return data;
+  },
+
+  export: async () => {
+    const response = await apiClient.get('/solicitudes/export', { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'reporte_solicitudes.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 };

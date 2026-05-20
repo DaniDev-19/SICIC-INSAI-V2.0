@@ -110,7 +110,6 @@ export function VehiculoModal({
       }
       onClose();
     } catch {
-      // toast notification handled by react-query mutations
     }
   };
 
@@ -132,7 +131,6 @@ export function VehiculoModal({
 
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Placa */}
               <div className="space-y-2">
                 <Label htmlFor="placa" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Placa / Matrícula <span className="text-rose-500">*</span>
@@ -167,7 +165,7 @@ export function VehiculoModal({
                       <SelectTrigger
                         id="tipo"
                         className={cn(
-                          "h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer",
+                          "w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer",
                           errors.tipo && "border-rose-500/50"
                         )}
                       >
@@ -187,7 +185,6 @@ export function VehiculoModal({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Marca */}
               <div className="space-y-2">
                 <Label htmlFor="marca" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Marca
@@ -204,7 +201,6 @@ export function VehiculoModal({
                 {errors.marca && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1">{errors.marca.message as string}</p>}
               </div>
 
-              {/* Modelo */}
               <div className="space-y-2">
                 <Label htmlFor="modelo" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Modelo
@@ -223,7 +219,6 @@ export function VehiculoModal({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Color */}
               <div className="space-y-2">
                 <Label htmlFor="color" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Color
@@ -240,7 +235,6 @@ export function VehiculoModal({
                 {errors.color && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1">{errors.color.message as string}</p>}
               </div>
 
-              {/* Status */}
               <div className="space-y-2">
                 <Label htmlFor="status" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Estatus de Operación
@@ -252,7 +246,7 @@ export function VehiculoModal({
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger
                         id="status"
-                        className="h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer"
+                        className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer"
                       >
                         <SelectValue placeholder="Seleccione un estatus" />
                       </SelectTrigger>
@@ -268,7 +262,6 @@ export function VehiculoModal({
               </div>
             </div>
 
-            {/* Informational Message */}
             <div className="flex gap-3 p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5 items-start">
               <Info className="size-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">

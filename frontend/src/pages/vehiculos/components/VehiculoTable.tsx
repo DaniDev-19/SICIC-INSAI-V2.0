@@ -21,16 +21,16 @@ interface VehiculoTableProps {
 }
 
 const TIPO_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  MOTO:      { label: 'Moto',      icon: <Bike className="size-4" />,  color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-  CARRO:     { label: 'Carro',     icon: <Car className="size-4" />,   color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  MOTO: { label: 'Moto', icon: <Bike className="size-4" />, color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  CARRO: { label: 'Carro', icon: <Car className="size-4" />, color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
   CAMIONETA: { label: 'Camioneta', icon: <Truck className="size-4" />, color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
-  OTRO:      { label: 'Otro',      icon: <Car className="size-4" />,   color: 'bg-muted/60 text-muted-foreground border-border' },
+  OTRO: { label: 'Otro', icon: <Car className="size-4" />, color: 'bg-muted/60 text-muted-foreground border-border' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  OPERATIVO:    { label: 'Operativo',    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  MANTENIMIENTO:{ label: 'Mantenimiento',color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-  INACTIVO:     { label: 'Inactivo',     color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
+  OPERATIVO: { label: 'Operativo', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  MANTENIMIENTO: { label: 'Mantenimiento', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  INACTIVO: { label: 'Inactivo', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
 };
 
 export function VehiculoTable({
@@ -49,8 +49,8 @@ export function VehiculoTable({
         <TableHeader className="bg-muted/30 border-b">
           <TableRow>
             <TableHead className="w-12 px-4">
-              <Checkbox 
-                checked={allSelected} 
+              <Checkbox
+                checked={allSelected}
                 onCheckedChange={onToggleSelectAll}
                 className="translate-y-[2px]"
               />
@@ -83,13 +83,13 @@ export function VehiculoTable({
               const isSelected = selectedIds.includes(vehiculo.id);
 
               return (
-                <TableRow 
-                  key={vehiculo.id} 
+                <TableRow
+                  key={vehiculo.id}
                   className={`group transition-all duration-300 ${isSelected ? 'bg-primary/5' : 'hover:bg-primary/5'}`}
                 >
                   <TableCell className="px-4">
-                    <Checkbox 
-                      checked={isSelected} 
+                    <Checkbox
+                      checked={isSelected}
                       onCheckedChange={() => onToggleSelect(vehiculo.id)}
                       className="translate-y-[2px]"
                     />
@@ -130,12 +130,6 @@ export function VehiculoTable({
 
                   <TableCell className="px-6 py-5">
                     <div className="flex items-center gap-2">
-                      {vehiculo.color && (
-                        <div
-                          className="size-4 rounded-full border border-border shadow-sm"
-                          style={{ backgroundColor: vehiculo.color.toLowerCase() }}
-                        />
-                      )}
                       <span className="text-sm text-muted-foreground font-medium">
                         {vehiculo.color || '—'}
                       </span>

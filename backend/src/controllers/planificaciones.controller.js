@@ -1,4 +1,17 @@
 import bitacoraService from '../services/bitacora.service.js';
+import excelService from '../services/excel.service.js';
+
+const parseTimeInput = (timeStr) => {
+  if (!timeStr) return null;
+  if (typeof timeStr !== 'string') return new Date(timeStr);
+  if (timeStr.includes('T') || timeStr.includes('Z')) {
+    return new Date(timeStr);
+  }
+  const parts = timeStr.split(':');
+  const hh = parts[0].padStart(2, '0');
+  const mm = (parts[1] || '00').padStart(2, '0');
+  return new Date(`1970-01-01T${hh}:${mm}:00.000Z`);
+};
 
 export const getPlanificaciones = async (req, res) => {
   const tenantPrisma = req.db;
@@ -6,6 +19,8 @@ export const getPlanificaciones = async (req, res) => {
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
   const { status, fecha_programada, q } = req.query;
+  const { currentInstance } = req.user || {};
+  const { rol, empleado_id } = currentInstance || {};
 
   const where = {
     AND: [
@@ -20,6 +35,16 @@ export const getPlanificaciones = async (req, res) => {
       } : {}
     ]
   };
+
+  if (rol === 'INSPECTOR' && empleado_id) {
+    where.AND.push({
+      planificacion_empleados: {
+        some: {
+          empleado_id: Number(empleado_id)
+        }
+      }
+    });
+  }
 
   const [planificaciones, totalCount] = await Promise.all([
     tenantPrisma.planificaciones.findMany({
@@ -129,8 +154,8 @@ export const createPlanificacion = async (req, res) => {
         data: {
           codigo: finalCodigo,
           fecha_programada: new Date(fecha_programada),
-          hora_inicio: hora_inicio ? new Date(`1970-01-01T${hora_inicio}`) : null,
-          hora_fin: hora_fin ? new Date(`1970-01-01T${hora_fin}`) : null,
+          hora_inicio: parseTimeInput(hora_inicio),
+          hora_fin: parseTimeInput(hora_fin),
           prioridad: prioridad || 'MEDIA',
           actividad,
           objetivo,
@@ -180,8 +205,7 @@ export const updatePlanificacion = async (req, res) => {
   const { empleados, codigo, ...data } = req.body;
 
   const existing = await tenantPrisma.planificaciones.findUnique({
-    where: { id: Number(id) },
-    include: { solicitud_id: true }
+    where: { id: Number(id) }
   });
 
   if (!existing) {
@@ -189,8 +213,8 @@ export const updatePlanificacion = async (req, res) => {
   }
 
   if (data.fecha_programada) data.fecha_programada = new Date(data.fecha_programada);
-  if (data.hora_inicio) data.hora_inicio = new Date(`1970-01-01T${data.hora_inicio}`);
-  if (data.hora_fin) data.hora_fin = new Date(`1970-01-01T${data.hora_fin}`);
+  if (data.hora_inicio) data.hora_inicio = parseTimeInput(data.hora_inicio);
+  if (data.hora_fin) data.hora_fin = parseTimeInput(data.hora_fin);
 
   const response = await tenantPrisma.$transaction(async (tx) => {
 
@@ -264,4 +288,77 @@ export const deletePlanificacion = async (req, res) => {
   });
 
   res.status(200).json({ status: 'success', message: 'Planificación eliminada y solicitud reseteada.' });
+};
+
+export const exportPlanificaciones = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { currentInstance } = req.user || {};
+  const { rol, empleado_id } = currentInstance || {};
+
+  const where = {};
+
+  if (rol === 'INSPECTOR' && empleado_id) {
+    where.planificacion_empleados = {
+      some: {
+        empleado_id: Number(empleado_id)
+      }
+    };
+  }
+
+  const planificaciones = await tenantPrisma.planificaciones.findMany({
+    where,
+    include: {
+      solicitudes: {
+        include: {
+          clientes: { select: { nombre: true } },
+          propiedades: { select: { nombre: true, codigo_insai: true } }
+        }
+      },
+      planificacion_empleados: {
+        include: {
+          empleados: { select: { nombre: true } }
+        }
+      }
+    },
+    orderBy: { fecha_programada: 'desc' }
+  });
+
+  const data = planificaciones.map(p => ({
+    codigo: p.codigo,
+    actividad: p.actividad,
+    fecha: p.fecha_programada ? new Date(p.fecha_programada).toLocaleDateString() : 'N/A',
+    hora_inicio: p.hora_inicio ? new Date(p.hora_inicio).toISOString().substring(11, 16) : 'N/A',
+    hora_fin: p.hora_fin ? new Date(p.hora_fin).toISOString().substring(11, 16) : 'N/A',
+    prioridad: p.prioridad,
+    status: p.status,
+    solicitud: p.solicitudes?.codigo || 'N/A',
+    solicitante: p.solicitudes?.clientes?.nombre || 'N/A',
+    propiedad: p.solicitudes?.propiedades?.nombre || 'N/A',
+    insai: p.solicitudes?.propiedades?.codigo_insai || 'N/A',
+    tecnicos: p.planificacion_empleados?.map(pe => pe.empleados?.nombre).filter(Boolean).join(', ') || 'Sin asignar'
+  }));
+
+  const buffer = await excelService.generate({
+    title: 'Reporte de Planificaciones de Visitas e Inspecciones - INSAI',
+    columns: [
+      { header: 'Código Planif.', key: 'codigo', width: 15 },
+      { header: 'Actividad / Inspección', key: 'actividad', width: 35 },
+      { header: 'Fecha Visita', key: 'fecha', width: 15 },
+      { header: 'Hora Inicio', key: 'hora_inicio', width: 12 },
+      { header: 'Hora Fin', key: 'hora_fin', width: 12 },
+      { header: 'Prioridad', key: 'prioridad', width: 12 },
+      { header: 'Estatus', key: 'status', width: 15 },
+      { header: 'Trámite Asoc.', key: 'solicitud', width: 15 },
+      { header: 'Productor', key: 'solicitante', width: 30 },
+      { header: 'Predio Rural', key: 'propiedad', width: 30 },
+      { header: 'Código INSAI Predio', key: 'insai', width: 20 },
+      { header: 'Inspectores Asignados', key: 'tecnicos', width: 40 },
+    ],
+    data,
+    sheetName: 'Planificaciones'
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_planificaciones.xlsx');
+  res.send(buffer);
 };

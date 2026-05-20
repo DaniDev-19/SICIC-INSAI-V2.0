@@ -22,17 +22,20 @@ import {
 } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/Stepper';
 import {
-  User,
-  Home,
   Calendar,
   Users,
+  User,
+  ExternalLink,
   Activity,
   ChevronLeft,
   ChevronRight,
   Check,
   Loader2,
-  AlertCircle,
-  Truck
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useClientes } from '@/hooks/use-clientes';
@@ -41,19 +44,20 @@ import { useEmpleados } from '@/hooks/use-empleados';
 import { useVehiculos } from '@/hooks/use-vehiculos';
 
 const wizardSchema = z.object({
-  // Step 1: Client and Property
+  // Step 1: Existing Producer
   solicitante_id: z.string().min(1, 'El productor es requerido'),
+
+  // Step 2: Existing Property
   propiedad_id: z.string().min(1, 'El predio rural es requerido'),
 
-  // Step 2: Solicitud Details
+  // Step 3: Solicitud Details
   tipo_solicitud_id: z.string().min(1, 'El tipo de solicitud es requerido'),
   descripcion: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   prioridad: z.enum(['BAJA', 'MEDIA', 'ALTA', 'URGENTE']),
   medio_recepcion: z.enum(['WEB', 'TELEFONO', 'PRESENCIAL', 'CORREO', 'OFICIO']),
 
-  // Step 3: Planificación (Opcional)
-  programar_inmediato: z.boolean().default(false),
-  fecha_programada: z.string().optional(),
+  // Step 4: Planificación (Obligatoria)
+  fecha_programada: z.string().min(1, 'La fecha programada es requerida'),
   hora_inicio: z.string().optional(),
   hora_fin: z.string().optional(),
   prioridad_plan: z.enum(['BAJA', 'MEDIA', 'ALTA', 'URGENTE']).optional(),
@@ -65,16 +69,8 @@ const wizardSchema = z.object({
   aseguramiento: z.string().optional(),
   vehiculo_id: z.string().optional(),
 
-  // Step 4: Assigned Employees
-  empleados: z.array(z.number()).optional(),
-}).refine((data) => {
-  if (data.programar_inmediato) {
-    return !!data.fecha_programada;
-  }
-  return true;
-}, {
-  message: 'La fecha programada es requerida para agendar la planificación',
-  path: ['fecha_programada'],
+  // Step 5: Assigned Employees (Obligatorio)
+  empleados: z.array(z.number()).min(1, 'Debe asignar al menos un inspector técnico'),
 });
 
 type WizardValues = z.infer<typeof wizardSchema>;
@@ -82,31 +78,43 @@ type WizardValues = z.infer<typeof wizardSchema>;
 interface SolicitudWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  initialFechaProgramada?: string;
 }
 
 const STEPS = [
-  { title: 'Origen', description: 'Productor y Predio' },
+  { title: 'Productor', description: 'Origen del trámite' },
+  { title: 'Propiedad', description: 'Predio a inspeccionar' },
   { title: 'Solicitud', description: 'Detalles del trámite' },
   { title: 'Planificación', description: 'Agenda de visita' },
   { title: 'Personal', description: 'Técnicos asignados' },
 ];
 
-export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
+export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: SolicitudWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Hooks de datos
+  // Inline Solicitud types management state
+  const [showNewSolicitudTipo, setShowNewSolicitudTipo] = useState(false);
+  const [newSolicitudTipoNombre, setNewSolicitudTipoNombre] = useState('');
+  const [creatingSolicitudTipo, setCreatingSolicitudTipo] = useState(false);
+  const [editingSolicitudTipoId, setEditingSolicitudTipoId] = useState<number | null>(null);
+  const [editingSolicitudTipoNombre, setEditingSolicitudTipoNombre] = useState('');
+  const [updatingSolicitudTipoId, setUpdatingSolicitudTipoId] = useState<number | null>(null);
+  const [deletingSolicitudTipoId, setDeletingSolicitudTipoId] = useState<number | null>(null);
+
+  // Existing hooks
   const { clientes, setSearch: setClientesSearch } = useClientes('', 50);
-  const { tipos, createSolicitud } = useSolicitudes();
+  const { 
+    tipos: solicitudTipos, 
+    createSolicitud,
+    createTipo: createSolicitudTipo,
+    updateTipo: updateSolicitudTipo,
+    deleteTipo: deleteSolicitudTipo
+  } = useSolicitudes();
   const { empleados, setLimit: setEmpleadosLimit } = useEmpleados();
   const { vehiculos } = useVehiculos();
 
-  // Asegurar que listamos bastantes empleados para la asignación
-  useEffect(() => {
-    if (isOpen) {
-      setEmpleadosLimit(100);
-    }
-  }, [isOpen, setEmpleadosLimit]);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   const {
     register,
@@ -117,7 +125,7 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
     reset,
     formState: { errors },
   } = useForm<WizardValues>({
-    resolver: zodResolver(wizardSchema),
+    resolver: zodResolver(wizardSchema) as any,
     defaultValues: {
       solicitante_id: '',
       propiedad_id: '',
@@ -125,65 +133,69 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
       descripcion: '',
       prioridad: 'MEDIA',
       medio_recepcion: 'PRESENCIAL',
-      programar_inmediato: false,
       prioridad_plan: 'MEDIA',
       empleados: [],
     }
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      setEmpleadosLimit(100);
+      if (initialFechaProgramada) {
+        setValue('fecha_programada', initialFechaProgramada);
+      } else {
+        setValue('fecha_programada', '');
+      }
+    }
+  }, [isOpen, setEmpleadosLimit, initialFechaProgramada, setValue]);
+
   const selectedClient = watch('solicitante_id');
-  const programarInmediato = watch('programar_inmediato');
+  const programarInmediato = true;
   const selectedEmpleados = watch('empleados') || [];
 
-  // Obtener propiedades del cliente seleccionado
+  // Retrieve properties for selected client
   const selectedClientObj = clientes.find(c => c.id.toString() === selectedClient);
   const clientProperties = selectedClientObj?.propiedades || [];
 
-  // Si cambia el cliente, reiniciamos la propiedad seleccionada
+  // Reset property if client changes
   useEffect(() => {
     setValue('propiedad_id', '');
   }, [selectedClient, setValue]);
 
   const isStepValid = () => {
     const values = watch();
-    switch (currentStep) {
-      case 0:
-        return !!values.solicitante_id && !!values.propiedad_id;
-      case 1:
-        return !!values.tipo_solicitud_id && values.descripcion?.length >= 10;
-      case 2:
-        if (values.programar_inmediato) {
-          return !!values.fecha_programada;
-        }
-        return true;
-      case 3:
-        if (values.programar_inmediato) {
-          return selectedEmpleados.length > 0;
-        }
-        return true;
-      default:
-        return true;
+    if (currentStep === 0) {
+      return !!values.solicitante_id;
     }
+    if (currentStep === 1) {
+      return !!values.propiedad_id;
+    }
+    if (currentStep === 2) {
+      return !!values.tipo_solicitud_id && (values.descripcion?.length || 0) >= 10;
+    }
+    if (currentStep === 3) {
+      return !!values.fecha_programada;
+    }
+    if (currentStep === 4) {
+      return selectedEmpleados.length > 0;
+    }
+    return true;
   };
 
   const handleNext = async () => {
     const fieldsByStep: (keyof WizardValues)[][] = [
-      ['solicitante_id', 'propiedad_id'],
+      ['solicitante_id'],
+      ['propiedad_id'],
       ['tipo_solicitud_id', 'descripcion', 'prioridad', 'medio_recepcion'],
       ['fecha_programada', 'hora_inicio', 'hora_fin', 'prioridad_plan', 'actividad', 'objetivo', 'vehiculo_id'],
       ['empleados']
     ];
 
-    const isStepValidRes = await trigger(fieldsByStep[currentStep]);
+    const isStepValidRes = await trigger(fieldsByStep[currentStep] as any);
     if (isStepValidRes) {
-      // Si el usuario decide NO planificar de inmediato, podemos saltar directamente al final desde el paso 2
-      if (currentStep === 1 && !programarInmediato) {
-        // Ejecutar envío final
-        handleSubmit(onFinalSubmit)();
-        return;
-      }
-
+      setIsAdvancing(true);
       setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
+      setTimeout(() => setIsAdvancing(false), 300);
     }
   };
 
@@ -194,17 +206,21 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
   const onFinalSubmit = async (values: WizardValues) => {
     setIsSubmitting(true);
     try {
+      const finalClientId = parseInt(values.solicitante_id);
+      const finalPropertyId = parseInt(values.propiedad_id);
+
+      // 2. Build the Solicitud payload
       const payload: any = {
-        solicitante_id: parseInt(values.solicitante_id),
-        propiedad_id: parseInt(values.propiedad_id),
+        solicitante_id: finalClientId,
+        propiedad_id: finalPropertyId,
         tipo_solicitud_id: parseInt(values.tipo_solicitud_id),
         descripcion: values.descripcion,
         prioridad: values.prioridad,
         medio_recepcion: values.medio_recepcion,
       };
 
-      // Si se decidió agendar de inmediato, incorporamos la planificación
-      if (values.programar_inmediato && values.fecha_programada) {
+      // 3. Build Planificación if scheduled
+      if (values.fecha_programada) {
         payload.planificacion = {
           fecha_programada: values.fecha_programada,
           hora_inicio: values.hora_inicio || undefined,
@@ -212,10 +228,6 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
           prioridad: values.prioridad_plan || values.prioridad,
           actividad: values.actividad || undefined,
           objetivo: values.objetivo || undefined,
-          convocatoria: values.convocatoria || undefined,
-          punto_encuentro: values.punto_encuentro || undefined,
-          ubicacion: values.ubicacion || undefined,
-          aseguramiento: values.aseguramiento || undefined,
           vehiculo_id: values.vehiculo_id ? parseInt(values.vehiculo_id) : null,
           empleados: selectedEmpleados,
         };
@@ -227,9 +239,43 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
       setCurrentStep(0);
       onClose();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al guardar la solicitud');
+      toast.error(error.response?.data?.message || 'Error al procesar el trámite');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Solicitud types management methods
+  const handleCreateSolicitudTipo = async () => {
+    if (!newSolicitudTipoNombre.trim()) return;
+    setCreatingSolicitudTipo(true);
+    try {
+      await createSolicitudTipo(newSolicitudTipoNombre.trim());
+      setNewSolicitudTipoNombre('');
+      setShowNewSolicitudTipo(false);
+    } finally {
+      setCreatingSolicitudTipo(false);
+    }
+  };
+
+  const handleUpdateSolicitudTipo = async (id: number) => {
+    if (!editingSolicitudTipoNombre.trim()) return;
+    setUpdatingSolicitudTipoId(id);
+    try {
+      await updateSolicitudTipo({ id, nombre: editingSolicitudTipoNombre.trim() });
+      setEditingSolicitudTipoId(null);
+      setEditingSolicitudTipoNombre('');
+    } catch { } finally {
+      setUpdatingSolicitudTipoId(null);
+    }
+  };
+
+  const handleDeleteSolicitudTipo = async (id: number) => {
+    setDeletingSolicitudTipoId(id);
+    try {
+      await deleteSolicitudTipo(id);
+    } catch { } finally {
+      setDeletingSolicitudTipoId(null);
     }
   };
 
@@ -262,16 +308,16 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
         </DialogHeader>
 
         <div className="p-8 pb-12">
-          {/* Ocultamos los últimos pasos del Stepper si no se programa planificación de inmediato */}
+          {/* Stepper with dynamic slides depending on planning */}
           <Stepper 
-            steps={programarInmediato ? STEPS : STEPS.slice(0, 2)} 
+            steps={programarInmediato ? STEPS : STEPS.slice(0, 3)} 
             currentStep={currentStep} 
           />
 
           <form onSubmit={(e) => e.preventDefault()} className="mt-8">
             <div key={currentStep} className="min-h-[350px] animate-in fade-in slide-in-from-bottom-4 duration-500">
               
-              {/* PASO 1: CLIENTE Y PROPIEDAD */}
+              {/* PASO 1: PRODUCTOR */}
               {currentStep === 0 && (
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -301,6 +347,47 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                     {errors.solicitante_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.solicitante_id.message}</p>}
                   </div>
 
+                  {/* Tarjeta de detalles del Productor seleccionado */}
+                  {selectedClientObj && (
+                    <div className="p-5 rounded-2xl border border-primary/10 bg-primary/5 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
+                      <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
+                        <User className="size-5 text-primary shrink-0" />
+                        <span className="text-xs font-black uppercase text-primary tracking-widest">Información del Productor Seleccionado</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="font-semibold text-muted-foreground block">Nombre Completo:</span>
+                          <span className="text-foreground font-bold text-sm">{selectedClientObj.nombre}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-muted-foreground block">Cédula / RIF:</span>
+                          <span className="text-foreground font-bold text-sm">{selectedClientObj.cedula_rif}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-muted-foreground block">Código RUNSAI:</span>
+                          <span className="text-foreground font-bold">{selectedClientObj.codigo_runsai || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-muted-foreground block">Teléfono / Contacto:</span>
+                          <span className="text-foreground font-bold">{selectedClientObj.telefono || '—'}</span>
+                        </div>
+                        <div className="md:col-span-2">
+                          <span className="font-semibold text-muted-foreground block">Correo Electrónico:</span>
+                          <span className="text-foreground font-bold">{selectedClientObj.email || '—'}</span>
+                        </div>
+                        <div className="md:col-span-2">
+                          <span className="font-semibold text-muted-foreground block">Dirección Fiscal:</span>
+                          <span className="text-foreground font-medium leading-relaxed">{selectedClientObj.direccion_fiscal || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PASO 2: PROPIEDAD / PREDIO */}
+              {currentStep === 1 && (
+                <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Predio Rural / Propiedad Asociada <span className="text-rose-500">*</span></label>
                     <Select 
@@ -314,7 +401,7 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                       <SelectContent className="glass-effect border-border" position="popper">
                         {clientProperties.map((p: any) => (
                           <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">
-                            {p.nombre} {p.codigo_insai ? `(${p.codigo_insai})` : ''}
+                            {p.nombre} {p.rif ? `(${p.rif})` : ''}
                           </SelectItem>
                         ))}
                         {selectedClient && clientProperties.length === 0 && (
@@ -324,25 +411,153 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                     </Select>
                     {errors.propiedad_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.propiedad_id.message}</p>}
                   </div>
+
+                  {/* Tarjeta de detalles de la Propiedad seleccionada */}
+                  {selectedClientObj && watch('propiedad_id') && (() => {
+                    const selectedPropId = watch('propiedad_id');
+                    const selectedPropertyObj = clientProperties.find((p: any) => p.id.toString() === selectedPropId);
+                    if (!selectedPropertyObj) return null;
+                    return (
+                      <div className="p-5 rounded-2xl border border-primary/10 bg-primary/5 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
+                        <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
+                          <MapPin className="size-5 text-primary shrink-0" />
+                          <span className="text-xs font-black uppercase text-primary tracking-widest">Detalles del Predio Rural Seleccionado</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="font-semibold text-muted-foreground block">Nombre del Predio:</span>
+                            <span className="text-foreground font-bold text-sm">{selectedPropertyObj.nombre}</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-muted-foreground block">RIF / Registro:</span>
+                            <span className="text-foreground font-bold text-sm">{selectedPropertyObj.rif || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-muted-foreground block">Área Total (Hectáreas):</span>
+                            <span className="text-foreground font-bold">{selectedPropertyObj.hectareas_totales} ha</span>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-muted-foreground block">Tipo de Propiedad:</span>
+                            <span className="text-foreground font-bold">{selectedPropertyObj.tipo_propiedad?.nombre || selectedPropertyObj.t_propiedad?.nombre || '—'}</span>
+                          </div>
+                          <div className="md:col-span-2">
+                            <span className="font-semibold text-muted-foreground block">Ubicación Geográfica:</span>
+                            <span className="text-foreground font-bold">
+                              {(() => {
+                                const ubic = selectedPropertyObj.propiedad_ubicacion?.[0];
+                                const sector = ubic?.sectores?.nombre || selectedPropertyObj.sector?.nombre || 'Sector N/A';
+                                const parroquia = ubic?.sectores?.parroquias?.nombre || selectedPropertyObj.parroquia?.nombre || '';
+                                const municipio = ubic?.sectores?.parroquias?.municipios?.nombre || selectedPropertyObj.parroquia?.municipio?.nombre || '';
+                                const estado = ubic?.sectores?.parroquias?.municipios?.estados?.nombre || selectedPropertyObj.parroquia?.municipio?.estado?.nombre || '';
+                                if (!parroquia && !municipio && !estado) return sector;
+                                return `${estado} / ${municipio} / ${parroquia} / ${sector}`;
+                              })()}
+                            </span>
+                          </div>
+                          {selectedPropertyObj.punto_referencia && (
+                            <div className="md:col-span-2">
+                              <span className="font-semibold text-muted-foreground block">Punto de Referencia:</span>
+                              <span className="text-foreground font-medium leading-relaxed">{selectedPropertyObj.punto_referencia}</span>
+                            </div>
+                          )}
+                          {(selectedPropertyObj.google_maps_url || selectedPropertyObj.propiedad_ubicacion?.[0]?.google_maps_url) && (
+                            <div className="md:col-span-2">
+                              <span className="font-semibold text-muted-foreground block">Ubicación Satelital:</span>
+                              <a
+                                href={selectedPropertyObj.google_maps_url || selectedPropertyObj.propiedad_ubicacion?.[0]?.google_maps_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline font-bold inline-flex items-center gap-1 mt-1"
+                              >
+                                Ver en Google Maps <ExternalLink className="size-3" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
-              {/* PASO 2: DETALLES DE LA SOLICITUD */}
-              {currentStep === 1 && (
+              {/* PASO 3: DETALLES DE LA SOLICITUD */}
+              {currentStep === 2 && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Tipo de Requerimiento <span className="text-rose-500">*</span></label>
-                      <Select onValueChange={(val) => setValue('tipo_solicitud_id', val, { shouldValidate: true })} value={watch('tipo_solicitud_id')}>
-                        <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background">
-                          <SelectValue placeholder="Seleccione..." />
-                        </SelectTrigger>
-                        <SelectContent className="glass-effect border-border" position="popper">
-                          {tipos.map(t => (
-                            <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">{t.nombre}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      
+                      {showNewSolicitudTipo && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={newSolicitudTipoNombre}
+                            onChange={(e) => setNewSolicitudTipoNombre(e.target.value)}
+                            placeholder="Nuevo tipo de solicitud..."
+                            className="h-9 rounded-lg text-sm border-primary/30 focus:border-primary"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateSolicitudTipo())}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={creatingSolicitudTipo || !newSolicitudTipoNombre.trim()} onClick={handleCreateSolicitudTipo} className="size-9 shrink-0 rounded-lg bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                            {creatingSolicitudTipo ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewSolicitudTipo(false); setNewSolicitudTipoNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {editingSolicitudTipoId !== null && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={editingSolicitudTipoNombre}
+                            onChange={(e) => setEditingSolicitudTipoNombre(e.target.value)}
+                            placeholder="Editar tipo..."
+                            className="h-9 rounded-lg text-sm border-blue-500/30 focus:border-blue-500"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { e.preventDefault(); handleUpdateSolicitudTipo(editingSolicitudTipoId); }
+                              if (e.key === 'Escape') { setEditingSolicitudTipoId(null); }
+                            }}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={!editingSolicitudTipoNombre.trim() || updatingSolicitudTipoId === editingSolicitudTipoId} onClick={() => handleUpdateSolicitudTipo(editingSolicitudTipoId)} className="size-9 shrink-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                            {updatingSolicitudTipoId === editingSolicitudTipoId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingSolicitudTipoId(null); setEditingSolicitudTipoNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={(val) => setValue('tipo_solicitud_id', val, { shouldValidate: true })} value={watch('tipo_solicitud_id') || ''}>
+                          <SelectTrigger className={cn(
+                            "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                            errors.tipo_solicitud_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
+                          )}>
+                            <SelectValue placeholder="Seleccione..." />
+                          </SelectTrigger>
+                          <SelectContent className="glass-effect border-border max-h-[250px]" position="popper">
+                            {solicitudTipos.map((tipo) => (
+                              <div key={tipo.id} className="group relative flex items-center">
+                                <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
+                                  {tipo.nombre}
+                                </SelectItem>
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                                  <button type="button" disabled={deletingSolicitudTipoId === tipo.id} onClick={(e) => { e.stopPropagation(); setEditingSolicitudTipoId(tipo.id); setEditingSolicitudTipoNombre(tipo.nombre); setShowNewSolicitudTipo(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar tipo">
+                                    <Pencil className="size-3" />
+                                  </button>
+                                  <button type="button" disabled={deletingSolicitudTipoId === tipo.id} onClick={(e) => { e.stopPropagation(); handleDeleteSolicitudTipo(tipo.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50" title="Eliminar tipo">
+                                    {deletingSolicitudTipoId === tipo.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewSolicitudTipo(!showNewSolicitudTipo); setEditingSolicitudTipoId(null); }} className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer" title="Crear nuevo tipo">
+                          <Plus className="size-5" />
+                        </Button>
+                      </div>
                       {errors.tipo_solicitud_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.tipo_solicitud_id.message}</p>}
                     </div>
 
@@ -379,18 +594,18 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                       </Select>
                     </div>
 
-                    <div className="space-y-4 pt-8 pl-4">
-                      <label className="flex items-center gap-3 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          {...register('programar_inmediato')}
-                          className="size-5 rounded-lg border-border text-primary focus:ring-primary/20 cursor-pointer"
-                        />
+                    <div className="pt-2 pl-4">
+                      <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                        <Calendar className="size-5 text-primary shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-sm font-bold text-foreground">¿Planificar visita técnica de inmediato?</span>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Agendar visita de inspección en el calendario nacional</p>
+                          <span className="text-xs font-black text-primary uppercase tracking-wider block mb-1">
+                            Agenda de Campo Integrada
+                          </span>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            Este asistente registrará de forma conjunta la solicitud y la planificación de visita técnica con el equipo inspector en los siguientes pasos.
+                          </p>
                         </div>
-                      </label>
+                      </div>
                     </div>
                   </div>
 
@@ -406,8 +621,8 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                 </div>
               )}
 
-              {/* PASO 3: PLANIFICACIÓN DE LA VISITA */}
-              {currentStep === 2 && programarInmediato && (
+              {/* PASO 4: PLANIFICACIÓN DE LA VISITA */}
+              {currentStep === 3 && programarInmediato && (
                 <div className="space-y-6">
                   <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mb-2">
                     <div className="flex items-center gap-3 mb-4 text-primary font-bold uppercase tracking-widest text-xs">
@@ -416,7 +631,7 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Fecha Programada <span className="text-rose-500">*</span></label>
-                        <Input {...register('fecha_programada')} type="date" className="h-12 rounded-xl bg-background border-border" />
+                        <Input {...register('fecha_programada')} type="date" min={new Date().toISOString().split('T')[0]} className="h-12 rounded-xl bg-background border-border" />
                         {errors.fecha_programada && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.fecha_programada.message}</p>}
                       </div>
                       <div className="space-y-2">
@@ -467,8 +682,8 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
                 </div>
               )}
 
-              {/* PASO 4: EQUIPO INSPECTOR */}
-              {currentStep === 3 && programarInmediato && (
+              {/* PASO 5: EQUIPO INSPECTOR */}
+              {currentStep === 4 && programarInmediato && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between pb-2 border-b border-border">
                     <div>
@@ -534,18 +749,20 @@ export function SolicitudWizard({ isOpen, onClose }: SolicitudWizardProps) {
 
               <Button
                 type="button"
-                onClick={currentStep === (programarInmediato ? STEPS.length - 1 : 1) ? handleSubmit(onFinalSubmit) : handleNext}
-                disabled={isSubmitting || !isStepValid()}
+                onClick={currentStep === (programarInmediato ? STEPS.length - 1 : 2) ? handleSubmit(onFinalSubmit) : handleNext}
+                disabled={isSubmitting || !isStepValid() || isAdvancing}
                 className={cn(
-                  "h-12 px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed",
-                  currentStep === (programarInmediato ? STEPS.length - 1 : 1)
-                    ? "px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 text-white hover:bg-primary/95" 
+                  "h-12 px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-white bg-primary",
+                  currentStep === (programarInmediato ? STEPS.length - 1 : 2)
+                    ? "px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:bg-primary/95" 
                     : "shadow-primary/20"
                 )}
               >
                 {isSubmitting ? (
                   <><Loader2 className="mr-2 size-4 animate-spin" /> Procesando...</>
-                ) : currentStep === (programarInmediato ? STEPS.length - 1 : 1) ? (
+                ) : isAdvancing ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> Cargando...</>
+                ) : currentStep === (programarInmediato ? STEPS.length - 1 : 2) ? (
                   <><Check className="mr-2 size-4" /> Finalizar y Guardar</>
                 ) : (
                   <>Siguiente <ChevronRight className="ml-2 size-4" /></>

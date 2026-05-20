@@ -12,6 +12,7 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('solicitudes', 'see'), solicitudesController.getSolicitudes);
+router.get('/export', checkPermission('solicitudes', 'see'), solicitudesController.exportSolicitudes);
 router.get('/:id', checkPermission('solicitudes', 'see'), solicitudesController.getSolicitudById);
 router.post('/', checkPermission('solicitudes', 'create'), validateSchema(createSolicitudSchema), solicitudesController.createSolicitud);
 router.put('/:id', checkPermission('solicitudes', 'update'), validateSchema(updateSolicitudSchema), solicitudesController.updateSolicitud);
