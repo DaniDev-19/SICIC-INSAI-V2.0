@@ -23,7 +23,8 @@ import {
   Server,
   User,
   LogOut,
-  Leaf
+  Leaf,
+  Car
 } from "lucide-react"
 
 import {
@@ -73,6 +74,7 @@ const navigationGroups = [
     label: "Inventario y Logística",
     items: [
       { title: "Oficinas", url: "/home/oficinas", icon: Building2, screen: "oficinas" },
+      { title: "Vehículos", url: "/home/vehiculos", icon: Car, screen: "vehiculos" },
       { title: "Inventario de Insumos", url: "/home/inventario", icon: Package, screen: "inventario" },
     ]
   },

@@ -30,6 +30,7 @@ import {
 import { useSolicitudes } from '@/hooks/use-solicitudes';
 import { SolicitudTable } from './components/SolicitudTable';
 import { SolicitudModal } from './components/SolicitudModal';
+import { SolicitudWizard } from './components/SolicitudWizard';
 
 const Solicitudes: React.FC = () => {
   const navigate = useNavigate();
@@ -53,12 +54,12 @@ const Solicitudes: React.FC = () => {
   } = useSolicitudes();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedSolicitud, setSelectedSolicitud] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const handleOpenCreate = () => {
-    setSelectedSolicitud(null);
-    setIsModalOpen(true);
+    setIsWizardOpen(true);
   };
 
   const handleOpenEdit = (solicitud: any) => {
@@ -182,12 +183,20 @@ const Solicitudes: React.FC = () => {
 
       <SolicitudModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSolicitud(null);
+        }}
         solicitud={selectedSolicitud}
         tipos={tipos}
         onCreateTipo={createTipo}
         onUpdateTipo={updateTipo}
         onDeleteTipo={deleteTipo}
+      />
+
+      <SolicitudWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

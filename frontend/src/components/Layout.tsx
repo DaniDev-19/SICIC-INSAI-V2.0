@@ -28,6 +28,9 @@ function LayoutContent() {
         if (pathname.includes('/roles')) return 'Módulo de Control de Acceso';
         if (pathname.includes('/cultivos')) return 'Gestión de Cultivos';
         if (pathname.includes('/programas')) return 'Gestión de Programas';
+        if (pathname.includes('/plagas')) return 'Gestión de Plagas';
+        if (pathname.includes('/enfermedades')) return 'Gestión de Enfermedades';
+        if (pathname.includes('/clientes')) return 'Gestión de Productores';
         return 'SICIC INSAI V2.0';
     };
 
