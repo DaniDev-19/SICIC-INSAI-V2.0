@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronLeft,
   Plus,
   Loader2,
   AlertTriangle,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -26,6 +28,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { useSolicitudes } from '@/hooks/use-solicitudes';
 import { SolicitudTable } from './components/SolicitudTable';
@@ -51,12 +54,30 @@ const Solicitudes: React.FC = () => {
     createTipo,
     updateTipo,
     deleteTipo,
+    exportSolicitudes,
   } = useSolicitudes();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedSolicitud, setSelectedSolicitud] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [initialFechaProgramada, setInitialFechaProgramada] = useState<string | undefined>(undefined);
+
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('openWizard') === 'true') {
+      const fecha = params.get('fecha');
+      if (fecha) {
+        setInitialFechaProgramada(fecha);
+      } else {
+        setInitialFechaProgramada(undefined);
+      }
+      setIsWizardOpen(true);
+      navigate('/home/solicitudes', { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleOpenCreate = () => {
     setIsWizardOpen(true);
@@ -102,16 +123,25 @@ const Solicitudes: React.FC = () => {
             <Select value={estatus} onValueChange={setEstatus}>
               <SelectTrigger
                 title="Filtrar por Estatus"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className={cn(
+                  "w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden",
+                  estatus !== 'all' && "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                )}
               >
                 <Activity className={`size-4 ${estatus !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="hidden"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border">
+              <SelectContent position="popper" className="glass-effect border-border">
                 <SelectItem value="all" className="cursor-pointer">Todos los Estados</SelectItem>
                 <SelectItem value="CREADA" className="cursor-pointer">Creadas</SelectItem>
+                <SelectItem value="DIAGNOSTICADA" className="cursor-pointer">Diagnosticadas</SelectItem>
                 <SelectItem value="PLANIFICADA" className="cursor-pointer">Planificadas</SelectItem>
                 <SelectItem value="INSPECCIONANDO" className="cursor-pointer">En Inspección</SelectItem>
                 <SelectItem value="FINALIZADA" className="cursor-pointer">Finalizadas</SelectItem>
+                <SelectItem value="NO_APROBADA" className="cursor-pointer">No Aprobadas</SelectItem>
+                <SelectItem value="SEGUIMIENTO" className="cursor-pointer">Seguimiento</SelectItem>
+                <SelectItem value="CUARENTENA" className="cursor-pointer">Cuarentena</SelectItem>
+                <SelectItem value="NO_ATENDIDA" className="cursor-pointer">No Atendidas</SelectItem>
               </SelectContent>
             </Select>
 
@@ -119,11 +149,15 @@ const Solicitudes: React.FC = () => {
             <Select value={prioridad} onValueChange={setPrioridad}>
               <SelectTrigger
                 title="Filtrar por Prioridad"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className={cn(
+                  "w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden",
+                  prioridad !== 'all' && "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+                )}
               >
                 <AlertCircle className={`size-4 ${prioridad !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="hidden"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border">
+              <SelectContent position="popper" className="glass-effect border-border">
                 <SelectItem value="all" className="cursor-pointer">Todas las Prioridades</SelectItem>
                 <SelectItem value="BAJA" className="cursor-pointer">Baja</SelectItem>
                 <SelectItem value="MEDIA" className="cursor-pointer">Media</SelectItem>
@@ -143,6 +177,11 @@ const Solicitudes: React.FC = () => {
                 className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
               />
             </div>
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+
+            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportSolicitudes} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
+              <Download className="size-5" />
+            </Button>
           </div>
 
           <Button onClick={handleOpenCreate} title="crear nueva solicitud" variant={"primary"}>
@@ -197,6 +236,7 @@ const Solicitudes: React.FC = () => {
       <SolicitudWizard
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
+        initialFechaProgramada={initialFechaProgramada}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

@@ -23,7 +23,30 @@ export const getClientes = async (req, res) => {
       skip,
       take: limit,
       orderBy: { nombre: 'asc' },
-      include: { propiedades: true },
+      include: {
+        propiedades: {
+          include: {
+            t_propiedad: true,
+            propiedad_ubicacion: {
+              include: {
+                sectores: {
+                  include: {
+                    parroquias: {
+                      include: {
+                        municipios: {
+                          include: {
+                            estados: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
     }),
     tenantPrisma.clientes.count({ where }),
   ]);
@@ -47,7 +70,28 @@ export const getClienteById = async (req, res) => {
   const cliente = await tenantPrisma.clientes.findUnique({
     where: { id: Number(id) },
     include: {
-      propiedades: true,
+      propiedades: {
+        include: {
+          t_propiedad: true,
+          propiedad_ubicacion: {
+            include: {
+              sectores: {
+                include: {
+                  parroquias: {
+                    include: {
+                      municipios: {
+                        include: {
+                          estados: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
     }
   });
 

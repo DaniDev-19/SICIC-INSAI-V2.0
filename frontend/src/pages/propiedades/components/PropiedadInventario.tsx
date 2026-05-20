@@ -3,7 +3,7 @@ import { usePropiedadInventario } from '@/hooks/use-propiedades-inventario';
 import { useCultivos } from '@/hooks/use-cultivos';
 import { useAnimales } from '@/hooks/use-animales';
 import apiClient from '@/lib/api-client';
-import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield } from 'lucide-react';
+import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,11 +42,30 @@ function resolveImageUrl(url: string): string {
 }
 
 export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
-  const [activeTab, setActiveTab] = useState<'cultivos' | 'animales' | 'hierros'>('cultivos');
+  const [activeTab, setActiveTab] = useState<'cultivos' | 'animales' | 'hierros' | 'solicitudes'>('cultivos');
 
   const { inventario, isLoading, addCultivo, removeCultivo, addAnimal, removeAnimal, addHierro, removeHierro, isAddingCultivo, isAddingAnimal, isAddingHierro } = usePropiedadInventario(propiedadId);
   const { cultivos, setLimit: setCultivosLimit } = useCultivos();
   const { animales, setLimit: setAnimalesLimit } = useAnimales();
+
+  const [solicitudesPropiedad, setSolicitudesPropiedad] = useState<any[]>([]);
+  const [isLoadingSolicitudes, setIsLoadingSolicitudes] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'solicitudes') {
+      setIsLoadingSolicitudes(true);
+      apiClient.get(`/solicitudes?propiedad_id=${propiedadId}&limit=100`)
+        .then(res => {
+          setSolicitudesPropiedad(res.data?.data || []);
+        })
+        .catch(err => {
+          console.error("Error loading property requests:", err);
+        })
+        .finally(() => {
+          setIsLoadingSolicitudes(false);
+        });
+    }
+  }, [activeTab, propiedadId]);
 
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   useEffect(() => {
@@ -157,6 +176,17 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
         >
           <Shield className="size-4" />
           Hierros ({inventario.hierros?.length || 0})
+        </button>
+        <button
+          title="Trámites y solicitudes de la propiedad"
+          onClick={() => setActiveTab('solicitudes')}
+          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'solicitudes'
+            ? 'bg-indigo-500/10 text-indigo-600 shadow-sm'
+            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+        >
+          <FileText className="size-4" />
+          Solicitudes
         </button>
       </div>
 
@@ -415,6 +445,71 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   </TableBody>
                 </Table>
               </div>
+            </div>
+          </div>
+        )}
+        {/* ── SOLICITUDES ── */}
+        {activeTab === 'solicitudes' && (
+          <div className="space-y-6 animate-in fade-in">
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-background">
+              {isLoadingSolicitudes ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                  <Loader2 className="size-6 text-primary animate-spin" />
+                  <p className="text-xs text-muted-foreground">Cargando solicitudes...</p>
+                </div>
+              ) : (
+                <div className="max-h-[300px] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/30 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead className="font-bold">Código</TableHead>
+                        <TableHead className="font-bold">Trámite</TableHead>
+                        <TableHead className="font-bold">Fecha</TableHead>
+                        <TableHead className="font-bold">Prioridad</TableHead>
+                        <TableHead className="font-bold">Estatus</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {solicitudesPropiedad.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground italic">
+                            No hay solicitudes registradas para esta propiedad
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        solicitudesPropiedad.map((item: any) => (
+                          <TableRow key={item.id} className="hover:bg-muted/10 transition-colors">
+                            <TableCell className="font-bold text-primary text-xs">{item.codigo}</TableCell>
+                            <TableCell className="font-medium text-foreground text-xs">{item.t_solicitud?.nombre || 'General'}</TableCell>
+                            <TableCell className="text-muted-foreground text-xs">
+                              {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                item.prioridad === 'URGENTE' ? 'bg-rose-100 text-rose-700' :
+                                item.prioridad === 'ALTA' ? 'bg-amber-100 text-amber-700' :
+                                item.prioridad === 'MEDIA' ? 'bg-blue-100 text-blue-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {item.prioridad}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                ['FINALIZADA', 'APROBADA'].includes(item.estatus) ? 'bg-emerald-100 text-emerald-700' :
+                                ['NO_APROBADA', 'RECHAZADA', 'CANCELADA'].includes(item.estatus) ? 'bg-rose-100 text-rose-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>
+                                {item.estatus?.replace(/_/g, ' ')}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -493,6 +493,7 @@ export function SolicitudModal({
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Fecha Estimada Resolución</label>
                 <Input
                   type="date"
+                  min={new Date().toISOString().split('T')[0]}
                   {...register('fecha_resolucion')}
                   className="h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all"
                 />

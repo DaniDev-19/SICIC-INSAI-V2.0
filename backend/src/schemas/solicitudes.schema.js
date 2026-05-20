@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createPlanificacionSchema } from './planificaciones.schema.js';
 
 export const createSolicitudSchema = z.object({
   body: z.object({
@@ -15,6 +16,7 @@ export const createSolicitudSchema = z.object({
     solicitante_id: z.number({ required_error: 'El solicitante es requerido' }),
     atendido_por_id: z.number().optional().nullable(),
     propiedad_id: z.number({ required_error: 'La propiedad es requerida' }),
+    planificacion: createPlanificacionSchema.shape.body.omit({ solicitud_id: true, status: true, codigo: true }).optional()
   })
 });
 

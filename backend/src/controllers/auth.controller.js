@@ -1,4 +1,4 @@
-import { masterPrisma } from '../config/prisma.js';
+import { masterPrisma, getTenantPrisma } from '../config/prisma.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/token.js';
 import bitacoraService from '../services/bitacora.service.js';
@@ -98,6 +98,13 @@ export const login = async (req, res) => {
 
   const permisosFinales = mergePermisos(ui.roles.permisos, ui.permisos_personalizados);
 
+  const tenantPrisma = getTenantPrisma(ui.instancias.db_name);
+  const empleado = await tenantPrisma.empleados.findFirst({
+    where: { usuario_global_id: usuario.id },
+    select: { id: true }
+  });
+  const empleado_id = empleado ? empleado.id : null;
+
   const token = generateToken({
     id: usuario.id,
     email: usuario.email,
@@ -106,6 +113,7 @@ export const login = async (req, res) => {
       id: ui.instancias.id,
       db_name: ui.instancias.db_name,
       rol: ui.roles.nombre,
+      empleado_id,
       permisos: permisosFinales,
     },
   });
@@ -114,7 +122,7 @@ export const login = async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 24, // 24 horas
+    maxAge: 1000 * 60 * 60 * 8, // 8 horas
   });
 
   bitacoraService.registrar({
@@ -141,6 +149,7 @@ export const login = async (req, res) => {
         nombre: ui.instancias.nombre_mostrable,
         db_name: ui.instancias.db_name,
         rol: ui.roles.nombre,
+        empleado_id,
         permisos: permisosFinales,
       },
       token,

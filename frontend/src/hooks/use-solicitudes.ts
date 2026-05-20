@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { type AxiosError } from 'axios';
 import { solicitudesService } from '@/services/solicitudes.service';
@@ -14,6 +14,11 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
   const [prioridad, setPrioridad] = useState<string>('all');
 
   const debouncedSearch = useDebounce(search, 500);
+
+  // Reset page to 1 when filters change to prevent empty pages
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, estatus, prioridad]);
 
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['solicitudes', page, limit, debouncedSearch, estatus, prioridad],
@@ -135,6 +140,7 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
     createTipo: createTipoMutation.mutateAsync,
     updateTipo: updateTipoMutation.mutateAsync,
     deleteTipo: deleteTipoMutation.mutateAsync,
+    exportSolicitudes: solicitudesService.export,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
   };

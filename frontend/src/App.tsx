@@ -17,6 +17,7 @@ import Propiedades from './pages/propiedades/Propiedades';
 import Empleados from './pages/empleados/Empleados';
 import Oficinas from './pages/oficinas/Oficinas';
 import Vehiculos from './pages/vehiculos/Vehiculos';
+import Planificaciones from './pages/planificaciones/Planificaciones';
 
 
 import { ProtectedRoute } from './components/auth/protected-route';
@@ -57,6 +58,7 @@ function App() {
               <Route path='plagas' element={<Plagas />} />
               <Route path='enfermedades' element={<Enfermedades />} />
               <Route path='solicitudes' element={<Solicitudes />} />
+              <Route path='planificacion' element={<Planificaciones />} />
               <Route path='clientes' element={<Clientes />} />
               <Route path='propiedades' element={<Propiedades />} />
               <Route path='empleados' element={<Empleados />} />

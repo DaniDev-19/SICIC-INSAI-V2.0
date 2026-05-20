@@ -12,6 +12,7 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('planificaciones', 'see'), planificacionesController.getPlanificaciones);
+router.get('/export', checkPermission('planificaciones', 'see'), planificacionesController.exportPlanificaciones);
 router.get('/:id', checkPermission('planificaciones', 'see'), planificacionesController.getPlanificacionById);
 router.post('/', checkPermission('planificaciones', 'create'), validateSchema(createPlanificacionSchema), planificacionesController.createPlanificacion);
 router.put('/:id', checkPermission('planificaciones', 'update'), validateSchema(updatePlanificacionSchema), planificacionesController.updatePlanificacion);

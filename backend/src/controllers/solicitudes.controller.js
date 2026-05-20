@@ -1,4 +1,17 @@
 import bitacoraService from '../services/bitacora.service.js';
+import excelService from '../services/excel.service.js';
+
+const parseTimeInput = (timeStr) => {
+  if (!timeStr) return null;
+  if (typeof timeStr !== 'string') return new Date(timeStr);
+  if (timeStr.includes('T') || timeStr.includes('Z')) {
+    return new Date(timeStr);
+  }
+  const parts = timeStr.split(':');
+  const hh = parts[0].padStart(2, '0');
+  const mm = (parts[1] || '00').padStart(2, '0');
+  return new Date(`1970-01-01T${hh}:${mm}:00.000Z`);
+};
 
 export const getSolicitudes = async (req, res) => {
   const tenantPrisma = req.db;
@@ -86,11 +99,28 @@ export const createSolicitud = async (req, res) => {
   const tenantPrisma = req.db;
   const {
     codigo, descripcion, fecha_resolucion, estatus, prioridad,
-    medio_recepcion, tipo_solicitud_id, solicitante_id, atendido_por_id, propiedad_id
+    medio_recepcion, tipo_solicitud_id, solicitante_id, atendido_por_id, propiedad_id,
+    planificacion
   } = req.body;
 
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
+      if (propiedad_id) {
+        const activeRequest = await tx.solicitudes.findFirst({
+          where: {
+            propiedad_id: Number(propiedad_id),
+            NOT: {
+              estatus: { in: ['FINALIZADA', 'NO_APROBADA', 'NO_ATENDIDA'] }
+            }
+          }
+        });
+        if (activeRequest) {
+          const error = new Error(`El predio ya posee una solicitud activa en proceso (${activeRequest.codigo}).`);
+          error.statusCode = 400;
+          throw error;
+        }
+      }
+
       if (codigo) {
         const existing = await tx.solicitudes.findUnique({ where: { codigo } });
         if (existing) {
@@ -115,7 +145,7 @@ export const createSolicitud = async (req, res) => {
           codigo: finalCodigo,
           descripcion,
           fecha_resolucion: fecha_resolucion ? new Date(fecha_resolucion) : null,
-          estatus: estatus || 'CREADA',
+          estatus: planificacion ? 'PLANIFICADA' : (estatus || 'CREADA'),
           prioridad: prioridad || 'MEDIA',
           medio_recepcion: medio_recepcion || 'PRESENCIAL',
           tipo_solicitud_id,
@@ -124,6 +154,43 @@ export const createSolicitud = async (req, res) => {
           propiedad_id
         }
       });
+
+      if (planificacion) {
+        const lastPlan = await tx.planificaciones.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextPlanId = (lastPlan?.id || 0) + 1;
+        const planCodigo = `PLA-${new Date().getFullYear()}-${nextPlanId.toString().padStart(4, '0')}`;
+
+        const horaInicio = parseTimeInput(planificacion.hora_inicio);
+        const horaFin = parseTimeInput(planificacion.hora_fin);
+
+        const nuevaPlanificacion = await tx.planificaciones.create({
+          data: {
+            codigo: planCodigo,
+            solicitud_id: nuevaSolicitud.id,
+            fecha_programada: new Date(planificacion.fecha_programada),
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            prioridad: planificacion.prioridad || prioridad || 'MEDIA',
+            actividad: planificacion.actividad,
+            objetivo: planificacion.objetivo,
+            convocatoria: planificacion.convocatoria,
+            punto_encuentro: planificacion.punto_encuentro,
+            ubicacion: planificacion.ubicacion,
+            aseguramiento: planificacion.aseguramiento,
+            vehiculo_id: planificacion.vehiculo_id || null,
+            status: 'PENDIENTE',
+            planificacion_empleados: planificacion.empleados?.length > 0 ? {
+              create: planificacion.empleados.map(empId => ({
+                empleado_id: empId
+              }))
+            } : undefined
+          }
+        });
+        nuevaSolicitud.planificacion = nuevaPlanificacion;
+      }
 
       if (propiedad_id) {
         await tx.propiedades.update({
@@ -326,4 +393,53 @@ export const deleteManySolicitudes = async (req, res) => {
     message: `Se eliminaron ${deletableIds.length} solicitudes exitosamente.`,
     data: { deletedCount: deletableIds.length }
   });
+};
+
+export const exportSolicitudes = async (req, res) => {
+  const tenantPrisma = req.db;
+  const solicitudes = await tenantPrisma.solicitudes.findMany({
+    include: {
+      clientes: { select: { nombre: true, cedula_rif: true } },
+      propiedades: { select: { nombre: true, codigo_insai: true } },
+      t_solicitud: { select: { nombre: true } }
+    },
+    orderBy: { created_at: 'desc' }
+  });
+
+  const data = solicitudes.map(s => ({
+    codigo: s.codigo,
+    descripcion: s.descripcion || 'N/A',
+    fecha: s.created_at ? new Date(s.created_at).toLocaleDateString() : 'N/A',
+    estatus: s.estatus,
+    prioridad: s.prioridad,
+    medio: s.medio_recepcion || 'PRESENCIAL',
+    tipo: s.t_solicitud?.nombre || 'N/A',
+    solicitante: s.clientes?.nombre || 'N/A',
+    cedula: s.clientes?.cedula_rif || 'N/A',
+    propiedad: s.propiedades?.nombre || 'N/A',
+    insai: s.propiedades?.codigo_insai || 'N/A'
+  }));
+
+  const buffer = await excelService.generate({
+    title: 'Reporte Nacional de Solicitudes y Trámites - INSAI',
+    columns: [
+      { header: 'Código', key: 'codigo', width: 15 },
+      { header: 'Tipo de Trámite', key: 'tipo', width: 25 },
+      { header: 'Fecha Registro', key: 'fecha', width: 15 },
+      { header: 'Estatus', key: 'estatus', width: 15 },
+      { header: 'Prioridad', key: 'prioridad', width: 12 },
+      { header: 'Solicitante', key: 'solicitante', width: 30 },
+      { header: 'Cédula/RIF', key: 'cedula', width: 15 },
+      { header: 'Predio Rural', key: 'propiedad', width: 30 },
+      { header: 'Código INSAI Predio', key: 'insai', width: 20 },
+      { header: 'Medio Recepción', key: 'medio', width: 18 },
+      { header: 'Detalle/Descripción', key: 'descripcion', width: 40 },
+    ],
+    data,
+    sheetName: 'Solicitudes'
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_solicitudes.xlsx');
+  res.send(buffer);
 };
