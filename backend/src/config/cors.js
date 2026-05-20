@@ -7,11 +7,11 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin && process.env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isAllowedOrigin = allowedOrigins.includes(origin);
 
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+
+    if ((!origin && isDevelopment) || isAllowedOrigin) {
       callback(null, true);
     } else {
       callback(new Error('Acceso denegado por políticas de CORS'));

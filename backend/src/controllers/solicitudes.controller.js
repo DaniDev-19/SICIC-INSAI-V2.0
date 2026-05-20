@@ -86,7 +86,8 @@ export const createSolicitud = async (req, res) => {
   const tenantPrisma = req.db;
   const {
     codigo, descripcion, fecha_resolucion, estatus, prioridad,
-    medio_recepcion, tipo_solicitud_id, solicitante_id, atendido_por_id, propiedad_id
+    medio_recepcion, tipo_solicitud_id, solicitante_id, atendido_por_id, propiedad_id,
+    planificacion
   } = req.body;
 
   try {
@@ -115,7 +116,7 @@ export const createSolicitud = async (req, res) => {
           codigo: finalCodigo,
           descripcion,
           fecha_resolucion: fecha_resolucion ? new Date(fecha_resolucion) : null,
-          estatus: estatus || 'CREADA',
+          estatus: planificacion ? 'PLANIFICADA' : (estatus || 'CREADA'),
           prioridad: prioridad || 'MEDIA',
           medio_recepcion: medio_recepcion || 'PRESENCIAL',
           tipo_solicitud_id,
@@ -124,6 +125,43 @@ export const createSolicitud = async (req, res) => {
           propiedad_id
         }
       });
+
+      if (planificacion) {
+        const lastPlan = await tx.planificaciones.findFirst({
+          orderBy: { id: 'desc' },
+          select: { id: true }
+        });
+        const nextPlanId = (lastPlan?.id || 0) + 1;
+        const planCodigo = `PLA-${new Date().getFullYear()}-${nextPlanId.toString().padStart(4, '0')}`;
+
+        const horaInicio = planificacion.hora_inicio ? new Date(`1970-01-01T${planificacion.hora_inicio}:00.000Z`) : null;
+        const horaFin = planificacion.hora_fin ? new Date(`1970-01-01T${planificacion.hora_fin}:00.000Z`) : null;
+
+        const nuevaPlanificacion = await tx.planificaciones.create({
+          data: {
+            codigo: planCodigo,
+            solicitud_id: nuevaSolicitud.id,
+            fecha_programada: new Date(planificacion.fecha_programada),
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            prioridad: planificacion.prioridad || prioridad || 'MEDIA',
+            actividad: planificacion.actividad,
+            objetivo: planificacion.objetivo,
+            convocatoria: planificacion.convocatoria,
+            punto_encuentro: planificacion.punto_encuentro,
+            ubicacion: planificacion.ubicacion,
+            aseguramiento: planificacion.aseguramiento,
+            vehiculo_id: planificacion.vehiculo_id || null,
+            status: 'PENDIENTE',
+            planificacion_empleados: planificacion.empleados?.length > 0 ? {
+              create: planificacion.empleados.map(empId => ({
+                empleado_id: empId
+              }))
+            } : undefined
+          }
+        });
+        nuevaSolicitud.planificacion = nuevaPlanificacion;
+      }
 
       if (propiedad_id) {
         await tx.propiedades.update({
