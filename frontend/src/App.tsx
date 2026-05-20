@@ -16,6 +16,7 @@ import Clientes from './pages/clientes/Clientes';
 import Propiedades from './pages/propiedades/Propiedades';
 import Empleados from './pages/empleados/Empleados';
 import Oficinas from './pages/oficinas/Oficinas';
+import Vehiculos from './pages/vehiculos/Vehiculos';
 
 
 import { ProtectedRoute } from './components/auth/protected-route';
@@ -60,6 +61,7 @@ function App() {
               <Route path='propiedades' element={<Propiedades />} />
               <Route path='empleados' element={<Empleados />} />
               <Route path='oficinas' element={<Oficinas />} />
+              <Route path='vehiculos' element={<Vehiculos />} />
               <Route path='help' element={<HelpMe />} />
 
             </Route>

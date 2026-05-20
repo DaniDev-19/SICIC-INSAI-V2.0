@@ -1,4 +1,5 @@
 import type { ApiResponse, SimpleResponse } from "./pagination";
+import type { CreatePlanificacionDto } from "./planificaciones";
 
 export type EstatusSolicitud =
   | 'CREADA'
@@ -63,7 +64,9 @@ export type CreateSolicitudDto = Omit<Solicitud,
   | 't_solicitud'
   | 'empleados'
   | 'fecha_solicitada'
->;
+> & {
+  planificacion?: Omit<CreatePlanificacionDto, 'solicitud_id'>;
+};
 
 export type UpdateSolicitudDto = Partial<CreateSolicitudDto>;
 export type SolicitudResponse = ApiResponse<Solicitud[]>;
