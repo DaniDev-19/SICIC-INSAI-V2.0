@@ -26,7 +26,7 @@ router.post('/:id/inventario/cultivos', checkPermission('propiedades', 'update')
 router.delete('/:id/inventario/cultivos/:inventario_id', checkPermission('propiedades', 'update'), inventarioController.removeCultivo);
 router.post('/:id/inventario/animales', checkPermission('propiedades', 'update'), inventarioController.addAnimal);
 router.delete('/:id/inventario/animales/:inventario_id', checkPermission('propiedades', 'update'), inventarioController.removeAnimal);
-router.post('/:id/inventario/hierros', checkPermission('propiedades', 'update'), inventarioController.addHierro);
+router.post('/:id/inventario/hierros', checkPermission('propiedades', 'update'), upload.single('hierro_img'), inventarioController.addHierro);
 router.delete('/:id/inventario/hierros/:inventario_id', checkPermission('propiedades', 'update'), inventarioController.removeHierro);
 
 router.delete('/:id', checkPermission('propiedades', 'delete'), propiedadesController.deletePropiedad);

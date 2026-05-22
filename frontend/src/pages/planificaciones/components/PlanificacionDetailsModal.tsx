@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,9 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
   planId,
   onEdit,
 }) => {
+  const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
+  const canCreateInspeccion = hasPermission('inspecciones', 'create');
   const { planificacion, isLoading, error } = usePlanificacion(planId);
 
   const formatTime = (isoTimeStr: string | null) => {
@@ -289,10 +294,22 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40 flex-wrap">
               <Button onClick={onClose} variant="ghost" className="font-bold cursor-pointer">
                 Cerrar Ficha
               </Button>
+              {canCreateInspeccion && planificacion && (
+                <Button
+                  variant="outline"
+                  className="font-bold cursor-pointer"
+                  onClick={() => {
+                    onClose();
+                    navigate(`/home/inspecciones?planificacion_id=${planificacion.id}&openModal=true`);
+                  }}
+                >
+                  Registrar Inspección
+                </Button>
+              )}
               {onEdit && (
                 <Button
                   onClick={() => {

@@ -4,6 +4,7 @@ import type { ApiResponse } from '@/types/pagination';
 export interface UbicacionBase {
   id: number;
   nombre: string;
+  codigo?: string;
 }
 
 export const ubicacionService = {
