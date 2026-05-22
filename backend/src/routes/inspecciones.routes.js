@@ -13,6 +13,11 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('inspecciones', 'see'), inspeccionesController.getInspecciones);
+router.get(
+  '/preview-codigos',
+  checkPermission('inspecciones', 'see'),
+  inspeccionesController.previewCodigosInspeccion
+);
 router.get('/:id', checkPermission('inspecciones', 'see'), inspeccionesController.getInspeccionById);
 
 router.post(

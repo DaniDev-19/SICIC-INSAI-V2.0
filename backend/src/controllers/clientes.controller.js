@@ -81,18 +81,18 @@ export const getClienteById = async (req, res) => {
                     include: {
                       municipios: {
                         include: {
-                          estados: true
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                          estados: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-    }
+    },
   });
 
   if (!cliente) {
@@ -133,7 +133,7 @@ export const createCliente = async (req, res) => {
     req,
     accion: 'CREAR',
     modulo: 'Clientes',
-    payload_nuevo: response
+    payload_nuevo: response,
   });
 
   res.status(201).json({ status: 'success', data: response });
@@ -172,8 +172,8 @@ export const updateCliente = async (req, res) => {
     const emailExists = await tenantPrisma.clientes.findFirst({
       where: {
         email: data.email,
-        id: { not: Number(id) }
-      }
+        id: { not: Number(id) },
+      },
     });
     if (emailExists) {
       return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });

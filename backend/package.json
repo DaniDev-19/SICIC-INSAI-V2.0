@@ -8,7 +8,11 @@
     "dev": "nodemon src/index.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": " node src/test-connection.js"
+    "test": " node src/test-connection.js",
+    "prisma:generate:client": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:generate:master": "prisma generate --schema=prisma/master.prisma",
+    "prisma:generate": "npm run prisma:generate:client && npm run prisma:generate:master",
+    "hash:password": "node -e \"import bcrypt from 'bcrypt'; const pwd = process.argv[1]; if (!pwd) throw new Error('Password missing'); bcrypt.hash(pwd, 10).then(console.log).catch(console.error);\"\""
   },
   "keywords": [],
   "author": "",

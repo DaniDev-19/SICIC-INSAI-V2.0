@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/Stepper';
-import { MapPin, AlertCircle, Loader2, ChevronRight, ChevronLeft, Check, Fingerprint, Activity, Image as ImageIcon, Plus, Pencil, Trash2, X, Upload } from 'lucide-react';
+import { MapPin, AlertCircle, Loader2, ChevronRight, ChevronLeft, Check, Activity, Plus, Pencil, Trash2, X, } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { usePropiedades } from '@/hooks/use-propiedades';
@@ -52,9 +52,9 @@ const wizardSchema = z.object({
   google_maps_url: z.string().optional(),
 
   // Step 4: Additional
-  num_reg_hierro: z.string().optional(),
-  num_reg_ganadero: z.string().optional(),
-  hierro_img: z.any().optional(),
+  // num_reg_hierro: z.string().optional(),
+  // num_reg_ganadero: z.string().optional(),
+  // hierro_img: z.any().optional(),
 });
 
 type WizardValues = z.infer<typeof wizardSchema>;
@@ -68,7 +68,7 @@ const STEPS = [
   { title: 'Productor', description: 'Datos personales' },
   { title: 'Propiedad', description: 'Datos del predio' },
   { title: 'Ubicación', description: 'Geolocalización' },
-  { title: 'Producción', description: 'Hierros y otros' },
+  // { title: 'Producción', description: 'Hierros y otros' },
 ];
 
 export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
@@ -119,7 +119,6 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
   const [rifConflict, setRifConflict] = useState<any>(null);
   const [isCheckingProducer, setIsCheckingProducer] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
-  const [hierroPreview, setHierroPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -182,8 +181,8 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
         return !!values.nombre_propiedad && !!values.tipo_propiedad_id;
       case 2:
         return !!values.estado_id && !!values.municipio_id && !!values.parroquia_id && !!values.sector_id;
-      case 3:
-        return true;
+      // case 3:
+      //   return true;
       default:
         return true;
     }
@@ -194,7 +193,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
       ['cedula_rif', 'nombre_productor', 'email', 'telefono', 'codigo_runsai', 'direccion_fiscal'],
       ['nombre_propiedad', 'tipo_propiedad_id', 'rif_propiedad', 'hectareas_totales', 'punto_referencia'],
       ['estado_id', 'municipio_id', 'parroquia_id', 'sector_id', 'google_maps_url'],
-      ['num_reg_hierro', 'num_reg_ganadero']
+      // ['num_reg_hierro', 'num_reg_ganadero']
     ];
 
     const isStepValidRes = await trigger(fieldsByStep[currentStep]);
@@ -259,10 +258,9 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
       }
 
       if (currentStep === 1) {
-        // Al pasar del paso 2, verificamos si el RIF de la propiedad existe
         const rif = watch('rif_propiedad');
         if (rif) {
-          setIsCheckingProducer(true); // Reutilizamos el loader
+          setIsCheckingProducer(true);
           try {
             const { data: res } = await propiedadesService.getAll({ q: rif });
             const found = res.find((p: any) => p.rif === rif);
@@ -270,7 +268,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
               setRifConflict(found);
               toast.error(`Conflicto de RIF: Este RIF ya pertenece a la propiedad ${found.nombre}`);
               setIsCheckingProducer(false);
-              return; // Bloqueamos el avance
+              return;
             }
           } catch (error) {
             console.error('Error checking property RIF:', error);
@@ -284,7 +282,6 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
       setIsAdvancing(true);
       console.log('handleNext: Advancing from step', currentStep, 'to', Math.min(currentStep + 1, STEPS.length - 1));
       setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
-      // Prevenir doble clic accidental
       setTimeout(() => setIsAdvancing(false), 400);
     } else {
       console.log('handleNext: Step validation failed for step', currentStep);
@@ -296,7 +293,6 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
   };
 
   const onFinalSubmit = async (values: WizardValues) => {
-    // Seguridad: Solo permitir el envío si estamos en el último paso
     if (currentStep !== STEPS.length - 1) return;
 
     setIsSubmitting(true);
@@ -311,14 +307,13 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
           sector_id: parseInt(values.sector_id),
           google_maps_url: values.google_maps_url || '',
         },
-        hierro: values.num_reg_hierro ? {
-          num_reg_hierro: values.num_reg_hierro,
-          num_reg_ganadero: values.num_reg_ganadero,
-        } : undefined,
-        hierro_img: values.hierro_img?.[0], // Tomamos el primer archivo
+        // hierro: values.num_reg_hierro ? {
+        //   num_reg_hierro: values.num_reg_hierro,
+        //   num_reg_ganadero: values.num_reg_ganadero,
+        // } : undefined,
+        // hierro_img: values.hierro_img?.[0], 
       };
 
-      // Enviamos siempre los datos del productor (el backend decidirá si crea o actualiza)
       submissionData.productor = {
         cedula_rif: values.cedula_rif,
         nombre: values.nombre_productor,
@@ -332,9 +327,8 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
 
       toast.success('Inscripción completada exitosamente');
       reset();
-      setHierroPreview(null);
       setCurrentStep(0);
-      onClose(); // Cerramos el modal al terminar
+      onClose();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al procesar la inscripción');
     } finally {
@@ -412,7 +406,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
           >
             <div
               key={currentStep}
-              className="min-h-[350px] animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="min-h-87.5 animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
               {currentStep === 0 && (
                 <div className="space-y-6">
@@ -557,7 +551,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                           )}>
                             <SelectValue placeholder="Seleccione..." />
                           </SelectTrigger>
-                          <SelectContent className="glass-effect border-border max-h-[250px] min-w-(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                          <SelectContent className="glass-effect border-border max-h-62.5 min-w-(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                             {tipos.map((tipo) => (
                               <div key={tipo.id} className="group relative flex items-center">
                                 <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
@@ -681,7 +675,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {/* {currentStep === 3 && (
                 <div className="space-y-6">
                   <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mb-6">
                     <div className="flex items-center gap-3 mb-4 text-primary font-bold uppercase tracking-widest text-xs">
@@ -703,7 +697,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Imagen del Hierro</label>
                     <div
                       className={cn(
-                        "relative group cursor-pointer border-2 border-dashed rounded-2xl transition-all duration-300 min-h-[160px] flex flex-col items-center justify-center p-4",
+                        "relative group cursor-pointer border-2 border-dashed rounded-2xl transition-all duration-300 min-h-40 flex flex-col items-center justify-center p-4",
                         hierroPreview ? "border-primary/50 bg-primary/5" : "border-muted-foreground/20 hover:border-primary/30 hover:bg-muted/5"
                       )}
                       onClick={() => document.getElementById('hierro-upload')?.click()}
@@ -742,7 +736,7 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
 
             <div className="flex items-center justify-between mt-12 pt-6 border-t border-border/50">
