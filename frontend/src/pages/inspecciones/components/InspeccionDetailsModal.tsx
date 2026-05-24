@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatHoraInspeccion12h } from '@/utils/inspeccion-time';
 import type { InspeccionStatus } from '@/types/inspecciones';
 
 const STATUS_STYLES: Record<InspeccionStatus, string> = {
@@ -36,29 +37,16 @@ interface InspeccionDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   inspeccionId: number | null;
-  onEdit?: () => void;
-}
-
-function formatTime(iso: string | null) {
-  if (!iso) return '—';
-  try {
-    const t = iso.includes('T') ? iso.split('T')[1] : iso;
-    const [h, m] = t.split(':');
-    const hours = parseInt(h, 10);
-    const minutes = m?.slice(0, 2) || '00';
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes} ${ampm}`;
-  } catch {
-    return iso;
-  }
+  onPdf?: (id: number) => void;
+  pdfLoadingId?: number | null;
 }
 
 export function InspeccionDetailsModal({
   isOpen,
   onClose,
   inspeccionId,
-  onEdit,
+  onPdf,
+  pdfLoadingId = null,
 }: InspeccionDetailsModalProps) {
   const { inspeccion, isLoading } = useInspeccion(isOpen ? inspeccionId : null);
 
@@ -83,9 +71,20 @@ export function InspeccionDetailsModal({
                 </DialogDescription>
               </div>
             </div>
-            {onEdit && inspeccion && (
-              <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer shrink-0">
-                Editar
+            {inspeccionId && onPdf && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pdfLoadingId !== null}
+                onClick={() => onPdf(inspeccionId)}
+                className="cursor-pointer shrink-0 gap-2 disabled:opacity-60"
+              >
+                {pdfLoadingId === inspeccionId ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <FileText className="size-4" />
+                )}
+                {pdfLoadingId === inspeccionId ? 'Generando acta...' : 'Acta PDF'}
               </Button>
             )}
           </div>
@@ -119,7 +118,7 @@ export function InspeccionDetailsModal({
                 {new Date(inspeccion.fecha_inspeccion).toLocaleDateString('es-VE')}
               </DetailCard>
               <DetailCard icon={Clock} label="Hora">
-                {formatTime(inspeccion.hora_inspeccion)}
+                {formatHoraInspeccion12h(inspeccion.hora_inspeccion)}
               </DetailCard>
               <DetailCard icon={ClipboardList} label="Planificación">
                 {plan?.codigo || `#${plan?.id}`} — {solic?.codigo || 'Sin solicitud'}

@@ -18,7 +18,12 @@ export interface InspeccionCodigosPreview {
   prefijo: string;
 }
 
-const JSON_FIELDS = new Set(['finalidades', 'insumos_consumidos']);
+const JSON_FIELDS = new Set([
+  'finalidades',
+  'insumos_consumidos',
+  'fotos_eliminadas',
+  'areas_inspeccion',
+]);
 
 function appendFormField(formData: FormData, key: string, val: unknown) {
   if (val === undefined || val === null) return;
@@ -85,6 +90,43 @@ export const inspectionsService = {
   delete: async (id: number): Promise<SimpleResponse> => {
     const { data } = await apiClient.delete<SimpleResponse>(`/inspecciones/${id}`);
     return data;
+  },
+
+  export: async (params?: {
+    status?: string;
+    planificacion_id?: number;
+    q?: string;
+  }) => {
+    const response = await apiClient.get('/inspecciones/export', {
+      params,
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'reporte_inspecciones.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  getReporte: async (id: number) => {
+    const { data } = await apiClient.get<{ status: string; data: import('@/reports/acta-inspeccion/types').InspeccionReporteDto }>(
+      `/inspecciones/${id}/reporte`
+    );
+    return data.data;
+  },
+
+  openPdfReport: async (id: number) => {
+    const [{ generateActaPdfBlob }, reporte] = await Promise.all([
+      import('@/reports/acta-inspeccion/generateActaPdf'),
+      inspectionsService.getReporte(id),
+    ]);
+    const blob = await generateActaPdfBlob(reporte);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   },
 
   previewCodigos: async (params: {

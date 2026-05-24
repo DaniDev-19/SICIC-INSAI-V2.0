@@ -12,6 +12,7 @@ export function useInspecciones(initialLimit = 10) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [planificacionFilter, setPlanificacionFilter] = useState<number | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null);
 
   const debouncedStatus = useDebounce(statusFilter === 'all' ? '' : statusFilter, 300);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -75,6 +76,37 @@ export function useInspecciones(initialLimit = 10) {
     },
   });
 
+  const exportInspecciones = async () => {
+    try {
+      await inspectionsService.export({
+        status: debouncedStatus || undefined,
+        planificacion_id: planificacionFilter,
+        q: debouncedSearch || undefined,
+      });
+      toast.success('Reporte Excel descargado');
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(axiosError.response?.data?.message || 'Error al exportar inspecciones');
+    }
+  };
+
+  const openPdfReport = async (id: number) => {
+    if (pdfLoadingId !== null) return;
+    setPdfLoadingId(id);
+    const toastId = toast.loading('Generando acta PDF...');
+    try {
+      await inspectionsService.openPdfReport(id);
+      toast.dismiss(toastId);
+      toast.success('Acta PDF abierta en nueva pestaña');
+    } catch (error) {
+      toast.dismiss(toastId);
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(axiosError.response?.data?.message || 'Error al generar el acta PDF');
+    } finally {
+      setPdfLoadingId(null);
+    }
+  };
+
   return {
     inspecciones: response?.data || [],
     pagination: response?.pagination || {
@@ -98,6 +130,9 @@ export function useInspecciones(initialLimit = 10) {
     createInspeccion: createMutation.mutateAsync,
     updateInspeccion: updateMutation.mutateAsync,
     deleteInspeccion: deleteMutation.mutateAsync,
+    exportInspecciones,
+    openPdfReport,
+    pdfLoadingId,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,

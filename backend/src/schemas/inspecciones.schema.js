@@ -46,6 +46,10 @@ const bodyBase = {
   medidas_ordenadas: z.preprocess(emptyToNull, z.string().optional().nullable()),
   posee_certificado: z.preprocess(emptyToNull, z.string().optional().nullable()),
   vigencia_dias: z.coerce.number().optional(),
+  areas_inspeccion: z.preprocess(
+    (val) => parseJsonField(val),
+    z.array(z.string()).optional()
+  ),
   status: statusEnum.optional(),
   insumos_consumidos: z.preprocess(
     (val) => parseJsonField(val),
@@ -73,6 +77,10 @@ export const updateInspeccionSchema = z.object({
     finalidades: z.preprocess(
       (val) => parseJsonField(val),
       z.array(finalidadItemSchema).optional()
+    ),
+    fotos_eliminadas: z.preprocess(
+      (val) => parseJsonField(val),
+      z.array(z.coerce.number()).optional()
     ),
   }),
 });

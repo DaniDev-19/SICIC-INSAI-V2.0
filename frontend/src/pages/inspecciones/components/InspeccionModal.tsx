@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, type ReactNode } from 'react';
+import { useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +30,12 @@ import {
   inspectionsService,
   type InspeccionCodigosPreview,
 } from '@/services/inspecciones.service';
-import type { Inspeccion, FinalidadPayload, InspeccionStatus } from '@/types/inspecciones';
+import type {
+  Inspeccion,
+  InspeccionFoto,
+  FinalidadPayload,
+  InspeccionStatus,
+} from '@/types/inspecciones';
 import {
   Eye,
   Loader2,
@@ -42,6 +47,9 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AREAS_INSPECCION_OPCIONES } from '@/reports/acta-inspeccion/types';
+import { toHoraInputValue } from '@/utils/inspeccion-time';
 
 const STEPS = [
   { title: 'Planificación', description: 'Vincular visita programada' },
@@ -66,18 +74,45 @@ const ESTADO_ABREV_OPCIONES = [
   'TRU', 'VAR', 'YAR', 'ZUL',
 ];
 
-const formSchema = z.object({
+const OPCIONAL_DEFAULT = 'No especificado';
+
+function toFormOptional(value: string | null | undefined): string {
+  const v = value?.trim();
+  return v ? v : OPCIONAL_DEFAULT;
+}
+
+function toPayloadOptional(value: string | undefined): string {
+  const v = value?.trim();
+  return v && v !== OPCIONAL_DEFAULT ? v : OPCIONAL_DEFAULT;
+}
+
+function toPayloadEmail(value: string | undefined): string | undefined {
+  const v = value?.trim();
+  if (!v || v === OPCIONAL_DEFAULT) return undefined;
+  return v;
+}
+
+function buildFormSchema(allowPastFecha: boolean) {
+  return z.object({
   planificacion_id: z.string().min(1, 'Seleccione una planificación'),
-  fecha_inspeccion: z.string().min(1, 'La fecha es requerida'),
+  fecha_inspeccion: z
+    .string()
+    .min(1, 'La fecha es requerida')
+    .refine(
+      (val) => allowPastFecha || val >= new Date().toISOString().split('T')[0],
+      { message: 'La fecha no puede ser anterior a hoy' }
+    ),
   hora_inspeccion: z.string().optional(),
   status: z.string().min(1, 'Seleccione un estatus'),
   atendido_por_nombre: z.string().optional(),
   atendido_por_cedula: z.string().optional(),
   atendido_por_email: z
     .string()
-    .email('Email inválido')
     .optional()
-    .or(z.literal('')),
+    .refine(
+      (val) => !val?.trim() || val === OPCIONAL_DEFAULT || z.string().email().safeParse(val).success,
+      { message: 'Email inválido' }
+    ),
   atendido_por_tlf: z.string().optional(),
   insp_utm_norte: z.string().min(1, 'UTM Norte es requerido'),
   insp_utm_este: z.string().min(1, 'UTM Este es requerido'),
@@ -97,9 +132,10 @@ const formSchema = z.object({
     .refine((val) => !val?.trim() || (!Number.isNaN(Number(val)) && Number(val) > 0), {
       message: 'La vigencia debe ser un número mayor a 0',
     }),
-});
+  });
+}
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 const FIELDS_BY_STEP: (keyof FormValues)[][] = [
   ['planificacion_id', 'fecha_inspeccion', 'status'],
@@ -130,12 +166,6 @@ interface InspeccionModalProps {
   initialPlanificacionId?: number;
 }
 
-function toTimeInput(iso: string | null) {
-  if (!iso) return '';
-  const part = iso.includes('T') ? iso.split('T')[1] : iso;
-  return part.slice(0, 5);
-}
-
 function toDateInput(iso: string) {
   try {
     return new Date(iso).toISOString().slice(0, 10);
@@ -151,14 +181,21 @@ export function InspeccionModal({
   initialPlanificacionId,
 }: InspeccionModalProps) {
   const { createInspeccion, updateInspeccion, isCreating, isUpdating } = useInspecciones();
+  const isEditing = !!inspeccion;
+  const formSchema = useMemo(() => buildFormSchema(isEditing), [isEditing]);
   const [step, setStep] = useState(0);
   const [fotos, setFotos] = useState<File[]>([]);
+  const [removedFotoIds, setRemovedFotoIds] = useState<number[]>([]);
+  const [areasSeleccionadas, setAreasSeleccionadas] = useState<string[]>([]);
   const [finalidadesRows, setFinalidadesRows] = useState<FinalidadPayload[]>([
     { finalidad_id: 0, objetivo: '' },
   ]);
   const [estadoAbrev, setEstadoAbrev] = useState('');
   const [codigosPreview, setCodigosPreview] = useState<InspeccionCodigosPreview | null>(null);
   const [loadingCodigos, setLoadingCodigos] = useState(false);
+  const [submitLocked, setSubmitLocked] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const {
     register,
     handleSubmit,
@@ -175,10 +212,10 @@ export function InspeccionModal({
       fecha_inspeccion: new Date().toISOString().slice(0, 10),
       hora_inspeccion: '',
       status: 'INSPECCIONANDO',
-      atendido_por_nombre: '',
-      atendido_por_cedula: '',
-      atendido_por_email: '',
-      atendido_por_tlf: '',
+      atendido_por_nombre: 'No especificado',
+      atendido_por_cedula: 'No especificado',
+      atendido_por_email: 'No especificado',
+      atendido_por_tlf: 'No especificado',
       insp_utm_norte: '',
       insp_utm_este: '',
       insp_utm_zona: '',
@@ -211,7 +248,6 @@ export function InspeccionModal({
 
   const planificaciones = planificacionesRes?.data || [];
   const catalogFinalidades = finalidadesRes?.data || [];
-  const isEditing = !!inspeccion;
   const isLoading = isCreating || isUpdating;
 
   const watched = watch();
@@ -299,19 +335,30 @@ export function InspeccionModal({
 
     setStep(0);
     setFotos([]);
+    setRemovedFotoIds([]);
+    setSubmitLocked(false);
+    setIsAdvancing(false);
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
     setEstadoAbrev(inspeccion?.n_control?.split('-')[0]?.toUpperCase() || '');
     setCodigosPreview(null);
+    const areasRaw = inspeccion?.areas_inspeccion;
+    setAreasSeleccionadas(
+      Array.isArray(areasRaw) ? areasRaw.filter((a): a is string => typeof a === 'string') : []
+    );
 
     if (inspeccion) {
       reset({
         planificacion_id: String(inspeccion.planificacion_id || ''),
         fecha_inspeccion: toDateInput(inspeccion.fecha_inspeccion),
-        hora_inspeccion: toTimeInput(inspeccion.hora_inspeccion),
+        hora_inspeccion: toHoraInputValue(inspeccion.hora_inspeccion),
         status: inspeccion.status,
-        atendido_por_nombre: inspeccion.atendido_por_nombre || '',
-        atendido_por_cedula: inspeccion.atendido_por_cedula || '',
-        atendido_por_email: inspeccion.atendido_por_email || '',
-        atendido_por_tlf: inspeccion.atendido_por_tlf || '',
+        atendido_por_nombre: toFormOptional(inspeccion.atendido_por_nombre),
+        atendido_por_cedula: toFormOptional(inspeccion.atendido_por_cedula),
+        atendido_por_email: toFormOptional(inspeccion.atendido_por_email),
+        atendido_por_tlf: toFormOptional(inspeccion.atendido_por_tlf),
         insp_utm_norte: inspeccion.insp_utm_norte?.toString() || '',
         insp_utm_este: inspeccion.insp_utm_este?.toString() || '',
         insp_utm_zona: inspeccion.insp_utm_zona || '',
@@ -335,10 +382,10 @@ export function InspeccionModal({
         fecha_inspeccion: new Date().toISOString().slice(0, 10),
         hora_inspeccion: '',
         status: 'INSPECCIONANDO',
-        atendido_por_nombre: '',
-        atendido_por_cedula: '',
-        atendido_por_email: '',
-        atendido_por_tlf: '',
+        atendido_por_nombre: OPCIONAL_DEFAULT,
+        atendido_por_cedula: OPCIONAL_DEFAULT,
+        atendido_por_email: OPCIONAL_DEFAULT,
+        atendido_por_tlf: OPCIONAL_DEFAULT,
         insp_utm_norte: '',
         insp_utm_este: '',
         insp_utm_zona: '',
@@ -349,17 +396,41 @@ export function InspeccionModal({
         vigencia_dias: '30',
       });
       setFinalidadesRows([{ finalidad_id: 0, objetivo: '' }]);
+      setAreasSeleccionadas([]);
     }
   }, [isOpen, inspeccion, initialPlanificacionId, reset]);
 
+  const toggleArea = (area: string) => {
+    setAreasSeleccionadas((prev) =>
+      prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
+    );
+  };
+
   const handleNext = async () => {
+    if (isAdvancing) return;
+    setIsAdvancing(true);
+
     const fields = FIELDS_BY_STEP[step];
     const zodOk = fields.length === 0 || (await trigger(fields));
 
-    if (!zodOk) return;
-    if (step === 0 && (!estadoAbrev || !codigosPreview?.n_control)) return;
+    if (!zodOk || (step === 0 && (!estadoAbrev || !codigosPreview?.n_control))) {
+      setIsAdvancing(false);
+      return;
+    }
 
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    const nextStep = Math.min(step + 1, STEPS.length - 1);
+    setStep(nextStep);
+
+    if (nextStep === STEPS.length - 1) {
+      setSubmitLocked(true);
+    }
+
+    if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+    advanceTimerRef.current = setTimeout(() => {
+      setIsAdvancing(false);
+      setSubmitLocked(false);
+      advanceTimerRef.current = null;
+    }, 400);
   };
 
   const handleBack = () => setStep((s) => Math.max(s - 1, 0));
@@ -387,10 +458,10 @@ export function InspeccionModal({
       hora_inspeccion: values.hora_inspeccion || undefined,
       status: values.status as InspeccionStatus,
       estado_abrev: estadoAbrev,
-      atendido_por_nombre: values.atendido_por_nombre || undefined,
-      atendido_por_cedula: values.atendido_por_cedula || undefined,
-      atendido_por_email: values.atendido_por_email || undefined,
-      atendido_por_tlf: values.atendido_por_tlf || undefined,
+      atendido_por_nombre: toPayloadOptional(values.atendido_por_nombre),
+      atendido_por_cedula: toPayloadOptional(values.atendido_por_cedula),
+      atendido_por_email: toPayloadEmail(values.atendido_por_email),
+      atendido_por_tlf: toPayloadOptional(values.atendido_por_tlf),
       insp_utm_norte: values.insp_utm_norte ? Number(values.insp_utm_norte) : undefined,
       insp_utm_este: values.insp_utm_este ? Number(values.insp_utm_este) : undefined,
       insp_utm_zona: values.insp_utm_zona || undefined,
@@ -400,19 +471,37 @@ export function InspeccionModal({
       posee_certificado: values.posee_certificado || undefined,
       vigencia_dias: values.vigencia_dias ? Number(values.vigencia_dias) : undefined,
       finalidades: validFinalidades.length > 0 ? validFinalidades : undefined,
+      areas_inspeccion: areasSeleccionadas.length > 0 ? areasSeleccionadas : undefined,
     };
 
     if (isEditing && inspeccion) {
-      await updateInspeccion({ id: inspeccion.id, data: payload, fotos: fotos.length ? fotos : undefined });
+      await updateInspeccion({
+        id: inspeccion.id,
+        data: {
+          ...payload,
+          ...(removedFotoIds.length > 0 ? { fotos_eliminadas: removedFotoIds } : {}),
+        },
+        fotos: fotos.length ? fotos : undefined,
+      });
     } else {
       await createInspeccion({ data: payload, fotos: fotos.length ? fotos : undefined });
     }
     onClose();
   };
 
+  const existingFotosVisibles: InspeccionFoto[] = useMemo(() => {
+    if (!isEditing || !inspeccion?.inspeccion_fotos) return [];
+    return inspeccion.inspeccion_fotos.filter((f) => !removedFotoIds.includes(f.id));
+  }, [isEditing, inspeccion?.inspeccion_fotos, removedFotoIds]);
+
+  const handleRemoveExistingFoto = (fotoId: number) => {
+    setRemovedFotoIds((prev) => (prev.includes(fotoId) ? prev : [...prev, fotoId]));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setFotos((prev) => [...prev, ...files].slice(0, 10));
+    const maxNuevas = Math.max(0, 10 - existingFotosVisibles.length);
+    setFotos((prev) => [...prev, ...files].slice(0, maxNuevas));
     e.target.value = '';
   };
 
@@ -485,7 +574,12 @@ export function InspeccionModal({
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <FieldLabel required>Fecha inspección</FieldLabel>
-                  <Input type="date" {...register('fecha_inspeccion')} className="h-12 rounded-xl" />
+                  <Input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    {...register('fecha_inspeccion')}
+                    className="h-12 rounded-xl"
+                  />
                   {errors.fecha_inspeccion && (
                     <p className="text-xs text-rose-500">{errors.fecha_inspeccion.message}</p>
                   )}
@@ -493,6 +587,28 @@ export function InspeccionModal({
                 <div className="space-y-2">
                   <FieldLabel>Hora</FieldLabel>
                   <Input type="time" {...register('hora_inspeccion')} className="h-12 rounded-xl" />
+                </div>
+              </div>
+
+              <div className="space-y-3 p-4 rounded-2xl border border-border/60 bg-muted/20">
+                <FieldLabel>Área a la cual pertenece la inspección</FieldLabel>
+                <p className="text-[10px] text-muted-foreground">
+                  Se refleja en el acta oficial (sección 1). Puede seleccionar más de una.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {AREAS_INSPECCION_OPCIONES.map((area) => (
+                    <label
+                      key={area}
+                      className="flex items-start gap-2 cursor-pointer text-sm font-medium"
+                    >
+                      <Checkbox
+                        checked={areasSeleccionadas.includes(area)}
+                        onCheckedChange={() => toggleArea(area)}
+                        className="mt-0.5"
+                      />
+                      <span>{area}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -586,19 +702,19 @@ export function InspeccionModal({
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <FieldLabel>Nombre atendido</FieldLabel>
-                  <Input {...register('atendido_por_nombre')} className="h-12 rounded-xl" />
+                  <Input {...register('atendido_por_nombre')} placeholder="Juan Pérez" className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <FieldLabel>Cédula</FieldLabel>
-                  <Input {...register('atendido_por_cedula')} className="h-12 rounded-xl" />
+                  <Input {...register('atendido_por_cedula')} placeholder="1234567890" className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <FieldLabel>Teléfono</FieldLabel>
-                  <Input {...register('atendido_por_tlf')} className="h-12 rounded-xl" />
+                  <Input {...register('atendido_por_tlf')} placeholder="+58 412 000 0000" className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <FieldLabel>Email</FieldLabel>
-                  <Input type="email" {...register('atendido_por_email')} className="h-12 rounded-xl" />
+                  <Input type="email" {...register('atendido_por_email')} placeholder="juan.perez@example.com" className="h-12 rounded-xl" />
                   {errors.atendido_por_email && (
                     <p className="text-xs text-rose-500">{errors.atendido_por_email.message}</p>
                   )}
@@ -744,10 +860,56 @@ export function InspeccionModal({
 
           {step === 3 && (
             <div className="space-y-4">
+              {existingFotosVisibles.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Fotos registradas ({existingFotosVisibles.length})
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {existingFotosVisibles.map((foto) => (
+                      <div
+                        key={foto.id}
+                        className="relative aspect-square rounded-xl overflow-hidden border border-border group"
+                      >
+                        <img
+                          src={foto.imagen}
+                          alt="Evidencia registrada"
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleRemoveExistingFoto(foto.id)}
+                          className="absolute top-2 right-2 size-8 opacity-90 cursor-pointer"
+                          title="Eliminar foto"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Al quitar una foto y guardar, se elimina del registro y del almacenamiento.
+                  </p>
+                </div>
+              )}
+
               <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center">
                 <Upload className="size-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm font-semibold mb-2">Adjuntar fotos de evidencia (máx. 10)</p>
-                <label className="inline-flex cursor-pointer">
+                <p className="text-sm font-semibold mb-2">
+                  Adjuntar fotos de evidencia (máx. 10
+                  {existingFotosVisibles.length > 0
+                    ? `, ${10 - existingFotosVisibles.length} nuevas disponibles`
+                    : ''}
+                  )
+                </p>
+                <label
+                  className={cn(
+                    'inline-flex',
+                    existingFotosVisibles.length >= 10 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                  )}
+                >
                   <span className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">
                     Seleccionar archivos
                   </span>
@@ -756,35 +918,36 @@ export function InspeccionModal({
                     accept="image/*"
                     multiple
                     className="hidden"
+                    disabled={existingFotosVisibles.length >= 10}
                     onChange={handleFileChange}
                   />
                 </label>
               </div>
               {fotos.length > 0 && (
-                <ul className="space-y-2">
-                  {fotos.map((file, i) => (
-                    <li
-                      key={`${file.name}-${i}`}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 text-sm"
-                    >
-                      <span className="truncate font-medium">{file.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setFotos((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="cursor-pointer shrink-0"
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Nuevas por subir ({fotos.length})
+                  </p>
+                  <ul className="space-y-2">
+                    {fotos.map((file, i) => (
+                      <li
+                        key={`${file.name}-${i}`}
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/30 text-sm"
                       >
-                        <X className="size-4" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {isEditing && inspeccion?.inspeccion_fotos && inspeccion.inspeccion_fotos.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Las fotos existentes se conservan. Las nuevas se agregarán al guardar.
-                </p>
+                        <span className="truncate font-medium">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setFotos((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="cursor-pointer shrink-0"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}
@@ -802,9 +965,10 @@ export function InspeccionModal({
 
             {step < STEPS.length - 1 ? (
               <Button
+                key="step-next"
                 type="button"
                 onClick={handleNext}
-                disabled={!isStepValid() || isLoading}
+                disabled={!isStepValid() || isLoading || isAdvancing}
                 className={cn(
                   'cursor-pointer ml-auto',
                   (!isStepValid() || isLoading) && 'opacity-50 cursor-not-allowed'
@@ -814,11 +978,12 @@ export function InspeccionModal({
               </Button>
             ) : (
               <Button
+                key="step-submit"
                 type="submit"
-                disabled={isLoading || !isStepValid()}
+                disabled={isLoading || !isStepValid() || submitLocked}
                 className={cn(
                   'cursor-pointer ml-auto',
-                  (isLoading || !isStepValid()) && 'opacity-50 cursor-not-allowed'
+                  (isLoading || !isStepValid() || submitLocked) && 'opacity-50 cursor-not-allowed'
                 )}
               >
                 {isLoading ? (

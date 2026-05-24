@@ -7,6 +7,7 @@ import {
   Loader2,
   AlertTriangle,
   Activity,
+  Download,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -55,6 +56,9 @@ export default function Inspecciones() {
     setSearchQuery,
     setStatusFilter,
     deleteInspeccion,
+    exportInspecciones,
+    openPdfReport,
+    pdfLoadingId,
   } = useInspecciones();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -191,6 +195,18 @@ export default function Inspecciones() {
               className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
             />
           </div>
+
+          <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+
+          <Button
+            title="Exportar en excel"
+            variant="ghost"
+            size="icon"
+            onClick={exportInspecciones}
+            className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
+          >
+            <Download className="size-5" />
+          </Button>
         </div>
       </div>
 
@@ -211,6 +227,8 @@ export default function Inspecciones() {
                 onView={handleOpenView}
                 onEdit={handleOpenEdit}
                 onDelete={setDeleteId}
+                onPdf={openPdfReport}
+                pdfLoadingId={pdfLoadingId}
                 canEdit={canUpdate}
                 canDelete={canDelete}
               />
@@ -240,15 +258,8 @@ export default function Inspecciones() {
           setDetailsId(null);
         }}
         inspeccionId={detailsId}
-        onEdit={
-          canUpdate
-            ? () => {
-                const item = inspecciones.find((i) => i.id === detailsId);
-                setIsDetailsOpen(false);
-                if (item) handleOpenEdit(item);
-              }
-            : undefined
-        }
+        onPdf={openPdfReport}
+        pdfLoadingId={pdfLoadingId}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

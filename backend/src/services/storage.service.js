@@ -37,9 +37,8 @@ class StorageService {
 
     if (this.mode === 'r2') {
       return this.uploadToR2(webpBuffer, finalFileName);
-    } else {
-      return this.uploadToLocal(webpBuffer, finalFileName);
     }
+    return this.uploadToLocal(webpBuffer, finalFileName);
   }
 
   async uploadToR2(buffer, fileName) {
@@ -60,7 +59,6 @@ class StorageService {
     const dir = path.dirname(fullPath);
 
     await fs.mkdir(dir, { recursive: true });
-
     await fs.writeFile(fullPath, buffer);
 
     const baseUrl = process.env.UPLOAD_URL_BASE || '/uploads';
@@ -70,7 +68,7 @@ class StorageService {
 
   /**
    * Elimina un archivo del almacenamiento.
-   * @param {string} fileUrl 
+   * @param {string} fileUrl
    */
   async deleteFile(fileUrl) {
     if (!fileUrl) return;
@@ -80,10 +78,12 @@ class StorageService {
         const urlObj = new URL(fileUrl);
         const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
 
-        await this.s3Client.send(new DeleteObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME,
-          Key: key,
-        }));
+        await this.s3Client.send(
+          new DeleteObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+          })
+        );
       } else {
         const fileName = fileUrl.split('/uploads/')[1];
         if (fileName) {

@@ -14,9 +14,24 @@ router.use(tenantMiddleware);
 
 router.get('/', checkPermission('inspecciones', 'see'), inspeccionesController.getInspecciones);
 router.get(
+  '/export',
+  checkPermission('inspecciones', 'see'),
+  inspeccionesController.exportInspecciones
+);
+router.get(
+  '/export/pdf',
+  checkPermission('inspecciones', 'see'),
+  inspeccionesController.exportInspeccionesPdf
+);
+router.get(
   '/preview-codigos',
   checkPermission('inspecciones', 'see'),
   inspeccionesController.previewCodigosInspeccion
+);
+router.get(
+  '/:id/reporte',
+  checkPermission('inspecciones', 'see'),
+  inspeccionesController.getInspeccionReporte
 );
 router.get('/:id', checkPermission('inspecciones', 'see'), inspeccionesController.getInspeccionById);
 

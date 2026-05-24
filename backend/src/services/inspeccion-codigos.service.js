@@ -86,6 +86,26 @@ export function normalizarCedula(cedula) {
   return limpia || null;
 }
 
+/** Cédula con nacionalidad para el acta: V-18456789 */
+export function formatearCedulaParaControl(cedula) {
+  if (!cedula) return null;
+  const raw = String(cedula).trim().toUpperCase();
+  const match = raw.match(/^([VEJPG])[\s.-]*(\d{5,11})/);
+  if (match) return `${match[1]}-${match[2]}`;
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return null;
+  return `V-${digits}`;
+}
+
+function prefijoCodigoTerritorial(codigo, letra) {
+  const limpio = String(codigo ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(new RegExp(`^${letra}`, 'i'), '')
+    .replace(/\D/g, '');
+  return `${letra}${limpio || '00'}`;
+}
+
 export function formatearFechaControl(fecha) {
   const d = fecha instanceof Date ? fecha : new Date(fecha);
   if (Number.isNaN(d.getTime())) return null;
@@ -97,38 +117,86 @@ export function formatearFechaControl(fecha) {
 
 export function resolverAbrevEstado(estado) {
   if (!estado) return null;
-  const codigo = String(estado.codigo || '').trim().toUpperCase();
-  if (/^[A-Z]{2,4}$/.test(codigo)) return codigo;
 
   const clave = String(estado.nombre || '')
     .trim()
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
-  return ESTADO_ABREV_POR_NOMBRE[clave] || codigo.slice(0, 3) || null;
+  const desdeNombre = ESTADO_ABREV_POR_NOMBRE[clave];
+  if (desdeNombre) return desdeNombre;
+
+  const codigo = String(estado.codigo || '').trim().toUpperCase();
+  if (/^[A-Z]{2,4}$/.test(codigo)) return codigo;
+
+  return null;
 }
 
-export function construirCodigoTerritorial(propiedad) {
+export function construirCodigoTerritorial(propiedad, opts = {}) {
   if (!propiedad) return DEFAULT_T_CODIGO;
 
-  if (propiedad.codigo_insai && /^\d+-\d+-/.test(propiedad.codigo_insai)) {
-    return propiedad.codigo_insai;
+  const codigoGuardado = String(propiedad.codigo_insai || '').trim();
+  if (/^E\d+-M\d+-P\d+-S\d+/i.test(codigoGuardado)) {
+    return codigoGuardado;
   }
 
   const ubicacion = propiedad.propiedad_ubicacion?.[0];
   const sector = ubicacion?.sectores;
-  if (!sector?.parroquias?.municipios?.estados) return DEFAULT_T_CODIGO;
+  if (!sector?.parroquias?.municipios?.estados) {
+    return codigoGuardado || DEFAULT_T_CODIGO;
+  }
 
   const estado = sector.parroquias.municipios.estados;
   const municipio = sector.parroquias.municipios;
   const parroquia = sector.parroquias;
 
-  return [
-    String(estado.codigo).trim(),
-    String(municipio.codigo).trim(),
-    String(parroquia.codigo).trim(),
-    String(sector.codigo).trim(),
-  ].join('-');
+  const e = prefijoCodigoTerritorial(estado.codigo, 'E');
+  const m = prefijoCodigoTerritorial(municipio.codigo, 'M');
+  const p = prefijoCodigoTerritorial(parroquia.codigo, 'P');
+  const s = prefijoCodigoTerritorial(sector.codigo, 'S');
+
+  const fecha = opts.fechaInspeccion ? new Date(opts.fechaInspeccion) : new Date();
+  const ym = Number.isNaN(fecha.getTime())
+    ? ''
+    : `${fecha.getUTCFullYear()}${String(fecha.getUTCMonth() + 1).padStart(2, '0')}`;
+
+  const tipoNombre = String(propiedad?.t_propiedad?.nombre || '').toLowerCase();
+  const tipoAbrev = tipoNombre.includes('establecimiento')
+    ? 'ES'
+    : tipoNombre.includes('empresa')
+      ? 'EM'
+      : 'PR';
+
+  const secuencia = String(opts.secuencia ?? '1').replace(/\D/g, '') || '1';
+
+  const partes = [e, m, p, s, tipoAbrev];
+  if (ym) partes.push(ym);
+  partes.push(secuencia.padStart(4, '0'));
+
+  return partes.join('-');
+}
+
+/** N° control oficial: YAR-V-18456789-04052026-01 */
+export function formatNControlParaActa(inspeccion, planificacion) {
+  const guardado = String(inspeccion?.n_control || '').trim();
+  if (/^[A-Z]{2,4}-[VEJPG]-\d{5,11}-\d{8}-\d{2}$/i.test(guardado)) {
+    return guardado.toUpperCase();
+  }
+
+  const abrev = resolverAbrevDesdePlanificacion(planificacion, null) || 'YAR';
+  const inspector = obtenerPrimerInspector(planificacion);
+  const cedulaFmt = formatearCedulaParaControl(inspector?.cedula);
+  const fechaStr = formatearFechaControl(inspeccion?.fecha_inspeccion);
+  const partes = guardado.split('-');
+  const secuencia = /^\d{2}$/.test(partes[partes.length - 1] || '')
+    ? partes[partes.length - 1]
+    : '01';
+
+  if (abrev && cedulaFmt && fechaStr) {
+    return `${abrev}-${cedulaFmt}-${fechaStr}-${secuencia}`;
+  }
+
+  return guardado || '—';
 }
 
 function estadoDesdePropiedad(planificacion) {
@@ -144,8 +212,9 @@ function estadoDesdePrimerEmpleado(planificacion) {
 }
 
 export function resolverAbrevDesdePlanificacion(planificacion, estadoAbrevManual) {
-  if (estadoAbrevManual) {
-    return String(estadoAbrevManual).trim().toUpperCase();
+  const manual = String(estadoAbrevManual || '').trim().toUpperCase();
+  if (manual && /^[A-Z]{2,4}$/.test(manual)) {
+    return manual;
   }
   const dePropiedad = estadoDesdePropiedad(planificacion);
   if (dePropiedad) return resolverAbrevEstado(dePropiedad);
@@ -160,10 +229,10 @@ export function obtenerPrimerInspector(planificacion) {
 }
 
 export function construirPrefijoControl(estadoAbrev, cedula, fechaInspeccion) {
-  const cedulaNorm = normalizarCedula(cedula);
+  const cedulaFmt = formatearCedulaParaControl(cedula);
   const fechaStr = formatearFechaControl(fechaInspeccion);
-  if (!estadoAbrev || !cedulaNorm || !fechaStr) return null;
-  return `${estadoAbrev}-${cedulaNorm}-${fechaStr}`;
+  if (!estadoAbrev || !cedulaFmt || !fechaStr) return null;
+  return `${estadoAbrev}-${cedulaFmt}-${fechaStr}`;
 }
 
 export async function obtenerSiguienteSecuencia(tx, prefijo, excludeId = null) {
@@ -248,7 +317,7 @@ export async function generarNumeroControl(tx, {
   };
 }
 
-export async function resolverCodigoTerritorial(tx, planificacionId) {
+export async function resolverCodigoTerritorial(tx, planificacionId, opts = {}) {
   const planificacion = await tx.planificaciones.findUnique({
     where: { id: Number(planificacionId) },
     include: {
@@ -256,6 +325,7 @@ export async function resolverCodigoTerritorial(tx, planificacionId) {
         include: {
           propiedades: {
             include: {
+              t_propiedad: true,
               propiedad_ubicacion: {
                 take: 1,
                 include: {
@@ -278,24 +348,28 @@ export async function resolverCodigoTerritorial(tx, planificacionId) {
   });
 
   const propiedad = planificacion?.solicitudes?.propiedades;
-  return construirCodigoTerritorial(propiedad);
+  return construirCodigoTerritorial(propiedad, opts);
 }
 
 export async function resolverCodigosInspeccion(tx, params) {
   const { planificacionId, fechaInspeccion, estadoAbrev, excludeId } = params;
-  const [t_codigo, control] = await Promise.all([
-    resolverCodigoTerritorial(tx, planificacionId),
-    generarNumeroControl(tx, {
-      planificacionId,
-      fechaInspeccion,
-      estadoAbrev,
-      excludeId,
-    }),
-  ]);
+
+  const control = await generarNumeroControl(tx, {
+    planificacionId,
+    fechaInspeccion,
+    estadoAbrev,
+    excludeId,
+  });
 
   const planificacion = await tx.planificaciones.findUnique({
     where: { id: Number(planificacionId) },
     include: PLANIFICACION_CONTEXT_INCLUDE,
+  });
+
+  const propiedad = planificacion?.solicitudes?.propiedades;
+  const t_codigo = construirCodigoTerritorial(propiedad, {
+    fechaInspeccion,
+    secuencia: control.secuencia,
   });
 
   const estadoPropiedad = estadoDesdePropiedad(planificacion);
@@ -342,5 +416,7 @@ export default {
   generarNumeroControl,
   construirCodigoTerritorial,
   resolverAbrevEstado,
+  formatearCedulaParaControl,
+  formatNControlParaActa,
   debenRegenerarCodigos,
 };

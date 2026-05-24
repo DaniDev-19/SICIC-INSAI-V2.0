@@ -45,6 +45,7 @@ export interface Inspeccion {
   medidas_ordenadas: string | null;
   posee_certificado: string | null;
   vigencia_dias: number | null;
+  areas_inspeccion?: string[] | null;
   status: InspeccionStatus;
   created_at: string;
   updated_at: string;
@@ -101,8 +102,12 @@ export interface CreateInspeccionDto {
   status?: InspeccionStatus;
   planificacion_id: number;
   finalidades?: FinalidadPayload[];
+  areas_inspeccion?: string[];
 }
 
-export type UpdateInspeccionDto = Partial<CreateInspeccionDto> & { estado_abrev?: string };
+export type UpdateInspeccionDto = Partial<CreateInspeccionDto> & {
+  estado_abrev?: string;
+  fotos_eliminadas?: number[];
+};
 export type InspeccionResponse = ApiResponse<Inspeccion[]>;
 export type { SimpleResponse };
