@@ -1,5 +1,6 @@
 import type { Inspeccion } from '@/types/inspecciones';
-import { Eye, Edit, Trash2, Calendar, User, MapPin } from 'lucide-react';
+import { formatHoraInspeccion } from '@/utils/inspeccion-time';
+import { Eye, Edit, Trash2, Calendar, User, MapPin, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,6 +16,8 @@ interface InspeccionTableProps {
   onEdit: (inspeccion: Inspeccion) => void;
   onDelete: (id: number) => void;
   onView: (inspeccion: Inspeccion) => void;
+  onPdf: (id: number) => void;
+  pdfLoadingId?: number | null;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -34,6 +37,8 @@ export function InspeccionTable({
   onEdit,
   onDelete,
   onView,
+  onPdf,
+  pdfLoadingId = null,
   canEdit = true,
   canDelete = true,
 }: InspeccionTableProps) {
@@ -110,7 +115,7 @@ export function InspeccionTable({
                       </div>
                       {inspeccion.hora_inspeccion && (
                         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider block pl-5">
-                          {new Date(inspeccion.hora_inspeccion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {formatHoraInspeccion(inspeccion.hora_inspeccion)}
                         </span>
                       )}
                     </div>
@@ -132,6 +137,20 @@ export function InspeccionTable({
                         className="size-9 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer"
                       >
                         <Eye className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Acta PDF"
+                        disabled={pdfLoadingId !== null}
+                        onClick={() => onPdf(inspeccion.id)}
+                        className="size-9 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 cursor-pointer disabled:opacity-50"
+                      >
+                        {pdfLoadingId === inspeccion.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <FileText className="size-4" />
+                        )}
                       </Button>
                       {canEdit && (
                         <Button

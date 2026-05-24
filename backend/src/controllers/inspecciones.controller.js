@@ -1,44 +1,123 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import imageService from '../services/image.service.js';
 import inventoryService from '../services/inventory.service.js';
 import codigosService from '../services/inspeccion-codigos.service.js';
+import excelService from '../services/excel.service.js';
+import pdfService from '../services/pdf.service.js';
+import { parseHoraInspeccion, formatHoraInspeccion } from '../utils/inspeccion-time.util.js';
+import inspeccionReporteService, {
+  INSPECCION_REPORT_INCLUDE,
+} from '../services/inspeccion-reporte.service.js';
 
-export const getInspecciones = async (req, res) => {
-  const tenantPrisma = req.db;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-  const { status, planificacion_id, q } = req.query;
+function parseAreasBody(areas_inspeccion) {
+  if (areas_inspeccion === undefined || areas_inspeccion === null) return undefined;
+  if (Array.isArray(areas_inspeccion)) return areas_inspeccion;
+  if (typeof areas_inspeccion === 'string') {
+    try {
+      return JSON.parse(areas_inspeccion);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
 
+function isAdminUser(req) {
   const permisos = req.user?.currentInstance?.permisos;
-  const isAdmin = permisos?.all?.includes('*') || req.user?.currentInstance?.rol?.toLowerCase() === 'administrador';
+  return (
+    permisos?.all?.includes('*') ||
+    req.user?.currentInstance?.rol?.toLowerCase() === 'administrador'
+  );
+}
+
+function canAccessInspeccion(inspeccion, req) {
+  const empleadoId = req.user?.currentInstance?.empleado_id;
+  if (isAdminUser(req) || !empleadoId) return true;
+  return inspeccion.planificaciones?.planificacion_empleados?.some(
+    (pe) => pe.empleado_id === empleadoId
+  );
+}
+
+/** Inspector debe estar en planificacion_empleados; admin queda exento. */
+async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
+  if (isAdminUser(req)) return;
+
+  const empleadoId = req.user?.currentInstance?.empleado_id;
+  if (!empleadoId) {
+    const error = new Error(
+      'Su usuario no tiene un empleado vinculado. No puede registrar inspecciones de campo.'
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const planificacion = await tx.planificaciones.findUnique({
+    where: { id: Number(planificacionId) },
+    select: { id: true },
+  });
+  if (!planificacion) {
+    const error = new Error('La planificación indicada no existe');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const asignacion = await tx.planificacion_empleados.findFirst({
+    where: {
+      planificacion_id: Number(planificacionId),
+      empleado_id: empleadoId,
+    },
+  });
+
+  if (!asignacion) {
+    const error = new Error(
+      'No está asignado a esta planificación. Solo puede registrar inspecciones de visitas donde figura como inspector.'
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+function buildInspeccionesWhere(req) {
+  const { status, planificacion_id, q } = req.query;
+  const isAdmin = isAdminUser(req);
   const empleadoId = req.user?.currentInstance?.empleado_id;
 
   const where = {
     AND: [
       status ? { status } : {},
       planificacion_id ? { planificacion_id: Number(planificacion_id) } : {},
-      q ? {
-        OR: [
-          { n_control: { contains: q, mode: 'insensitive' } },
-          { t_codigo: { contains: q, mode: 'insensitive' } },
-          { atendido_por_nombre: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
-    ]
+      q
+        ? {
+            OR: [
+              { n_control: { contains: q, mode: 'insensitive' } },
+              { t_codigo: { contains: q, mode: 'insensitive' } },
+              { atendido_por_nombre: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {},
+    ],
   };
 
   if (!isAdmin && empleadoId) {
     where.AND.push({
       planificaciones: {
         planificacion_empleados: {
-          some: {
-            empleado_id: empleadoId
-          }
-        }
-      }
+          some: { empleado_id: empleadoId },
+        },
+      },
     });
   }
+
+  return where;
+}
+
+export const getInspecciones = async (req, res) => {
+  const tenantPrisma = req.db;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const where = buildInspeccionesWhere(req);
 
   const [inspecciones, totalCount] = await Promise.all([
     tenantPrisma.inspecciones.findMany({
@@ -80,8 +159,7 @@ export const getInspeccionById = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
 
-  const permisos = req.user?.currentInstance?.permisos;
-  const isAdmin = permisos?.all?.includes('*') || req.user?.currentInstance?.rol?.toLowerCase() === 'administrador';
+  const isAdmin = isAdminUser(req);
   const empleadoId = req.user?.currentInstance?.empleado_id;
 
   const inspeccion = await tenantPrisma.inspecciones.findUnique({
@@ -161,13 +239,22 @@ export const createInspeccion = async (req, res) => {
     atendido_por_cedula, atendido_por_email, atendido_por_tlf, insp_utm_norte,
     insp_utm_este, insp_utm_zona, google_maps_url, aspectos_constatados,
     medidas_ordenadas, posee_certificado, vigencia_dias, status, planificacion_id,
-    finalidades, insumos_consumidos
+    finalidades, insumos_consumidos, areas_inspeccion
   } = req.body;
 
   const empleado_id = req.user?.currentInstance?.empleado_id || null;
 
+  if (!planificacion_id) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'planificacion_id es requerido',
+    });
+  }
+
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
+      await requireInspectorEnPlanificacion(tx, req, planificacion_id);
+
       const codigos = await codigosService.resolverCodigosInspeccion(tx, {
         planificacionId: planificacion_id,
         fechaInspeccion: fecha_inspeccion,
@@ -180,7 +267,7 @@ export const createInspeccion = async (req, res) => {
       let photoUrls = [];
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file, index) =>
-          storageService.uploadImage(file.buffer, `${finalNControl}-foto-${index}`, 'inspecciones')
+          imageService.uploadInspectionPhoto(file.buffer, `${finalNControl}-foto-${index}`)
         );
         photoUrls = await Promise.all(uploadPromises);
       }
@@ -194,7 +281,7 @@ export const createInspeccion = async (req, res) => {
           n_control: finalNControl,
           t_codigo: finalTCodigo,
           fecha_inspeccion: new Date(fecha_inspeccion),
-          hora_inspeccion: hora_inspeccion ? new Date(`1970-01-01T${hora_inspeccion}`) : null,
+          hora_inspeccion: parseHoraInspeccion(hora_inspeccion),
           atendido_por_nombre,
           atendido_por_cedula,
           atendido_por_email,
@@ -207,6 +294,7 @@ export const createInspeccion = async (req, res) => {
           medidas_ordenadas,
           posee_certificado,
           vigencia_dias: Number(vigencia_dias) || 30,
+          areas_inspeccion: parseAreasBody(areas_inspeccion) ?? [],
           status: status || 'PENDIENTE',
           planificacion_id,
           finalidad_inspeccion: finalidadesList.length > 0 ? {
@@ -300,10 +388,9 @@ export const createInspeccion = async (req, res) => {
 export const updateInspeccion = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const { finalidades, estado_abrev, ...data } = req.body;
+  const { finalidades, estado_abrev, fotos_eliminadas, areas_inspeccion, ...data } = req.body;
 
-  const permisos = req.user?.currentInstance?.permisos;
-  const isAdmin = permisos?.all?.includes('*') || req.user?.currentInstance?.rol?.toLowerCase() === 'administrador';
+  const isAdmin = isAdminUser(req);
   const empleadoId = req.user?.currentInstance?.empleado_id;
 
   const existing = await tenantPrisma.inspecciones.findUnique({
@@ -334,16 +421,42 @@ export const updateInspeccion = async (req, res) => {
   let newPhotoUrls = [];
   if (req.files && req.files.length > 0) {
     const uploadPromises = req.files.map((file, index) =>
-      storageService.uploadImage(file.buffer, `${existing.n_control}-extra-${Date.now()}-${index}`, 'inspecciones')
+      imageService.uploadInspectionPhoto(
+        file.buffer,
+        `${existing.n_control}-extra-${Date.now()}-${index}`
+      )
     );
     newPhotoUrls = await Promise.all(uploadPromises);
   }
 
   if (data.fecha_inspeccion) data.fecha_inspeccion = new Date(data.fecha_inspeccion);
-  if (data.hora_inspeccion) data.hora_inspeccion = new Date(`1970-01-01T${data.hora_inspeccion}`);
+  if (data.hora_inspeccion) data.hora_inspeccion = parseHoraInspeccion(data.hora_inspeccion);
+
+  const fotoIdsToDelete = fotos_eliminadas
+    ? (Array.isArray(fotos_eliminadas) ? fotos_eliminadas : JSON.parse(fotos_eliminadas))
+        .map(Number)
+        .filter((id) => Number.isFinite(id))
+    : [];
 
   const response = await tenantPrisma.$transaction(async (tx) => {
+    if (fotoIdsToDelete.length > 0) {
+      const fotosToRemove = existing.inspeccion_fotos.filter((f) => fotoIdsToDelete.includes(f.id));
+      for (const foto of fotosToRemove) {
+        await storageService.deleteFile(foto.imagen);
+      }
+      await tx.inspeccion_fotos.deleteMany({
+        where: {
+          id: { in: fotoIdsToDelete },
+          inspeccion_id: Number(id),
+        },
+      });
+    }
+
     const updatePayload = { ...data };
+    const areasParsed = parseAreasBody(areas_inspeccion);
+    if (areasParsed !== undefined) {
+      updatePayload.areas_inspeccion = areasParsed;
+    }
 
     if (
       codigosService.debenRegenerarCodigos(
@@ -432,8 +545,7 @@ export const deleteInspeccion = async (req, res) => {
   const { id } = req.params;
   const empleado_id = req.user?.currentInstance?.empleado_id || null;
 
-  const permisos = req.user?.currentInstance?.permisos;
-  const isAdmin = permisos?.all?.includes('*') || req.user?.currentInstance?.rol?.toLowerCase() === 'administrador';
+  const isAdmin = isAdminUser(req);
 
   const toDelete = await tenantPrisma.inspecciones.findUnique({
     where: { id: Number(id) },
@@ -495,5 +607,125 @@ export const deleteInspeccion = async (req, res) => {
     res.status(200).json({ status: 'success', message: 'Inspecci?n eliminada y stock restaurado' });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+const INSPECCIONES_EXPORT_COLUMNS = [
+  { header: 'N° Control', key: 'n_control', width: 28 },
+  { header: 'Código Formulario', key: 't_codigo', width: 18 },
+  { header: 'Fecha', key: 'fecha', width: 14 },
+  { header: 'Hora', key: 'hora', width: 10 },
+  { header: 'Estatus', key: 'status', width: 16 },
+  { header: 'Planificación', key: 'planificacion', width: 16 },
+  { header: 'Solicitud', key: 'solicitud', width: 16 },
+  { header: 'Productor', key: 'productor', width: 28 },
+  { header: 'Predio', key: 'predio', width: 28 },
+  { header: 'Código INSAI', key: 'codigo_insai', width: 16 },
+  { header: 'Persona atendida', key: 'atendido', width: 24 },
+  { header: 'UTM N/E/Zona', key: 'utm', width: 22 },
+  { header: 'Finalidades', key: 'finalidades', width: 36 },
+  { header: 'Cant. fotos', key: 'fotos', width: 12 },
+];
+
+async function fetchInspeccionesExportData(tenantPrisma, where) {
+  const inspecciones = await tenantPrisma.inspecciones.findMany({
+    where,
+    orderBy: { fecha_inspeccion: 'desc' },
+    include: {
+      planificaciones: {
+        include: {
+          solicitudes: {
+            include: {
+              clientes: { select: { nombre: true } },
+              propiedades: { select: { nombre: true, codigo_insai: true } },
+            },
+          },
+        },
+      },
+      finalidad_inspeccion: { include: { finalidad: { select: { nombre: true } } } },
+      inspeccion_fotos: { select: { id: true } },
+    },
+  });
+
+  return inspecciones.map((i) => {
+    const plan = i.planificaciones;
+    const solic = plan?.solicitudes;
+    return {
+      n_control: i.n_control,
+      t_codigo: i.t_codigo || '10-00-M00-P00-F01',
+      fecha: i.fecha_inspeccion ? new Date(i.fecha_inspeccion).toLocaleDateString('es-VE') : 'N/A',
+      hora: i.hora_inspeccion ? formatHoraInspeccion(i.hora_inspeccion) : 'N/A',
+      status: i.status || 'N/A',
+      planificacion: plan?.codigo || 'N/A',
+      solicitud: solic?.codigo || 'N/A',
+      productor: solic?.clientes?.nombre || 'N/A',
+      predio: solic?.propiedades?.nombre || 'N/A',
+      codigo_insai: solic?.propiedades?.codigo_insai || 'N/A',
+      atendido: i.atendido_por_nombre || 'No especificado',
+      utm: `${i.insp_utm_norte ?? ''} / ${i.insp_utm_este ?? ''} / ${i.insp_utm_zona ?? ''}`,
+      finalidades:
+        i.finalidad_inspeccion?.map((f) => f.finalidad?.nombre).filter(Boolean).join(', ') || 'N/A',
+      fotos: i.inspeccion_fotos?.length ?? 0,
+    };
+  });
+}
+
+export const exportInspecciones = async (req, res) => {
+  const tenantPrisma = req.db;
+  const where = buildInspeccionesWhere(req);
+  const data = await fetchInspeccionesExportData(tenantPrisma, where);
+
+  const buffer = await excelService.generate({
+    title: 'Reporte de Inspecciones de Campo - INSAI',
+    columns: INSPECCIONES_EXPORT_COLUMNS,
+    data,
+    sheetName: 'Inspecciones',
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_inspecciones.xlsx');
+  res.send(buffer);
+};
+
+export const exportInspeccionesPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const where = buildInspeccionesWhere(req);
+  const data = await fetchInspeccionesExportData(tenantPrisma, where);
+
+  const buffer = await pdfService.generateTable({
+    title: 'Reporte de Inspecciones de Campo - INSAI',
+    columns: INSPECCIONES_EXPORT_COLUMNS,
+    data,
+    orientation: 'landscape',
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_inspecciones.pdf');
+  res.send(buffer);
+};
+
+export const getInspeccionReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  const inspeccion = await tenantPrisma.inspecciones.findUnique({
+    where: { id: Number(id) },
+    include: INSPECCION_REPORT_INCLUDE,
+  });
+
+  if (!inspeccion) {
+    return res.status(404).json({ status: 'error', message: 'Inspecci?n no encontrada' });
+  }
+
+  if (!canAccessInspeccion(inspeccion, req)) {
+    return res.status(403).json({ status: 'error', message: 'Acceso denegado a esta inspecci?n.' });
+  }
+
+  try {
+    const reporte = await inspeccionReporteService.buildInspeccionReporte(inspeccion);
+    res.status(200).json({ status: 'success', data: reporte });
+  } catch (error) {
+    console.error('Error preparando reporte de inspecci?n:', error);
+    res.status(500).json({ status: 'error', message: 'No se pudo preparar el acta' });
   }
 };
