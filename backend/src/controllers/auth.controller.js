@@ -3,6 +3,13 @@ import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/token.js';
 import bitacoraService from '../services/bitacora.service.js';
 
+const TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 1000 * 60 * 60 * 8,
+};
+
 /**
  * @param {Object} rolPermisos
  * @param {Object|null} customPermisos
@@ -28,6 +35,50 @@ const mergePermisos = (rolPermisos, customPermisos) => {
 
 export const getInstances = async (req, res) => {
   try {
+    const { email } = req.query;
+
+    if (email) {
+      const normalizedEmail = String(email).trim();
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+
+      if (!emailValid) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email inválido',
+        });
+      }
+
+      const usuario = await masterPrisma.usuarios.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          status: true,
+          usuario_instancia: {
+            where: { instancias: { status: true } },
+            select: {
+              instancias: {
+                select: {
+                  id: true,
+                  nombre_mostrable: true,
+                  db_name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!usuario?.status) {
+        return res.status(200).json({ status: 'success', data: [] });
+      }
+
+      const instancias = usuario.usuario_instancia.map((ui) => ui.instancias);
+
+      return res.status(200).json({
+        status: 'success',
+        data: instancias,
+      });
+    }
+
     const instancias = await masterPrisma.instancias.findMany({
       where: { status: true },
       select: {
@@ -118,12 +169,7 @@ export const login = async (req, res) => {
     },
   });
 
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 8, // 8 horas
-  });
+  res.cookie('token', token, TOKEN_COOKIE_OPTIONS);
 
   bitacoraService.registrar({
     manualUser: {
@@ -195,7 +241,7 @@ export const logout = (req, res) => {
     });
   }
 
-  res.clearCookie('token');
+  res.clearCookie('token', TOKEN_COOKIE_OPTIONS);
   res.status(200).json({
     status: 'success',
     message: 'Sesión cerrada exitosamente',

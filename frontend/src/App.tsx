@@ -3,6 +3,8 @@ import Layout from './components/Layout';
 import Home from './pages/home/Home';
 // import Cargos from './pages/cargos/Cargos';
 import Roles from './pages/roles/Roles';
+import Usuarios from './pages/usuarios/Usuarios';
+import Instancias from './pages/instancias/Instancias';
 import BitacoraPage from './pages/bitacora/BitacoraPage';
 import Cultivos from './pages/cultivos/Cultivos';
 import Animales from './pages/animales/Animales';
@@ -23,6 +25,7 @@ import Inspecciones from './pages/inspecciones/Inspecciones';
 
 import { ProtectedRoute } from './components/auth/protected-route';
 import { PublicRoute } from './components/auth/public-route';
+import { PermissionRoute } from './components/auth/permission-route';
 import Error from './pages/error/Error';
 
 import { Toaster } from 'sonner';
@@ -52,6 +55,12 @@ function App() {
               <Route index element={<Home />} />
               {/* <Route path='cargos' element={<Cargos />} /> */}
               <Route path='roles' element={<Roles />} />
+              <Route element={<PermissionRoute screen="usuarios" />}>
+                <Route path='usuarios' element={<Usuarios />} />
+              </Route>
+              <Route element={<PermissionRoute screen="instancias" />}>
+                <Route path='instancias' element={<Instancias />} />
+              </Route>
               <Route path='bitacora' element={<BitacoraPage />} />
               <Route path='cultivos' element={<Cultivos />} />
               <Route path='animales' element={<Animales />} />

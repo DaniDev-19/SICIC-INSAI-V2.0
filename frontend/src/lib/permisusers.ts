@@ -1,7 +1,9 @@
 export const PANTALLAS = [
     { key: 'home', label: 'Inicio / Dashboard', ACCIONES: ['see', 'export'] },
     { key: 'roles', label: 'Gestión de Roles', ACCIONES: ['see', 'create', 'edit', 'delete'] },
-    { key: 'user', label: 'Gestión de Usuarios', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
+    { key: 'usuarios', label: 'Usuarios del Sistema', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
+    { key: 'instancias', label: 'Instancias / Sedes', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
+    { key: 'user', label: 'Gestión de Usuarios (legacy)', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
     { key: 'inventario', label: 'Inventario', ACCIONES: ['see', 'create', 'edit', 'delete'] },
     { key: 'reportes', label: 'Reportes y Estadísticas', ACCIONES: ['see', 'export'] },
     { key: 'auditoria', label: 'Auditoría / Logs', ACCIONES: ['see', 'export', 'clear'] },

@@ -47,9 +47,12 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media-url';
+import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AREAS_INSPECCION_OPCIONES } from '@/reports/acta-inspeccion/types';
 import { toHoraInputValue } from '@/utils/inspeccion-time';
+import { buildEstadoSelectOptions, ESTADO_ABREV_FALLBACK } from '@/utils/estado-abrev';
 
 const STEPS = [
   { title: 'Planificación', description: 'Vincular visita programada' },
@@ -66,12 +69,6 @@ const STATUS_OPTIONS: { value: InspeccionStatus; label: string }[] = [
   { value: 'SEGUIMIENTO', label: 'Seguimiento' },
   { value: 'CUARENTENA', label: 'Cuarentena' },
   { value: 'NO_ATENDIDA', label: 'No atendida' },
-];
-
-const ESTADO_ABREV_OPCIONES = [
-  'AMA', 'ANZ', 'APU', 'ARA', 'BAR', 'BOL', 'VAL', 'COJ', 'DAM', 'DCT',
-  'FAL', 'GUA', 'LAR', 'MER', 'MIR', 'MON', 'NES', 'POR', 'SUC', 'TAC',
-  'TRU', 'VAR', 'YAR', 'ZUL',
 ];
 
 const OPCIONAL_DEFAULT = 'No especificado';
@@ -192,6 +189,7 @@ export function InspeccionModal({
   ]);
   const [estadoAbrev, setEstadoAbrev] = useState('');
   const [codigosPreview, setCodigosPreview] = useState<InspeccionCodigosPreview | null>(null);
+  const [codigosError, setCodigosError] = useState<string | null>(null);
   const [loadingCodigos, setLoadingCodigos] = useState(false);
   const [submitLocked, setSubmitLocked] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -286,23 +284,21 @@ export function InspeccionModal({
   };
 
   const opcionesEstado = useMemo(() => {
-    const fromApi = (estadosRes?.data || []).map((e) => {
-      const codigo = String(e.codigo || '').trim().toUpperCase();
-      const abrev = /^[A-Z]{2,4}$/.test(codigo) ? codigo : codigo.slice(0, 3);
-      return { value: abrev, label: `${abrev} — ${e.nombre}` };
-    });
+    const fromApi = buildEstadoSelectOptions(estadosRes?.data || []);
     if (fromApi.length > 0) return fromApi;
-    return ESTADO_ABREV_OPCIONES.map((abrev) => ({ value: abrev, label: abrev }));
+    return ESTADO_ABREV_FALLBACK.map((abrev) => ({ value: abrev, label: abrev }));
   }, [estadosRes]);
 
   useEffect(() => {
     if (!isOpen || !planId || !fechaInsp) {
       setCodigosPreview(null);
+      setCodigosError(null);
       return;
     }
 
     let cancelled = false;
     setLoadingCodigos(true);
+    setCodigosError(null);
 
     inspectionsService
       .previewCodigos({
@@ -314,12 +310,19 @@ export function InspeccionModal({
       .then((res) => {
         if (cancelled) return;
         setCodigosPreview(res.data);
-        if (res.data.estado_abrev && !estadoAbrev) {
+        setCodigosError(null);
+        if (!estadoAbrev && res.data.estado_abrev) {
           setEstadoAbrev(res.data.estado_abrev);
         }
       })
-      .catch(() => {
-        if (!cancelled) setCodigosPreview(null);
+      .catch((err: { response?: { data?: { message?: string } } }) => {
+        if (cancelled) return;
+        setCodigosPreview(null);
+        const msg =
+          err.response?.data?.message ||
+          'No se pudieron calcular los códigos. Verifique planificación, fecha y sede.';
+        setCodigosError(msg);
+        toast.error(msg);
       })
       .finally(() => {
         if (!cancelled) setLoadingCodigos(false);
@@ -343,7 +346,7 @@ export function InspeccionModal({
       advanceTimerRef.current = null;
     }
     setEstadoAbrev(inspeccion?.n_control?.split('-')[0]?.toUpperCase() || '');
-    setCodigosPreview(null);
+    setCodigosError(null);
     const areasRaw = inspeccion?.areas_inspeccion;
     setAreasSeleccionadas(
       Array.isArray(areasRaw) ? areasRaw.filter((a): a is string => typeof a === 'string') : []
@@ -398,7 +401,8 @@ export function InspeccionModal({
       setFinalidadesRows([{ finalidad_id: 0, objetivo: '' }]);
       setAreasSeleccionadas([]);
     }
-  }, [isOpen, inspeccion, initialPlanificacionId, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset estable; no re-ejecutar al cambiar su referencia
+  }, [isOpen, inspeccion, initialPlanificacionId]);
 
   const toggleArea = (area: string) => {
     setAreasSeleccionadas((prev) =>
@@ -509,7 +513,7 @@ export function InspeccionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto border-none shadow-2xl glass-effect custom-scrollbar">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-y-auto border-none shadow-2xl glass-effect custom-scrollbar p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -535,10 +539,7 @@ export function InspeccionModal({
                 <FieldLabel required>Planificación asociada</FieldLabel>
                 <Select
                   value={watch('planificacion_id')}
-                  onValueChange={(v) => {
-                    setValue('planificacion_id', v, { shouldValidate: true });
-                    if (!isEditing) setEstadoAbrev('');
-                  }}
+                  onValueChange={(v) => setValue('planificacion_id', v, { shouldValidate: true })}
                   disabled={isEditing || loadingPlans}
                 >
                   <SelectTrigger className="h-12 rounded-xl">
@@ -639,7 +640,7 @@ export function InspeccionModal({
                     <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue placeholder="Ej. YAR, VAL, MIR..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-72 overflow-y-auto">
                       {opcionesEstado.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value} className="cursor-pointer">
                           {opt.label}
@@ -652,20 +653,32 @@ export function InspeccionModal({
                   </p>
                 </div>
 
+                {!planId || !fechaInsp ? (
+                  <p className="text-xs text-amber-600/90 font-medium rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+                    Seleccione la planificación y la fecha de inspección para calcular los códigos automáticos.
+                  </p>
+                ) : null}
+
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                  <div className="p-3 rounded-xl bg-background/80 border border-border/50">
+                  <div className="p-3 rounded-xl bg-background/80 border border-border/50 min-w-0">
                     <span className="text-[10px] font-black uppercase text-muted-foreground block mb-1">
                       Código territorial (predio)
                     </span>
                     {loadingCodigos ? (
                       <Loader2 className="size-4 animate-spin text-primary" />
                     ) : (
-                      <span className="font-mono font-bold text-foreground">
+                      <span className="font-mono font-bold text-foreground break-all">
                         {codigosPreview?.t_codigo || '—'}
                       </span>
                     )}
+                    {codigosPreview?.t_codigo && !/^E\d+-M\d+-P\d+-S\d+/i.test(codigosPreview.t_codigo) && (
+                      <p className="text-[10px] text-amber-600/90 mt-2 leading-relaxed">
+                        Para el formato territorial (E-M-P-S-PR-YYYYMM-0001), la propiedad debe tener
+                        ubicación con estado, municipio, parroquia y sector en su ficha.
+                      </p>
+                    )}
                   </div>
-                  <div className="p-3 rounded-xl bg-background/80 border border-border/50">
+                  <div className="p-3 rounded-xl bg-background/80 border border-border/50 min-w-0">
                     <span className="text-[10px] font-black uppercase text-muted-foreground block mb-1">
                       N° de control
                     </span>
@@ -678,6 +691,12 @@ export function InspeccionModal({
                     )}
                   </div>
                 </div>
+
+                {codigosError && !loadingCodigos && (
+                  <p className="text-xs text-rose-500 font-medium rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2">
+                    {codigosError}
+                  </p>
+                )}
 
                 {codigosPreview?.inspector?.nombre && (
                   <p className="text-xs text-muted-foreground">
@@ -872,9 +891,10 @@ export function InspeccionModal({
                         className="relative aspect-square rounded-xl overflow-hidden border border-border group"
                       >
                         <img
-                          src={foto.imagen}
+                          src={resolveMediaUrl(foto.imagen)}
                           alt="Evidencia registrada"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover bg-muted"
+                          loading="lazy"
                         />
                         <Button
                           type="button"

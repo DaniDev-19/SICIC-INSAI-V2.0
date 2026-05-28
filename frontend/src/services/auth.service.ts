@@ -16,8 +16,10 @@ export const authService = {
     return data;
   },
 
-  getInstances: async (): Promise<{ status: string; data: { id: number; nombre_mostrable: string; db_name: string }[] }> => {
-    const { data } = await apiClient.get('/auth/instances');
+  getInstances: async (email?: string): Promise<{ status: string; data: { id: number; nombre_mostrable: string; db_name: string }[] }> => {
+    const { data } = await apiClient.get('/auth/instances', {
+      params: email ? { email } : undefined,
+    });
     return data;
   },
 };

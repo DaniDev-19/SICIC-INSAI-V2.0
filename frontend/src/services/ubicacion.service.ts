@@ -9,7 +9,9 @@ export interface UbicacionBase {
 
 export const ubicacionService = {
   getEstados: async (): Promise<ApiResponse<UbicacionBase[]>> => {
-    const { data } = await apiClient.get<ApiResponse<UbicacionBase[]>>('/estados');
+    const { data } = await apiClient.get<ApiResponse<UbicacionBase[]>>('/estados', {
+      params: { page: 1, limit: 100 },
+    });
     return data;
   },
 

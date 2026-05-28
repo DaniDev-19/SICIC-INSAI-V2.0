@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { formatHoraInspeccion12h } from '@/utils/inspeccion-time';
 import type { InspeccionStatus } from '@/types/inspecciones';
 
@@ -55,18 +56,18 @@ export function InspeccionDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 border-b border-border/50 sticky top-0 backdrop-blur-md z-10">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="size-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
-                <Eye className="size-6" />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
+        <DialogHeader className="p-5 sm:p-8 pb-4 bg-muted/40 border-b border-border/50 sticky top-0 backdrop-blur-md z-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="size-11 sm:size-12 shrink-0 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                <Eye className="size-5 sm:size-6" />
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-black uppercase tracking-wide">
+              <div className="min-w-0">
+                <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-wide">
                   Ficha de Inspección
                 </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground mt-1">
+                <DialogDescription className="text-sm text-muted-foreground mt-1 truncate">
                   {inspeccion?.n_control || 'Cargando registro...'}
                 </DialogDescription>
               </div>
@@ -77,7 +78,7 @@ export function InspeccionDetailsModal({
                 size="sm"
                 disabled={pdfLoadingId !== null}
                 onClick={() => onPdf(inspeccionId)}
-                className="cursor-pointer shrink-0 gap-2 disabled:opacity-60"
+                className="cursor-pointer w-full sm:w-auto shrink-0 gap-2 disabled:opacity-60"
               >
                 {pdfLoadingId === inspeccionId ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -98,7 +99,7 @@ export function InspeccionDetailsModal({
         ) : !inspeccion ? (
           <p className="p-8 text-center text-muted-foreground">No se encontró la inspección.</p>
         ) : (
-          <div className="p-8 space-y-8">
+          <div className="p-5 sm:p-8 space-y-6 sm:space-y-8">
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={cn(
@@ -196,12 +197,14 @@ export function InspeccionDetailsModal({
                   {inspeccion.finalidad_inspeccion.map((fi) => (
                     <li
                       key={fi.id}
-                      className="p-3 rounded-xl border border-border/50 bg-muted/20 text-sm"
+                      className="p-3 rounded-xl border border-primary/20 bg-primary/5 text-sm"
                     >
-                      <span className="font-bold">{fi.finalidad?.nombre || `Finalidad #${fi.finalidad_id}`}</span>
-                      {fi.objetivo && (
+                      <span className="font-bold text-foreground">
+                        {fi.finalidad?.nombre || `Finalidad #${fi.finalidad_id}`}
+                      </span>
+                      {fi.objetivo ? (
                         <p className="text-muted-foreground mt-1">{fi.objetivo}</p>
-                      )}
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -218,12 +221,20 @@ export function InspeccionDetailsModal({
                   {inspeccion.inspeccion_fotos.map((foto) => (
                     <a
                       key={foto.id}
-                      href={foto.imagen}
+                      href={resolveMediaUrl(foto.imagen)}
                       target="_blank"
                       rel="noreferrer"
                       className="aspect-square rounded-xl overflow-hidden border border-border hover:ring-2 ring-primary/30 transition-all"
                     >
-                      <img src={foto.imagen} alt="Evidencia" className="w-full h-full object-cover" />
+                      <img
+                        src={resolveMediaUrl(foto.imagen)}
+                        alt="Evidencia"
+                        className="w-full h-full object-cover bg-muted"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </a>
                   ))}
                 </div>

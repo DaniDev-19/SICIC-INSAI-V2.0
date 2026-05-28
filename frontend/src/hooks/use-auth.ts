@@ -11,8 +11,7 @@ export function useAuth() {
   const {
     data: authData,
     isLoading,
-    isFetched,
-    error: authError
+    error: authError,
   } = useQuery({
     queryKey: ['auth-user'],
     queryFn: async () => {
@@ -28,22 +27,8 @@ export function useAuth() {
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const { 
-    data: instancesData, 
-    isLoading: isLoadingInstances,
-    error: instancesError 
-  } = useQuery({
-    queryKey: ['auth-instances'],
-    queryFn: async () => {
-      const response = await authService.getInstances();
-      return response.data;
-    },
-    staleTime: 1000 * 60 * 30,
-    retry: 1,
-  });
-
   useEffect(() => {
-    const error = (instancesError || authError) as AxiosError | null;
+    const error = authError as AxiosError | null;
     if (error?.response?.status === 429) {
       toast.warning('Acceso Temporalmente Limitado', {
         description: 'Demasiadas peticiones. Se ha relajado el límite, por favor espera unos segundos.',
@@ -51,7 +36,7 @@ export function useAuth() {
     } else if (error && !error.response) {
       toast.error('Fallo de conexión con el servidor maestro');
     }
-  }, [instancesError, authError]);
+  }, [authError]);
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
@@ -61,21 +46,22 @@ export function useAuth() {
     },
   });
 
+  const clearSession = () => {
+    queryClient.setQueryData(['auth-user'], null);
+    queryClient.removeQueries();
+    window.location.href = '/login';
+  };
+
   const logoutMutation = useMutation({
     mutationFn: authService.logout,
-    onSuccess: () => {
-      queryClient.setQueryData(['auth-user'], null);
-      queryClient.removeQueries();
-      window.location.href = '/login';
-    },
+    onSettled: clearSession,
   });
 
   return {
     user: authData?.data?.user as User | null,
     currentInstance: authData?.data?.currentInstance as Instance | null,
-    instances: (instancesData || []) as { id: number; nombre_mostrable: string; db_name: string }[],
     isAuthenticated: !!authData?.data?.user,
-    isLoading: isLoading || (isLoadingInstances && !isFetched),
+    isLoading,
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     isLoggingIn: loginMutation.isPending,

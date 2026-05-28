@@ -21,7 +21,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <Input
           ref={ref}
           className={cn(
-            "pr-9 transition-all bg-muted/30 border-none h-10 focus-visible:ring-primary/20",
+            "pr-11 transition-all bg-muted/30 border-none h-10 sm:h-11 focus-visible:ring-primary/20",
             showIcon ? "pl-9" : "pl-3",
             className
           )}
@@ -31,9 +31,10 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted p-0.5"
+            aria-label="Limpiar búsqueda"
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
           >
-            <X className="h-full w-full" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>

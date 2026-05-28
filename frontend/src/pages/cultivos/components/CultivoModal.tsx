@@ -278,7 +278,7 @@ export function CultivoModal({
                   )}>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-[250px] min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border max-h-[250px] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">

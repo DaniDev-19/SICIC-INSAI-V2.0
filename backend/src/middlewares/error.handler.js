@@ -68,6 +68,25 @@ export const errorHandler = (err, req, res, _next) => {
     });
   }
 
+  if (err.name === 'MulterError') {
+    const multerMessages = {
+      LIMIT_FILE_SIZE: 'Cada imagen debe pesar menos de 15 MB',
+      LIMIT_FILE_COUNT: 'Máximo 10 imágenes por envío',
+      LIMIT_UNEXPECTED_FILE: 'Campo de archivo no válido',
+    };
+    return res.status(400).json({
+      status: 'error',
+      message: multerMessages[err.code] || 'Error al subir archivos',
+    });
+  }
+
+  if (err.message === 'Solo se permiten archivos de imagen') {
+    return res.status(400).json({
+      status: 'error',
+      message: err.message,
+    });
+  }
+
   const statusCode = err.status || 500;
   const message = err.message || 'Ocurrió un error interno en el servidor';
 

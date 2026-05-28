@@ -99,7 +99,19 @@ export const getPlanificacionById = async (req, res) => {
       vehiculos: true,
       planificacion_empleados: {
         include: {
-          empleados: true
+          empleados: {
+            select: {
+              id: true,
+              cedula: true,
+              nombre: true,
+              apellido: true,
+              telefono: true,
+              email: true,
+              status_laboral: true,
+              cargo_id: true,
+              oficina_id: true
+            }
+          }
         }
       },
       inspecciones: true,

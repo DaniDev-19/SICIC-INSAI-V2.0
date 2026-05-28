@@ -218,7 +218,7 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
                 </span>
 
                 {dayPlans.length > 0 && (
-                  <span className="text-[9px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 size-4.5 rounded-full flex items-center justify-center">
+                  <span className="text-[11px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 size-[18px] rounded-full flex items-center justify-center">
                     {dayPlans.length}
                   </span>
                 )}
@@ -264,30 +264,30 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
       </div>
 
       <Dialog open={!!selectedDate} onOpenChange={(open) => !open && setSelectedDate(null)}>
-        <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-          <DialogHeader className="p-6 bg-muted/40 border-b border-border/50 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
-                <CalendarIcon className="size-5" />
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(90vh,52rem)] overflow-hidden border-none shadow-2xl glass-effect p-0 custom-scrollbar flex flex-col">
+          <DialogHeader className="shrink-0 p-6 sm:p-8 bg-muted/40 border-b border-border/50 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <div className="size-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
+                <CalendarIcon className="size-6" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold uppercase tracking-wide">
+                <DialogTitle className="text-xl sm:text-2xl font-bold uppercase tracking-wide">
                   Inspecciones del Día
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground capitalize mt-0.5 font-medium">
+                <DialogDescription className="text-sm text-muted-foreground capitalize mt-1 font-medium">
                   {formatSelectedDate(selectedDate)}
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="p-6 space-y-4">
+          <div className="flex min-h-0 flex-1 flex-col p-6 sm:p-8 space-y-5">
             {selectedDatePlans.length > 0 ? (
-              <div className="space-y-3">
-                <p className="text-xs text-muted-foreground font-semibold">
+              <div className="flex min-h-0 flex-1 flex-col gap-4">
+                <p className="text-sm text-muted-foreground font-semibold">
                   Se encontraron <span className="text-indigo-400 font-extrabold">{selectedDatePlans.length}</span> visitas planificadas para esta fecha:
                 </p>
-                <div className="space-y-2.5 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1 max-h-[min(58vh,28rem)]">
                   {selectedDatePlans.map((plan) => (
                     <div
                       key={plan.id}
@@ -295,46 +295,51 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
                         setSelectedDate(null);
                         onViewDetails(plan.id);
                       }}
-                      className="group cursor-pointer p-4 bg-muted/20 border border-border/40 rounded-xl hover:border-primary/40 hover:bg-primary/1 transition-all flex items-center justify-between gap-4"
+                      className="group cursor-pointer p-5 sm:p-6 bg-muted/20 border border-border/40 rounded-xl hover:border-primary/40 hover:bg-primary/5 transition-all flex items-start sm:items-center justify-between gap-4 sm:gap-6"
                     >
-                      <div className="space-y-1 flex-1 min-w-0">
+                      <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                          <span className="text-[10px] sm:text-xs font-black uppercase text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded border border-indigo-500/20">
                             {plan.codigo}
                           </span>
-                          <span className={cn("text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase", getPriorityTextClass(plan.prioridad))}>
+                          <span className={cn("text-[10px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded border uppercase", getPriorityTextClass(plan.prioridad))}>
                             {plan.prioridad}
                           </span>
-                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                          <span className="text-[10px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded border uppercase bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                             {plan.status}
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold text-foreground truncate mt-1 group-hover:text-primary transition-colors">
+                        <h4 className="text-base sm:text-lg font-bold text-foreground leading-snug line-clamp-2 mt-0.5 group-hover:text-primary transition-colors">
                           {plan.actividad}
                         </h4>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium pt-1">
-                          <span className="flex items-center gap-1">
-                            <Clock className="size-3.5" />
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 text-sm text-muted-foreground font-medium pt-0.5">
+                          <span className="flex items-center gap-1.5 shrink-0">
+                            <Clock className="size-4" />
                             {plan.hora_inicio ? formatTime(plan.hora_inicio) : 'Sin hora'}
                           </span>
-                          <span>•</span>
-                          <span>Finca: <span className="font-semibold text-foreground/80">{plan.solicitudes?.propiedades?.nombre || 'General'}</span></span>
+                          <span className="hidden sm:inline text-border">•</span>
+                          <span className="min-w-0">
+                            Finca:{' '}
+                            <span className="font-semibold text-foreground/80 break-words">
+                              {plan.solicitudes?.propiedades?.nombre || 'General'}
+                            </span>
+                          </span>
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 rounded-lg group-hover:bg-primary/10 group-hover:text-primary transition-all cursor-pointer"
+                        className="size-10 shrink-0 rounded-lg group-hover:bg-primary/10 group-hover:text-primary transition-all cursor-pointer"
                         title="Ver detalles"
                       >
-                        <Eye className="size-4" />
+                        <Eye className="size-5" />
                       </Button>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 gap-3 text-center border border-dashed border-border rounded-2xl bg-muted/5">
+              <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-4 text-center border border-dashed border-border rounded-2xl bg-muted/5">
                 <AlertTriangle className="size-10 text-muted-foreground/60" />
                 <div>
                   <h4 className="text-sm font-bold text-foreground">No hay visitas planificadas</h4>
@@ -345,11 +350,11 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
               </div>
             )}
 
-            <div className="flex items-center justify-end pt-4 border-t border-border/50">
+            <div className="flex shrink-0 items-center justify-end pt-4 border-t border-border/50">
               <Button
                 onClick={() => setSelectedDate(null)}
                 variant="ghost"
-                className="text-xs font-bold cursor-pointer"
+                className="h-10 px-5 text-sm font-bold cursor-pointer"
               >
                 Cerrar
               </Button>

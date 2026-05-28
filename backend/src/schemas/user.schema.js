@@ -5,8 +5,14 @@ export const createUserSchema = z.object({
     username: z.string({ required_error: 'El nombre de usuario es requerido' }).min(3),
     email: z.string({ required_error: 'El email es requerido' }).email('Email inválido'),
     password: z.string({ required_error: 'La contraseña es requerida' }).min(6, 'Mínimo 6 caracteres'),
-    status: z.boolean().optional().default(true)
-  })
+    status: z.boolean().optional().default(true),
+    initial_assignment: z
+      .object({
+        instancia_id: z.coerce.number({ required_error: 'La instancia es requerida' }),
+        rol_id: z.coerce.number({ required_error: 'El rol es requerido' }),
+      })
+      .optional(),
+  }),
 });
 
 export const updateUserSchema = z.object({
@@ -14,14 +20,20 @@ export const updateUserSchema = z.object({
     username: z.string().min(3).optional(),
     email: z.string().email().optional(),
     password: z.string().min(6).optional(),
-    status: z.boolean().optional()
-  })
+    status: z.boolean().optional(),
+  }),
+});
+
+export const updateUserStatusSchema = z.object({
+  body: z.object({
+    status: z.boolean(),
+  }),
 });
 
 export const assignInstanceSchema = z.object({
   body: z.object({
-    instancia_id: z.number({ required_error: 'El ID de instancia es requerido' }),
-    rol_id: z.number({ required_error: 'El ID de rol es requerido' }),
-    permisos_personalizados: z.record(z.any()).optional()
-  })
+    instancia_id: z.coerce.number({ required_error: 'La instancia es requerida' }),
+    rol_id: z.coerce.number({ required_error: 'El rol es requerido' }),
+    permisos_personalizados: z.record(z.any()).optional().nullable(),
+  }),
 });

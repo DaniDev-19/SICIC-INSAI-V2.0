@@ -38,15 +38,29 @@ function val(value, fallback = '') {
   return s || fallback;
 }
 
+function normalizeAreaLabel(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 function parseAreas(raw) {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter(Boolean);
+  if (Array.isArray(raw)) return raw.map((a) => String(a).trim()).filter(Boolean);
   try {
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    return Array.isArray(parsed) ? parsed.map((a) => String(a).trim()).filter(Boolean) : [];
   } catch {
     return [];
   }
+}
+
+function isAreaMarcada(areaCatalogo, areasGuardadas) {
+  const normCatalogo = normalizeAreaLabel(areaCatalogo);
+  return areasGuardadas.some((guardada) => normalizeAreaLabel(guardada) === normCatalogo);
 }
 
 function inferAreasFromFinalidades(finalidades) {
@@ -63,35 +77,69 @@ function inferAreasFromFinalidades(finalidades) {
   return inferred;
 }
 
+function resolverOpcionFinalidadActa(fi) {
+  const texto = `${fi.finalidad?.nombre || ''} ${fi.objetivo || ''}`.toLowerCase();
+
+  if (texto.includes('epidemiol') || texto.includes('alerta epidemiol')) return 6;
+  if (texto.includes('fito') || texto.includes('vegetal') || texto.includes('plaga')) return 1;
+  if (
+    texto.includes('zoo') ||
+    texto.includes('animal') ||
+    texto.includes('brucelosis') ||
+    texto.includes('tuberculosis') ||
+    texto.includes('bioseguridad')
+  ) {
+    return 2;
+  }
+  if (texto.includes('agroecolog')) return 3;
+  if (texto.includes('moviliz') || texto.includes('export') || texto.includes('import')) return 4;
+  if (
+    texto.includes('manufactura') ||
+    texto.includes('bpm') ||
+    texto.includes('licencia') ||
+    texto.includes('permiso') ||
+    texto.includes('funcionamiento') ||
+    texto.includes('fiscaliz')
+  ) {
+    return 5;
+  }
+  return 6;
+}
+
 function mapFinalidadesActa(finalidades) {
-  return FINALIDADES_ACTA_OPCIONES.map((opcion) => {
-    let checked = false;
-    let detalle = '';
-    (finalidades || []).forEach((fi) => {
-      const nombre = (fi.finalidad?.nombre || '').toLowerCase();
-      const objetivo = val(fi.objetivo, val(fi.finalidad?.nombre));
-      if (opcion.id === 1 && (nombre.includes('fito') || nombre.includes('vegetal'))) {
-        checked = true;
-        detalle = objetivo;
-      } else if (opcion.id === 2 && (nombre.includes('zoo') || nombre.includes('animal'))) {
-        checked = true;
-        detalle = objetivo;
-      } else if (opcion.id === 3 && nombre.includes('agroecolog')) {
-        checked = true;
-        detalle = objetivo;
-      } else if (opcion.id === 4 && nombre.includes('moviliz')) {
-        checked = true;
-        detalle = objetivo;
-      } else if (opcion.id === 5 && (nombre.includes('manufactura') || nombre.includes('bpm'))) {
-        checked = true;
-        detalle = objetivo;
-      } else if (opcion.id === 6 && checked === false) {
-        checked = true;
-        detalle = objetivo || val(fi.finalidad?.nombre);
-      }
-    });
-    return { ...opcion, checked, detalle };
-  });
+  const result = FINALIDADES_ACTA_OPCIONES.map((opcion) => ({
+    ...opcion,
+    checked: false,
+    detalle: '',
+  }));
+
+  const filas = finalidades || [];
+  if (filas.length === 0) return result;
+
+  for (const fi of filas) {
+    const opcionId = resolverOpcionFinalidadActa(fi);
+    const opcion = result.find((o) => o.id === opcionId) || result.find((o) => o.id === 6);
+    if (!opcion) continue;
+
+    opcion.checked = true;
+    const texto = val(fi.objetivo, val(fi.finalidad?.nombre));
+    if (!texto) continue;
+    opcion.detalle = opcion.detalle ? `${opcion.detalle}; ${texto}` : texto;
+  }
+
+  const algunaMarcada = result.some((o) => o.checked);
+  if (!algunaMarcada && filas.length > 0) {
+    const otro = result.find((o) => o.id === 6);
+    if (otro) {
+      otro.checked = true;
+      otro.detalle = filas
+        .map((fi) => val(fi.objetivo, val(fi.finalidad?.nombre)))
+        .filter(Boolean)
+        .join('; ');
+    }
+  }
+
+  return result;
 }
 
 function formatFechaCorta(dateInput) {
@@ -187,7 +235,7 @@ export async function buildInspeccionReporte(inspeccion) {
     justificacion_legal: JUSTIFICACION_LEGAL,
     areas: AREAS_INSPECCION_OPCIONES.map((nombre) => ({
       nombre,
-      checked: areasMarcadas.includes(nombre),
+      checked: isAreaMarcada(nombre, areasMarcadas),
     })),
     servidores,
     propietario: {
@@ -217,6 +265,10 @@ export async function buildInspeccionReporte(inspeccion) {
       tipo: val(propiedad?.t_propiedad?.nombre),
     },
     finalidades: mapFinalidadesActa(inspeccion.finalidad_inspeccion),
+    finalidades_registradas: (inspeccion.finalidad_inspeccion || []).map((fi) => ({
+      nombre: val(fi.finalidad?.nombre),
+      objetivo: val(fi.objetivo),
+    })),
     aspectos_constatados: val(inspeccion.aspectos_constatados, 'sin novedad'),
     medidas_ordenadas: val(inspeccion.medidas_ordenadas, 'sin novedad'),
     fotos,
