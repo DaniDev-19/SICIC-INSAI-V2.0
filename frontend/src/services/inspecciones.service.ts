@@ -62,9 +62,7 @@ export const inspectionsService = {
     Object.entries(payload).forEach(([key, val]) => appendFormField(formData, key, val));
     fotos?.forEach((foto) => formData.append('fotos', foto));
 
-    const { data } = await apiClient.post<ApiResponse<Inspeccion>>('/inspecciones', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const { data } = await apiClient.post<ApiResponse<Inspeccion>>('/inspecciones', formData);
     return data;
   },
 
@@ -81,9 +79,7 @@ export const inspectionsService = {
     Object.entries(payload).forEach(([key, val]) => appendFormField(formData, key, val));
     fotos?.forEach((foto) => formData.append('fotos', foto));
 
-    const { data } = await apiClient.put<ApiResponse<Inspeccion>>(`/inspecciones/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const { data } = await apiClient.put<ApiResponse<Inspeccion>>(`/inspecciones/${id}`, formData);
     return data;
   },
 

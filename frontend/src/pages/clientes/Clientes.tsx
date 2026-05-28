@@ -81,7 +81,7 @@ const Clientes: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
-            <div className="w-50 lg:w-70">
+            <div className="w-full sm:w-[18rem] lg:w-[22rem]">
               <SearchInput
                 placeholder="Nombre, Cédula o RIF..."
                 value={search}

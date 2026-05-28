@@ -310,7 +310,7 @@ export function EmpleadoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[90vh] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[960px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[92vh] max-h-[92vh] flex flex-col">
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="bg-primary/5 p-6 border-b border-border/50 shrink-0">
             <DialogHeader>
@@ -324,9 +324,9 @@ export function EmpleadoModal({
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
             {/* Sección de Foto y Datos Básicos */}
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
               <div className="flex flex-col items-center gap-4 shrink-0">
                 <div
                   className="relative group cursor-pointer"
@@ -350,14 +350,14 @@ export function EmpleadoModal({
                     onChange={handleFotoChange}
                   />
                 </div>
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Foto de Perfil</Label>
+                <Label className="text-xs font-black uppercase tracking-wide text-muted-foreground">Foto de Perfil</Label>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 flex-1">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Cédula de Identidad <span className="text-rose-500">*</span></Label>
                   <Input {...register('cedula')} placeholder="V-12345678" className={cn("h-11 rounded-xl bg-background/50", errors.cedula && "border-rose-500/50 bg-rose-500/5")} />
-                  {errors.cedula && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.cedula.message as string}</p>}
+                  {errors.cedula && <p className="text-xs text-rose-500 font-bold uppercase tracking-wide pl-1 animate-in fade-in slide-in-from-left-1">{errors.cedula.message as string}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Estatus Laboral</Label>
@@ -380,12 +380,12 @@ export function EmpleadoModal({
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Nombres <span className="text-rose-500">*</span></Label>
                   <Input {...register('nombre')} placeholder="Juan Alberto" className={cn("h-11 rounded-xl bg-background/50", errors.nombre && "border-rose-500/50 bg-rose-500/5")} />
-                  {errors.nombre && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.nombre.message as string}</p>}
+                  {errors.nombre && <p className="text-xs text-rose-500 font-bold uppercase tracking-wide pl-1 animate-in fade-in slide-in-from-left-1">{errors.nombre.message as string}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Apellidos <span className="text-rose-500">*</span></Label>
                   <Input {...register('apellido')} placeholder="Pérez García" className={cn("h-11 rounded-xl bg-background/50", errors.apellido && "border-rose-500/50 bg-rose-500/5")} />
-                  {errors.apellido && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.apellido.message as string}</p>}
+                  {errors.apellido && <p className="text-xs text-rose-500 font-bold uppercase tracking-wide pl-1 animate-in fade-in slide-in-from-left-1">{errors.apellido.message as string}</p>}
                 </div>
               </div>
             </div>
@@ -404,7 +404,7 @@ export function EmpleadoModal({
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input {...register('email')} type="email" placeholder="correo@insai.gob.ve" className={cn("h-11 rounded-xl bg-background/50 pl-9", errors.email && "border-rose-500/50 bg-rose-500/5")} />
-                  {errors.email && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.email.message as string}</p>}
+                  {errors.email && <p className="text-xs text-rose-500 font-bold uppercase tracking-wide pl-1 animate-in fade-in slide-in-from-left-1">{errors.email.message as string}</p>}
                 </div>
               </div>
             </div>
@@ -419,10 +419,10 @@ export function EmpleadoModal({
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-foreground/80">Información Laboral</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                 {/* Departamento */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Departamento</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Departamento</Label>
                   {showNewDepto && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                       <Input
@@ -459,9 +459,9 @@ export function EmpleadoModal({
                       </Button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Select value={watch('departamento_id') || ''} onValueChange={(v) => setValue('departamento_id', v)}>
-                      <SelectTrigger className="h-10 rounded-xl bg-background/50 flex-1">
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50">
                         <SelectValue placeholder="Seleccione..." />
                       </SelectTrigger>
                       <SelectContent className="glass-effect rounded-xl border-border">
@@ -483,8 +483,8 @@ export function EmpleadoModal({
                 </div>
 
                 {/* Cargo */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cargo</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Cargo</Label>
                   {showNewCargo && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                       <Input
@@ -521,9 +521,9 @@ export function EmpleadoModal({
                       </Button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Select value={watch('cargo_id') || ''} onValueChange={(v) => setValue('cargo_id', v)}>
-                      <SelectTrigger className="h-10 rounded-xl bg-background/50 flex-1">
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50">
                         <SelectValue placeholder="Seleccione..." />
                       </SelectTrigger>
                       <SelectContent className="glass-effect rounded-xl border-border">
@@ -545,8 +545,8 @@ export function EmpleadoModal({
                 </div>
 
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Oficina / Sede</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Oficina / Sede</Label>
                   <Select value={watch('oficina_id') || ''} onValueChange={(v) => setValue('oficina_id', v)}>
                     <SelectTrigger className="w-full h-10 rounded-xl bg-background/50">
                       <SelectValue placeholder="Seleccione..." />
@@ -558,8 +558,8 @@ export function EmpleadoModal({
                 </div>
 
                 {/* Tipo Contrato */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Tipo Contrato</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Tipo Contrato</Label>
                   {showNewContrato && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                       <Input
@@ -596,9 +596,9 @@ export function EmpleadoModal({
                       </Button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Select value={watch('contrato_id') || ''} onValueChange={(v) => setValue('contrato_id', v)}>
-                      <SelectTrigger className="h-10 rounded-xl bg-background/50 flex-1">
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50">
                         <SelectValue placeholder="Seleccione..." />
                       </SelectTrigger>
                       <SelectContent className="glass-effect rounded-xl border-border">
@@ -620,8 +620,8 @@ export function EmpleadoModal({
                 </div>
 
                 {/* Profesión */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Profesión</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Profesión</Label>
                   {showNewProf && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                       <Input
@@ -658,9 +658,9 @@ export function EmpleadoModal({
                       </Button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Select value={watch('profesion_id') || ''} onValueChange={(v) => setValue('profesion_id', v)}>
-                      <SelectTrigger className="h-10 rounded-xl bg-background/50 flex-1">
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50">
                         <SelectValue placeholder="Seleccione..." />
                       </SelectTrigger>
                       <SelectContent className="glass-effect rounded-xl border-border">
@@ -680,8 +680,8 @@ export function EmpleadoModal({
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fecha Ingreso</Label>
+                <div className="min-w-0 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Fecha Ingreso</Label>
                   <Input type="date" {...register('fechas_ingreso')} className="h-10 rounded-xl bg-background/50" />
                 </div>
               </div>

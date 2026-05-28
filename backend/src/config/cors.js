@@ -3,15 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : [];
+
+const isLocalDevOrigin = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 const corsOptions = {
   origin: (origin, callback) => {
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const isAllowedOrigin = allowedOrigins.includes(origin);
+    const isAllowedOrigin = origin && allowedOrigins.includes(origin);
+    const isDevLocal = isDevelopment && origin && isLocalDevOrigin(origin);
 
-
-    if ((!origin && isDevelopment) || isAllowedOrigin) {
+    if ((!origin && isDevelopment) || isAllowedOrigin || isDevLocal) {
       callback(null, true);
     } else {
       callback(new Error('Acceso denegado por políticas de CORS'));

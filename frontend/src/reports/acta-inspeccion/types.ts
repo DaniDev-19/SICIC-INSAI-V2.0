@@ -35,6 +35,7 @@ export interface InspeccionReporteDto {
     tipo: string;
   };
   finalidades: { id: number; label: string; checked: boolean; detalle: string }[];
+  finalidades_registradas?: { nombre: string; objetivo: string }[];
   aspectos_constatados: string;
   medidas_ordenadas: string;
   fotos: { id: number; dataUrl: string }[];

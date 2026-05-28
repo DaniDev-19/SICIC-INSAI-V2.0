@@ -254,7 +254,7 @@ export function ProgramaModal({
                   <SelectTrigger className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm">
                     <SelectValue placeholder="Seleccione un tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px] min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-20">

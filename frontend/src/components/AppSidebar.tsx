@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
-import { toast } from "sonner"
 import { useNavigate, useLocation } from "react-router-dom"
 
 const navigationGroups = [
@@ -118,13 +117,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success("Sesión cerrada correctamente");
-    } catch {
-      toast.error("Error al cerrar sesión");
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -154,7 +148,7 @@ export function AppSidebar() {
 
           return (
             <SidebarGroup key={group.label} className="px-2">
-              <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 dark:text-muted-foreground/50 mb-2">
+              <SidebarGroupLabel className="px-4 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground/80 dark:text-muted-foreground/50 mb-2">
                 {group.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -168,8 +162,8 @@ export function AppSidebar() {
                         className="h-9 px-2 cursor-pointer transition-all duration-300 ease-in-out bg-transparent hover:bg-emerald-500/5 data-[active=true]:bg-transparent data-[active=true]:text-emerald-500 group"
                       >
                         <button onClick={() => navigate(item.url)} className="w-full flex items-center gap-3">
-                          <item.icon className="size-4.5 transition-transform duration-200 group-hover:scale-110" />
-                          <span className="font-medium tracking-tight text-[13px] group-data-[active=true]:font-bold">{item.title}</span>
+                          <item.icon className="size-4 transition-transform duration-200 group-hover:scale-110" />
+                          <span className="font-medium tracking-tight text-sm group-data-[active=true]:font-bold">{item.title}</span>
                           {location.pathname === item.url && (
                             <div className="ml-auto size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
                           )}
@@ -194,8 +188,8 @@ export function AppSidebar() {
               className="w-full justify-start gap-3 h-10 px-4 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-200 rounded-xl cursor-pointer group/logout active:bg-transparent"
               title="Cerrar Sesión"
             >
-              <LogOut className="size-4.5 transition-transform duration-200 group-hover/logout:-translate-x-1" style={{ color: '#f43f5e' }} />
-              <span className="font-bold tracking-tight text-[13px]" style={{ color: '#f43f5e' }}>Cerrar Sesión</span>
+              <LogOut className="size-4 transition-transform duration-200 group-hover/logout:-translate-x-1" style={{ color: '#f43f5e' }} />
+              <span className="font-bold tracking-tight text-sm" style={{ color: '#f43f5e' }}>Cerrar Sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -203,10 +197,10 @@ export function AppSidebar() {
         <div className="px-1 py-2 flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-emerald-500/50" />
-            <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">Sistema de información para el control de inspecciones de campo</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/50">Sistema de información para el control de inspecciones de campo</p>
           </div>
           <hr className="m-2" />
-          <p className="text-[10px] text-muted-foreground/30 font-medium pl-3.5">© 2026 todos los derechos reservados</p>
+          <p className="text-xs text-muted-foreground/40 font-medium pl-3.5">© 2026 todos los derechos reservados</p>
         </div>
       </SidebarFooter>
 

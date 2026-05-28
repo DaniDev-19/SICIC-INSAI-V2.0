@@ -42,3 +42,34 @@ export const protect = async (req, res, next) => {
     });
   }
 };
+
+export const optionalProtect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = verifyToken(token);
+
+    const usuario = await masterPrisma.usuarios.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, status: true },
+    });
+
+    if (usuario?.status) {
+      req.user = decoded;
+    }
+  } catch {
+    // sesión inválida o expirada: se limpia la cookie en logout
+  }
+
+  next();
+};

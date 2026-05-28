@@ -38,7 +38,7 @@ function LayoutContent() {
         <>
             <AppSidebar />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 transition-all bg-background gap-2">
+                <header className="flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-4 md:px-6 transition-all bg-background gap-2">
                     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                         <SidebarTrigger
                             className="-ml-1 cursor-pointer shrink-0"
@@ -50,7 +50,7 @@ function LayoutContent() {
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 shrink-0">
                         <GlobalSearch />
                         <HelpButton />
                         <ThemeToggle />

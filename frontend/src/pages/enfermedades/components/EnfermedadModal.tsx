@@ -155,7 +155,7 @@ export function EnfermedadModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-125 border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
@@ -261,7 +261,7 @@ export function EnfermedadModal({
                   )}>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border max-h-[15.625rem] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">

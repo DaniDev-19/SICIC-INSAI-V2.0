@@ -1,6 +1,7 @@
 import app from './app.js';
 import dotenv from 'dotenv';
 import { masterPrisma, getTenantPrisma } from './config/prisma.js';
+import { ensureAreasInspeccionColumn } from './utils/tenant-schema.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 4000;
@@ -33,6 +34,7 @@ app.listen(PORT, () => {
           try {
             const tenantPrisma = getTenantPrisma(inst.db_name.trim());
             await tenantPrisma.$connect();
+            await ensureAreasInspeccionColumn(tenantPrisma);
             console.table(`[OK] ENHORABUENA -> ${inst.nombre_mostrable} (${inst.db_name})`);
           } catch (tenantError) {
             console.error(

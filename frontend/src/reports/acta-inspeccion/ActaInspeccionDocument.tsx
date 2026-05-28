@@ -4,6 +4,9 @@ import {
   View,
   Text,
   Image,
+  Svg,
+  Rect,
+  Line,
   StyleSheet,
 } from '@react-pdf/renderer';
 import type { InspeccionReporteDto } from './types';
@@ -129,28 +132,29 @@ const styles = StyleSheet.create({
   checkRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 2,
   },
   checkItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     width: '48%',
-    marginBottom: 2,
+    marginBottom: 4,
+    paddingRight: 6,
   },
   checkItemFull: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 2,
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  checkBox: {
-    width: 8,
-    height: 8,
-    borderWidth: 1,
-    borderColor: '#000',
-    marginRight: 3,
-    textAlign: 'center',
-    fontSize: 6,
-    fontFamily: 'Helvetica-Bold',
+  checkBoxSvg: {
+    width: 11,
+    height: 11,
+    marginRight: 5,
+    marginTop: 1,
+  },
+  checkLabel: {
+    fontSize: 7,
+    flexGrow: 1,
+    flexShrink: 1,
   },
   linedBox: {
     borderWidth: 1,
@@ -214,6 +218,20 @@ const styles = StyleSheet.create({
   },
 });
 
+function PdfCheckbox({ checked }: { checked: boolean }) {
+  return (
+    <Svg width={11} height={11} viewBox="0 0 11 11" style={styles.checkBoxSvg}>
+      <Rect x={0.5} y={0.5} width={10} height={10} stroke="#000000" strokeWidth={1} fill="#ffffff" />
+      {checked ? (
+        <>
+          <Line x1={2.5} y1={2.5} x2={8.5} y2={8.5} stroke="#000000" strokeWidth={1.4} />
+          <Line x1={8.5} y1={2.5} x2={2.5} y2={8.5} stroke="#000000" strokeWidth={1.4} />
+        </>
+      ) : null}
+    </Svg>
+  );
+}
+
 function CheckItem({
   checked,
   label,
@@ -225,10 +243,8 @@ function CheckItem({
 }) {
   return (
     <View style={fullWidth ? styles.checkItemFull : styles.checkItem}>
-      <View style={styles.checkBox}>
-        <Text>{checked ? 'X' : ''}</Text>
-      </View>
-      <Text style={{ fontSize: 7, flex: 1 }}>{label}</Text>
+      <PdfCheckbox checked={checked} />
+      <Text style={styles.checkLabel}>{label}</Text>
     </View>
   );
 }
@@ -438,6 +454,14 @@ export function ActaInspeccionDocument({
               label={`${f.id}. ${f.label}${f.detalle && f.checked ? `: ${f.detalle}` : ''}`}
             />
           ))}
+          {(data.finalidades_registradas?.length ?? 0) > 0 && (
+            <Text style={{ fontSize: 8, marginTop: 6, color: '#333' }}>
+              Finalidades registradas en el sistema:{' '}
+              {data.finalidades_registradas
+                ?.map((f) => (f.objetivo ? `${f.nombre} (${f.objetivo})` : f.nombre))
+                .join('; ')}
+            </Text>
+          )}
         </View>
 
         <ActaFooter data={data} page={1} logoUrl={logoUrl} />

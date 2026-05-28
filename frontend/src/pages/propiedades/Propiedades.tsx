@@ -102,7 +102,7 @@ const Propiedades: React.FC = () => {
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <div className="w-50 lg:w-70">
+            <div className="w-full sm:w-[18rem] lg:w-[22rem]">
               <SearchInput
                 placeholder="Nombre o Código INSAI..."
                 value={search}

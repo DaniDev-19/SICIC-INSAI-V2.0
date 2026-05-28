@@ -60,6 +60,7 @@ const PLANIFICACION_CONTEXT_INCLUDE = {
     include: {
       propiedades: {
         include: {
+          t_propiedad: true,
           propiedad_ubicacion: {
             take: 1,
             include: {
@@ -135,45 +136,45 @@ export function resolverAbrevEstado(estado) {
 export function construirCodigoTerritorial(propiedad, opts = {}) {
   if (!propiedad) return DEFAULT_T_CODIGO;
 
+  const ubicacion = propiedad.propiedad_ubicacion?.[0];
+  const sector = ubicacion?.sectores;
+  if (sector?.parroquias?.municipios?.estados) {
+    const estado = sector.parroquias.municipios.estados;
+    const municipio = sector.parroquias.municipios;
+    const parroquia = sector.parroquias;
+
+    const e = prefijoCodigoTerritorial(estado.codigo, 'E');
+    const m = prefijoCodigoTerritorial(municipio.codigo, 'M');
+    const p = prefijoCodigoTerritorial(parroquia.codigo, 'P');
+    const s = prefijoCodigoTerritorial(sector.codigo, 'S');
+
+    const fecha = opts.fechaInspeccion ? new Date(opts.fechaInspeccion) : new Date();
+    const ym = Number.isNaN(fecha.getTime())
+      ? ''
+      : `${fecha.getUTCFullYear()}${String(fecha.getUTCMonth() + 1).padStart(2, '0')}`;
+
+    const tipoNombre = String(propiedad?.t_propiedad?.nombre || '').toLowerCase();
+    const tipoAbrev = tipoNombre.includes('establecimiento')
+      ? 'ES'
+      : tipoNombre.includes('empresa')
+        ? 'EM'
+        : 'PR';
+
+    const secuencia = String(opts.secuencia ?? '1').replace(/\D/g, '') || '1';
+
+    const partes = [e, m, p, s, tipoAbrev];
+    if (ym) partes.push(ym);
+    partes.push(secuencia.padStart(4, '0'));
+
+    return partes.join('-');
+  }
+
   const codigoGuardado = String(propiedad.codigo_insai || '').trim();
   if (/^E\d+-M\d+-P\d+-S\d+/i.test(codigoGuardado)) {
     return codigoGuardado;
   }
 
-  const ubicacion = propiedad.propiedad_ubicacion?.[0];
-  const sector = ubicacion?.sectores;
-  if (!sector?.parroquias?.municipios?.estados) {
-    return codigoGuardado || DEFAULT_T_CODIGO;
-  }
-
-  const estado = sector.parroquias.municipios.estados;
-  const municipio = sector.parroquias.municipios;
-  const parroquia = sector.parroquias;
-
-  const e = prefijoCodigoTerritorial(estado.codigo, 'E');
-  const m = prefijoCodigoTerritorial(municipio.codigo, 'M');
-  const p = prefijoCodigoTerritorial(parroquia.codigo, 'P');
-  const s = prefijoCodigoTerritorial(sector.codigo, 'S');
-
-  const fecha = opts.fechaInspeccion ? new Date(opts.fechaInspeccion) : new Date();
-  const ym = Number.isNaN(fecha.getTime())
-    ? ''
-    : `${fecha.getUTCFullYear()}${String(fecha.getUTCMonth() + 1).padStart(2, '0')}`;
-
-  const tipoNombre = String(propiedad?.t_propiedad?.nombre || '').toLowerCase();
-  const tipoAbrev = tipoNombre.includes('establecimiento')
-    ? 'ES'
-    : tipoNombre.includes('empresa')
-      ? 'EM'
-      : 'PR';
-
-  const secuencia = String(opts.secuencia ?? '1').replace(/\D/g, '') || '1';
-
-  const partes = [e, m, p, s, tipoAbrev];
-  if (ym) partes.push(ym);
-  partes.push(secuencia.padStart(4, '0'));
-
-  return partes.join('-');
+  return codigoGuardado || DEFAULT_T_CODIGO;
 }
 
 /** N° control oficial: YAR-V-18456789-04052026-01 */
@@ -183,7 +184,7 @@ export function formatNControlParaActa(inspeccion, planificacion) {
     return guardado.toUpperCase();
   }
 
-  const abrev = resolverAbrevDesdePlanificacion(planificacion, null) || 'YAR';
+  const abrev = resolverAbrevDesdePlanificacion(planificacion, null);
   const inspector = obtenerPrimerInspector(planificacion);
   const cedulaFmt = formatearCedulaParaControl(inspector?.cedula);
   const fechaStr = formatearFechaControl(inspeccion?.fecha_inspeccion);
@@ -211,16 +212,22 @@ function estadoDesdePrimerEmpleado(planificacion) {
   return residencia?.sectores?.parroquias?.municipios?.estados ?? null;
 }
 
+export function sugerirAbrevEstadoPlanificacion(planificacion) {
+  const dePropiedad = estadoDesdePropiedad(planificacion);
+  const deEmpleado = estadoDesdePrimerEmpleado(planificacion);
+  return {
+    propiedad: resolverAbrevEstado(dePropiedad),
+    empleado: resolverAbrevEstado(deEmpleado),
+  };
+}
+
 export function resolverAbrevDesdePlanificacion(planificacion, estadoAbrevManual) {
   const manual = String(estadoAbrevManual || '').trim().toUpperCase();
   if (manual && /^[A-Z]{2,4}$/.test(manual)) {
     return manual;
   }
-  const dePropiedad = estadoDesdePropiedad(planificacion);
-  if (dePropiedad) return resolverAbrevEstado(dePropiedad);
-  const deEmpleado = estadoDesdePrimerEmpleado(planificacion);
-  if (deEmpleado) return resolverAbrevEstado(deEmpleado);
-  return 'YAR';
+  const sugerencias = sugerirAbrevEstadoPlanificacion(planificacion);
+  return sugerencias.propiedad || sugerencias.empleado || null;
 }
 
 export function obtenerPrimerInspector(planificacion) {
@@ -282,6 +289,13 @@ export async function generarNumeroControl(tx, {
   }
 
   const abrev = resolverAbrevDesdePlanificacion(planificacion, estadoAbrev);
+  if (!abrev) {
+    const error = new Error(
+      'Indique la abreviatura del estado (sede) para generar el número de control'
+    );
+    error.statusCode = 400;
+    throw error;
+  }
   const prefijo = construirPrefijoControl(abrev, cedula, fechaInspeccion);
   if (!prefijo) {
     const error = new Error('No se pudo construir el prefijo del número de control');
@@ -411,11 +425,14 @@ export function debenRegenerarCodigos(body, existing) {
 }
 
 export default {
+  PLANIFICACION_CONTEXT_INCLUDE,
   resolverCodigosInspeccion,
   resolverCodigoTerritorial,
   generarNumeroControl,
   construirCodigoTerritorial,
   resolverAbrevEstado,
+  sugerirAbrevEstadoPlanificacion,
+  resolverAbrevDesdePlanificacion,
   formatearCedulaParaControl,
   formatNControlParaActa,
   debenRegenerarCodigos,

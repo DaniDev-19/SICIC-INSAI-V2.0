@@ -9,7 +9,10 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  // Solo agregar llave de idempotencia para métodos que modifican estado
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+
   const methods = ['post', 'put', 'patch', 'delete'];
   if (methods.includes(config.method?.toLowerCase() || '')) {
     // Generar un UUID si no existe ya en los headers

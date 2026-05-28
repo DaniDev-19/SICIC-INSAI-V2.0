@@ -214,14 +214,29 @@ export const previewCodigosInspeccion = async (req, res) => {
   }
 
   try {
-    const codigos = await tenantPrisma.$transaction((tx) =>
-      codigosService.resolverCodigosInspeccion(tx, {
+    const codigos = await tenantPrisma.$transaction(async (tx) => {
+      let estadoAbrevEfectivo = estado_abrev
+        ? String(estado_abrev).trim().toUpperCase()
+        : null;
+
+      if (!estadoAbrevEfectivo) {
+        const plan = await tx.planificaciones.findUnique({
+          where: { id: Number(planificacion_id) },
+          include: codigosService.PLANIFICACION_CONTEXT_INCLUDE,
+        });
+        if (plan) {
+          const sugerencias = codigosService.sugerirAbrevEstadoPlanificacion(plan);
+          estadoAbrevEfectivo = sugerencias.propiedad || sugerencias.empleado || null;
+        }
+      }
+
+      return codigosService.resolverCodigosInspeccion(tx, {
         planificacionId: Number(planificacion_id),
         fechaInspeccion: fecha_inspeccion,
-        estadoAbrev: estado_abrev || undefined,
+        estadoAbrev: estadoAbrevEfectivo || undefined,
         excludeId: exclude_id ? Number(exclude_id) : null,
-      })
-    );
+      });
+    });
 
     res.status(200).json({ status: 'success', data: codigos });
   } catch (error) {
