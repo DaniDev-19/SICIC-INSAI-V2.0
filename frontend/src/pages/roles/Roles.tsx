@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from 'react-router-dom';
 import { useRoles } from '@/hooks/use-roles';
+import Can from '@/components/auth/Can';
 
 
 import { RolesTable } from './components/RolesTable';
@@ -153,9 +154,11 @@ function Roles() {
             </div>
           </div>
 
-          <Button onClick={handleOpenCreate} title='crea un nuevo rol' variant={'primary'}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Nuevo Rol</span>
-          </Button>
+          <Can screen="roles" action="create">
+            <Button onClick={handleOpenCreate} title='crea un nuevo rol' variant={'primary'}>
+              <Plus className="size-4" /> <span className="hidden sm:inline">Nuevo Rol</span>
+            </Button>
+          </Can>
         </div>
       </div>
 
@@ -203,8 +206,8 @@ function Roles() {
 
       {selectedIds.length > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
-            <div className="flex items-center gap-3 pr-8 border-r border-background/10 dark:border-foreground/10">
+          <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
+            <div className="flex items-center gap-3 pr-8 border-r border-border">
               <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
                 {selectedIds.length}
               </div>
@@ -212,6 +215,7 @@ function Roles() {
             </div>
 
             <div className="flex items-center gap-3">
+            <Can screen="roles" action="delete">
               <Button
                 variant="ghost"
                 size="sm"
@@ -221,11 +225,12 @@ function Roles() {
               >
                 <Trash2 className="size-4 mr-2" /> Eliminar Masivo
               </Button>
+            </Can>
               <Button
                 variant="ghost"
                 size="icon"
                 title='Limpiar selección'
-                className="rounded-full hover:bg-white/10 dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
                 onClick={() => setSelectedIds([])}
               >
                 <X className="size-4" />

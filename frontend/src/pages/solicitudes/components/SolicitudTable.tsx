@@ -1,5 +1,6 @@
 import type { Solicitud } from '@/types/solicitudes';
-import { FileText, Edit, Trash2, Eye, Calendar, User, MapPin } from 'lucide-react';
+import { FileText, Eye, Calendar, User, MapPin } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -143,24 +144,11 @@ export function SolicitudTable({ solicitudes, onEdit, onDelete, onView }: Solici
                       <Eye className="size-4" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Editar"
-                    onClick={() => onEdit(solicitud)}
-                    className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                  >
-                    <Edit className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Eliminar"
-                    onClick={() => onDelete(solicitud.id)}
-                    className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <CrudTableActions
+                    screen="solicitudes"
+                    onEdit={() => onEdit(solicitud)}
+                    onDelete={() => onDelete(solicitud.id)}
+                  />
                 </div>
               </TableCell>
             </TableRow>

@@ -1,6 +1,3 @@
-/**
- * Formato unificado de hora_inspeccion (misma lógica que el backend).
- */
 
 export function formatHoraInspeccion(value: string | Date | null | undefined): string {
   if (value == null || value === '') return '';
@@ -14,12 +11,11 @@ export function formatHoraInspeccion(value: string | Date | null | undefined): s
   return '';
 }
 
-/** Valor para <input type="time" /> */
+
 export function toHoraInputValue(value: string | null | undefined): string {
   return formatHoraInspeccion(value) || '';
 }
 
-/** Ficha de detalle (12 h, coherente con la hora real) */
 export function formatHoraInspeccion12h(value: string | null | undefined): string {
   const hhmm = formatHoraInspeccion(value);
   if (!hhmm) return '—';

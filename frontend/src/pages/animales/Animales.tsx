@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import Can from '@/components/auth/Can';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -130,9 +131,11 @@ const Animales: React.FC = () => {
                         </div>
                     </div>
 
-                    <Button onClick={handleOpenCreate} title='crea un nuevo animal' variant={"primary"}>
+                    <Can screen="animales" action="create">
+                        <Button onClick={handleOpenCreate} title='crea un nuevo animal' variant={"primary"}>
                         <Plus className="size-5 text-white" /> <span className="text-white">Nuevo animal</span>
                     </Button>
+                    </Can>
                 </div>
             </div>
 

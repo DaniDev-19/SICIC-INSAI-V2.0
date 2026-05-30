@@ -14,12 +14,11 @@ const BRAND = {
   text: '#212121',
 };
 
-/**
- * Servicio global de PDF tabular (misma idea que excel.service.js).
- */
 class PdfService {
   resolveCintilloPath(customPath) {
     if (customPath && fs.existsSync(customPath)) return customPath;
+    const directPath = '/home/jp/Escritorio/SICIC-INSAI-V2.0/frontend/public/cintillo nuevo.png';
+    if (fs.existsSync(directPath)) return directPath;
     if (fs.existsSync(CINTILLO_PATH)) return CINTILLO_PATH;
     return null;
   }
@@ -61,18 +60,18 @@ class PdfService {
       const cintillo = this.resolveCintilloPath(bannerPath);
       if (cintillo) {
         doc.image(cintillo, doc.page.margins.left, cursorY, {
-          fit: [pageWidth, 48],
+          fit: [pageWidth, 55],
           align: 'center',
           valign: 'center',
         });
-        cursorY += 54;
+        cursorY += 60;
       }
 
       doc.y = cursorY;
       doc
         .font('Helvetica-Bold')
         .fontSize(14)
-        .fillColor(BRAND.primaryDark)
+        .fillColor('#000000')
         .text(String(title).toUpperCase(), { align: 'center' });
 
       doc.moveDown(0.35);
@@ -82,32 +81,60 @@ class PdfService {
         .fillColor(BRAND.text)
         .text(
           subtitle ||
-            `SICIC • INSAI • Generado: ${new Date().toLocaleString('es-VE')}`,
+          `SICIC • INSAI • Generado: ${new Date().toLocaleString('es-VE')}`,
           { align: 'center' }
         );
 
       doc.moveDown(0.8);
 
-      const colCount = columns.length;
-      const colWidth = pageWidth / colCount;
-      const rowHeight = 20;
+      // Calculate column widths
+      let totalDefinedWidth = 0;
+      let undefinedCount = 0;
+      columns.forEach(col => {
+        if (col.width) {
+          const w = col.width < 38 ? col.width * 6 : col.width;
+          totalDefinedWidth += w;
+        } else {
+          undefinedCount++;
+        }
+      });
+
+      let colWidths;
+      const remainingWidth = Math.max(0, pageWidth - totalDefinedWidth);
+      const defaultColWidth = undefinedCount > 0 ? remainingWidth / undefinedCount : 0;
+      
+      colWidths = columns.map(col => {
+        if (col.width) {
+          return col.width < 38 ? col.width * 6 : col.width;
+        }
+        return defaultColWidth;
+      });
+      
+      // Ensure all columns perfectly fit within the printable page width
+      const sumWidths = colWidths.reduce((sum, w) => sum + w, 0);
+      if (sumWidths > 0) {
+        const scale = pageWidth / sumWidths;
+        colWidths = colWidths.map(w => w * scale);
+      }
+
       const headerHeight = 24;
       const bottomLimit = doc.page.height - doc.page.margins.bottom - 30;
 
       const drawHeader = (y) => {
         let x = doc.page.margins.left;
-        columns.forEach((col) => {
-          doc.rect(x, y, colWidth, headerHeight).fillAndStroke(BRAND.primary, BRAND.border);
+        columns.forEach((col, idx) => {
+          const w = colWidths[idx];
+          doc.rect(x, y, w, headerHeight).fillAndStroke(BRAND.primary, BRAND.border);
           doc
             .fillColor('#FFFFFF')
             .font('Helvetica-Bold')
             .fontSize(8)
             .text(col.header, x + 4, y + 7, {
-              width: colWidth - 8,
+              width: w - 8,
               align: 'center',
               ellipsis: true,
             });
-          x += colWidth;
+          x += w;
         });
         return y + headerHeight;
       };
@@ -115,7 +142,19 @@ class PdfService {
       let y = drawHeader(doc.y);
 
       data.forEach((row, index) => {
-        if (y + rowHeight > bottomLimit) {
+        // Calculate max required height for this row
+        let maxRowHeight = 20; // default minimum
+        columns.forEach((col, idx) => {
+          const w = colWidths[idx];
+          const value = row[col.key];
+          const textVal = value === null || value === undefined ? '' : String(value);
+          const textHeight = doc.heightOfString(textVal, { width: w - 8 }) + 10;
+          if (textHeight > maxRowHeight) {
+            maxRowHeight = textHeight;
+          }
+        });
+
+        if (y + maxRowHeight > bottomLimit) {
           doc.addPage();
           y = drawHeader(doc.page.margins.top);
         }
@@ -123,27 +162,27 @@ class PdfService {
         const fill = index % 2 === 0 ? BRAND.zebra : '#FFFFFF';
         let x = doc.page.margins.left;
 
-        columns.forEach((col) => {
-          doc.rect(x, y, colWidth, rowHeight).fillAndStroke(fill, BRAND.border);
+        columns.forEach((col, idx) => {
+          const w = colWidths[idx];
+          doc.rect(x, y, w, maxRowHeight).fillAndStroke(fill, BRAND.border);
           const value = row[col.key];
           doc
             .fillColor(BRAND.text)
             .font('Helvetica')
             .fontSize(7.5)
             .text(value === null || value === undefined ? '' : String(value), x + 4, y + 6, {
-              width: colWidth - 8,
-              ellipsis: true,
+              width: w - 8,
             });
-          x += colWidth;
+          x += w;
         });
 
-        y += rowHeight;
+        y += maxRowHeight;
       });
 
       doc
         .font('Helvetica-Bold')
         .fontSize(9)
-        .fillColor(BRAND.primary)
+        .fillColor('#000000')
         .text(`TOTAL DE REGISTROS: ${data.length}`, doc.page.margins.left, y + 10);
 
       const pages = doc.bufferedPageRange();

@@ -1,6 +1,7 @@
 import type { Vehiculo } from '@/types/vehiculos';
-import { Car, Edit, Trash2, Bike, Truck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Car, Bike, Truck } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
+import { useModulePermissions } from '@/hooks/use-module-permissions';
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ export function VehiculoTable({
   onToggleSelect,
   onToggleSelectAll,
 }: VehiculoTableProps) {
+  const { canDelete } = useModulePermissions('vehiculos');
   const allSelected = vehiculos.length > 0 && selectedIds.length === vehiculos.length;
 
   return (
@@ -49,11 +51,13 @@ export function VehiculoTable({
         <TableHeader className="bg-muted/30 border-b">
           <TableRow>
             <TableHead className="w-12 px-4">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={onToggleSelectAll}
-                className="translate-y-[2px]"
-              />
+              {canDelete && (
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={onToggleSelectAll}
+                  className="translate-y-[2px]"
+                />
+              )}
             </TableHead>
             <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Vehículo</TableHead>
             <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Placa</TableHead>
@@ -88,11 +92,13 @@ export function VehiculoTable({
                   className={`group transition-all duration-300 ${isSelected ? 'bg-primary/5' : 'hover:bg-primary/5'}`}
                 >
                   <TableCell className="px-4">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => onToggleSelect(vehiculo.id)}
-                      className="translate-y-[2px]"
-                    />
+                    {canDelete && (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => onToggleSelect(vehiculo.id)}
+                        className="translate-y-[2px]"
+                      />
+                    )}
                   </TableCell>
 
                   <TableCell className="px-6 py-5">
@@ -147,26 +153,11 @@ export function VehiculoTable({
                   </TableCell>
 
                   <TableCell className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Editar"
-                        onClick={() => onEdit(vehiculo)}
-                        className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                      >
-                        <Edit className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Eliminar"
-                        onClick={() => onDelete(vehiculo.id)}
-                        className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
+                    <CrudTableActions
+                      screen="vehiculos"
+                      onEdit={() => onEdit(vehiculo)}
+                      onDelete={() => onDelete(vehiculo.id)}
+                    />
                   </TableCell>
                 </TableRow>
               );

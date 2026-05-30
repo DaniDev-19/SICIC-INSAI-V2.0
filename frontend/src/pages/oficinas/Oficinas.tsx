@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import Can from '@/components/auth/Can';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -155,9 +156,11 @@ const Oficinas: React.FC = () => {
                         </div>
                     </div>
 
-                    <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
+                    <Can screen="oficinas" action="create">
+                        <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
                         <Plus className="size-5 text-white" /> <span className="text-white">Nueva Oficina</span>
                     </Button>
+                    </Can>
                 </div>
             </div>
 
@@ -165,8 +168,8 @@ const Oficinas: React.FC = () => {
             {/* Floating bulk delete bar - igual que en Roles */}
             {selectedIds.length > 0 && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-                    <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
-                        <div className="flex items-center gap-3 pr-8 border-r border-background/10 dark:border-foreground/10">
+                    <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
+                        <div className="flex items-center gap-3 pr-8 border-r border-border">
                             <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
                                 {selectedIds.length}
                             </div>
@@ -186,7 +189,7 @@ const Oficinas: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 title="Limpiar selección"
-                                className="rounded-full hover:bg-white/10 dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
                                 onClick={() => setSelectedIds([])}
                             >
                                 <X className="size-4" />

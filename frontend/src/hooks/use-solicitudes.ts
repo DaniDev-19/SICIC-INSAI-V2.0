@@ -15,7 +15,6 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
 
   const debouncedSearch = useDebounce(search, 500);
 
-  // Reset page to 1 when filters change to prevent empty pages
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, estatus, prioridad]);
@@ -117,6 +116,38 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
     },
   });
 
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
+    try {
+      await solicitudesService.export({
+        estatus: estatus === 'all' ? undefined : estatus,
+        prioridad: prioridad === 'all' ? undefined : prioridad,
+        q: debouncedSearch || undefined,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las solicitudes');
+    }
+  };
+
+  const handleExportPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await solicitudesService.exportPdf({
+        estatus: estatus === 'all' ? undefined : estatus,
+        prioridad: prioridad === 'all' ? undefined : prioridad,
+        q: debouncedSearch || undefined,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las solicitudes en PDF');
+    }
+  };
+
   return {
     solicitudes: response?.data || [],
     tipos: tiposResponse?.data || [],
@@ -140,7 +171,8 @@ export function useSolicitudes(initialSearch = '', initialLimit = 10) {
     createTipo: createTipoMutation.mutateAsync,
     updateTipo: updateTipoMutation.mutateAsync,
     deleteTipo: deleteTipoMutation.mutateAsync,
-    exportSolicitudes: solicitudesService.export,
+    exportSolicitudes: handleExport,
+    exportSolicitudesPdf: handleExportPdf,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
   };

@@ -1,6 +1,6 @@
 import type { Oficina } from '@/types/oficinas';
-import { Building2, Edit, Trash2, MapPin, CheckCircle2, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Building2, MapPin, CheckCircle2, XCircle } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import {
   Table,
   TableBody,
@@ -39,7 +39,7 @@ export function OficinasTable({
               <Checkbox 
                 checked={allSelected} 
                 onCheckedChange={onToggleSelectAll}
-                className="translate-y-[2px]"
+                className="translate-y-0.5"
               />
             </TableHead>
             <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Oficina / Sede</TableHead>
@@ -73,7 +73,7 @@ export function OficinasTable({
                   <Checkbox 
                     checked={selectedIds.includes(oficina.id)} 
                     onCheckedChange={() => onToggleSelect(oficina.id)}
-                    className="translate-y-[2px]"
+                    className="translate-y-0.5"
                   />
                 </TableCell>
                 <TableCell className="px-6 py-5">
@@ -91,7 +91,7 @@ export function OficinasTable({
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-sm text-foreground font-medium">
                       <MapPin className="size-3 text-muted-foreground" />
-                      <span className="line-clamp-1 max-w-[250px]">{oficina.direccion || 'Sin dirección'}</span>
+                      <span className="line-clamp-1 max-w-62.5">{oficina.direccion || 'Sin dirección'}</span>
                     </div>
                     {oficina.ubicacion_gms && (
                       <span className="text-[10px] text-muted-foreground ml-4.5 font-mono">{oficina.ubicacion_gms}</span>
@@ -115,24 +115,11 @@ export function OficinasTable({
                 </TableCell>
                 <TableCell className="px-6 py-5 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Editar"
-                      onClick={() => onEdit(oficina)}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                    >
-                      <Edit className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Eliminar"
-                      onClick={() => onDelete(oficina.id)}
-                      className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <CrudTableActions
+                      screen="oficinas"
+                      onEdit={() => onEdit(oficina)}
+                      onDelete={() => onDelete(oficina.id)}
+                    />
                   </div>
                 </TableCell>
               </TableRow>

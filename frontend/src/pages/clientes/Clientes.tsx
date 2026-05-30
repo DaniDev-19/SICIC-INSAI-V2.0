@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft,
-  Plus,
   Loader2,
   AlertTriangle,
-  Download,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -21,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { useClientes } from '@/hooks/use-clientes';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import type { Cliente } from '@/types/clientes';
 import { ProducerTable } from './components/ProducerTable';
 import { ProducerWizard } from './components/ProducerWizard';
@@ -38,6 +37,7 @@ const Clientes: React.FC = () => {
     setSearch,
     deleteCliente,
     exportClientes,
+    exportClientesPdf,
   } = useClientes();
 
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -93,14 +93,17 @@ const Clientes: React.FC = () => {
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportClientes} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
-              <Download className="size-5" />
-            </Button>
+            <ModuleToolbarActions
+              screen="clientes"
+              onExport={exportClientes}
+              onExportPdf={exportClientesPdf}
+              exportTitle="Exportar en excel"
+              exportPdfTitle="Exportar en PDF"
+              onCreate={() => setIsWizardOpen(true)}
+              createLabel="Inscribir Productor"
+              createTitle="Inscribir nuevo productor"
+            />
           </div>
-
-          <Button onClick={() => setIsWizardOpen(true)} title="Inscribir nuevo productor" variant="primary">
-            <Plus className="size-5 text-white" /> <span className="text-white">Inscribir Productor</span>
-          </Button>
         </div>
       </div>
 

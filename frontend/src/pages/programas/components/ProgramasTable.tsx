@@ -1,6 +1,6 @@
 import type { Programa } from '@/types/programas';
-import { ClipboardList, Edit, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ClipboardList } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import {
   Table,
   TableBody,
@@ -79,26 +79,12 @@ export function ProgramasTable({
                   </div>
                 </TableCell>
                 <TableCell className="px-6 py-5 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Editar"
-                      onClick={(e) => { e.stopPropagation(); onEdit(programa); }}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                    >
-                      <Edit className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Eliminar"
-                      onClick={(e) => { e.stopPropagation(); onDelete(programa.id); }}
-                      className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
+                  <CrudTableActions
+                    screen="programas"
+                    onEdit={() => onEdit(programa)}
+                    onDelete={() => onDelete(programa.id)}
+                    stopPropagation
+                  />
                 </TableCell>
               </TableRow>
             ))

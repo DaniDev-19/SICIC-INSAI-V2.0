@@ -3,10 +3,7 @@ import path from 'path';
 import sharp from 'sharp';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-/**
- * Servicio exclusivo de imágenes de INSPECCIÓN → JPEG (actas PDF / react-pdf).
- * El resto del sistema sigue usando storage.service.js (WebP).
- */
+
 class ImageService {
   constructor() {
     this.mode = process.env.STORAGE_MODE || 'local';
@@ -62,9 +59,6 @@ class ImageService {
     return `${cleanBaseUrl}/${fileName}`;
   }
 
-  /**
-   * Sube evidencia de inspección (cualquier formato de entrada) como JPEG.
-   */
   async uploadInspectionPhoto(fileBuffer, fileName) {
     const jpegBuffer = await sharp(fileBuffer).rotate().jpeg({ quality: 86 }).toBuffer();
 
@@ -93,9 +87,6 @@ class ImageService {
     return fs.readFile(fullPath);
   }
 
-  /**
-   * Convierte evidencia (JPEG/PNG/WebP) a data URL JPEG para el acta PDF.
-   */
   async toPdfDataUrl(fileUrl) {
     try {
       const buffer = await this.readFileBuffer(fileUrl);

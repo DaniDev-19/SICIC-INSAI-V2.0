@@ -244,7 +244,14 @@ export function InspeccionModal({
     enabled: isOpen,
   });
 
-  const planificaciones = planificacionesRes?.data || [];
+  const planificaciones = useMemo(() => {
+    const raw = planificacionesRes?.data || [];
+    return raw.filter((p) => {
+      if (inspeccion && p.id === inspeccion.planificacion_id) return true;
+      if (initialPlanificacionId && p.id === initialPlanificacionId) return true;
+      return !p.inspecciones || p.inspecciones.length === 0;
+    });
+  }, [planificacionesRes, inspeccion, initialPlanificacionId]);
   const catalogFinalidades = finalidadesRes?.data || [];
   const isLoading = isCreating || isUpdating;
 

@@ -1,5 +1,7 @@
 import type { Role } from '@/types/role';
-import { ShieldCheck, Edit, Trash2, Power } from 'lucide-react';
+import { ShieldCheck, Power } from 'lucide-react';
+import { useModulePermissions } from '@/hooks/use-module-permissions';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -29,7 +31,7 @@ export function RolesTable({
   onDelete,
   onToggleStatus
 }: RolesTableProps) {
-
+  const { canUpdate, canDelete } = useModulePermissions('roles');
 
   const isAllSelected = roles.length > 0 && selectedIds.length === roles.length;
   const isSomeSelected = selectedIds.length > 0 && selectedIds.length < roles.length;
@@ -57,11 +59,13 @@ export function RolesTable({
         <TableHeader className="bg-muted/30 border-b">
           <TableRow>
             <TableHead className="w-12 px-6">
+              {canDelete && (
               <Checkbox
                 checked={isAllSelected || (isSomeSelected ? "indeterminate" : false)}
                 onCheckedChange={handleSelectAll}
                 aria-label="Seleccionar todos"
               />
+              )}
             </TableHead>
             <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Nombre</TableHead>
             <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Descripción</TableHead>
@@ -91,11 +95,13 @@ export function RolesTable({
                 className={`group hover:bg-primary/5 transition-all duration-300 ${selectedIds.includes(role.id) ? 'bg-primary/5' : ''}`}
               >
                 <TableCell className="px-6">
+                  {canDelete && (
                   <Checkbox
                     checked={selectedIds.includes(role.id)}
                     onCheckedChange={(checked) => handleSelectRow(role.id, !!checked)}
                     aria-label={`Seleccionar ${role.nombre}`}
                   />
+                  )}
                 </TableCell>
                 <TableCell className="px-6 py-5">
                   <div className="flex items-center gap-4">
@@ -124,7 +130,7 @@ export function RolesTable({
                 </TableCell>
                 <TableCell className="px-6 py-5 text-right">
                   <div className="flex items-center justify-end gap-2 transition-all duration-300">
-
+                    {canUpdate && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -137,26 +143,12 @@ export function RolesTable({
                     >
                       <Power className={`size-4 ${role.status ? "fill-emerald-500/20" : ""}`} />
                     </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title='Editar'
-                      onClick={() => onEdit(role)}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                    >
-                      <Edit className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="eliminar"
-                      onClick={() => onDelete(role.id)}
-                      className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    )}
+                    <CrudTableActions
+                      screen="roles"
+                      onEdit={() => onEdit(role)}
+                      onDelete={() => onDelete(role.id)}
+                    />
                   </div>
                 </TableCell>
               </TableRow>

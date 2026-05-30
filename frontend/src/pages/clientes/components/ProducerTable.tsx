@@ -1,6 +1,7 @@
 import type { Cliente } from '@/types/clientes';
 import { User, Edit, Trash2, Phone, Mail, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useModulePermissions } from '@/hooks/use-module-permissions';
 import {
   Table,
   TableBody,
@@ -17,6 +18,8 @@ interface ProducerTableProps {
 }
 
 export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps) {
+  const { canUpdate, canDelete } = useModulePermissions('clientes');
+
   return (
     <Table>
       <TableHeader className="bg-muted/30 border-b">
@@ -89,6 +92,7 @@ export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps
 
               <TableCell className="px-6 py-5 text-right">
                 <div className="flex items-center justify-end gap-2">
+                  {canUpdate && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -97,6 +101,8 @@ export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps
                   >
                     <Edit className="size-4" />
                   </Button>
+                  )}
+                  {canDelete && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -105,6 +111,7 @@ export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps
                   >
                     <Trash2 className="size-4" />
                   </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

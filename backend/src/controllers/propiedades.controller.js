@@ -1,6 +1,7 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 import excelService from '../services/excel.service.js';
+import pdfService from '../services/pdf.service.js';
 
 export const getPropiedades = async (req, res) => {
   const tenantPrisma = req.db;
@@ -423,9 +424,25 @@ export const deleteManyPropiedades = async (req, res) => {
 };
 
 export const exportPropiedades = async (req, res) => {
-
   const tenantPrisma = req.db;
+  const { q, tipo_propiedad_id, due_o_id } = req.query;
+
+  const where = {
+    AND: [
+      tipo_propiedad_id ? { tipo_propiedad_id: Number(tipo_propiedad_id) } : {},
+      due_o_id ? { due_o_id: Number(due_o_id) } : {},
+      q ? {
+        OR: [
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { codigo_insai: { contains: q, mode: 'insensitive' } },
+          { rif: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
+
   const propiedades = await tenantPrisma.propiedades.findMany({
+    where,
     include: {
       clientes: { select: { nombre: true } },
       t_propiedad: { select: { nombre: true } }
@@ -458,7 +475,74 @@ export const exportPropiedades = async (req, res) => {
     sheetName: 'Propiedades'
   });
 
+  let filename = 'reporte_propiedades.xlsx';
+  if (q || tipo_propiedad_id || due_o_id) {
+    filename = 'reporte_propiedades_filtrado.xlsx';
+  }
+
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', 'attachment; filename=reporte_propiedades.xlsx');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+  res.send(buffer);
+};
+
+export const exportPropiedadesPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { q, tipo_propiedad_id, due_o_id } = req.query;
+
+  const where = {
+    AND: [
+      tipo_propiedad_id ? { tipo_propiedad_id: Number(tipo_propiedad_id) } : {},
+      due_o_id ? { due_o_id: Number(due_o_id) } : {},
+      q ? {
+        OR: [
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { codigo_insai: { contains: q, mode: 'insensitive' } },
+          { rif: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
+
+  const propiedades = await tenantPrisma.propiedades.findMany({
+    where,
+    include: {
+      clientes: { select: { nombre: true } },
+      t_propiedad: { select: { nombre: true } }
+    },
+    orderBy: { nombre: 'asc' }
+  });
+
+  const data = propiedades.map(p => ({
+    codigo: p.codigo_insai || 'N/A',
+    nombre: p.nombre,
+    rif: p.rif || 'N/A',
+    productor: p.clientes?.nombre || 'N/A',
+    tipo: p.t_propiedad?.nombre || 'N/A',
+    superficie: p.hectareas_totales || 0,
+    status: p.status
+  }));
+
+  const buffer = await pdfService.generateTable({
+    title: 'Reporte Nacional de Propiedades y Predios - INSAI',
+    columns: [
+      { header: 'Código INSAI', key: 'codigo', width: 90 },
+      { header: 'Nombre del Predio', key: 'nombre' },
+      { header: 'RIF', key: 'rif', width: 70 },
+      { header: 'Productor', key: 'productor' },
+      { header: 'Tipo de Propiedad', key: 'tipo' },
+      { header: 'Superficie (Ha)', key: 'superficie', width: 65 },
+      { header: 'Estatus', key: 'status', width: 80 }
+    ],
+    data,
+    orientation: 'landscape'
+  });
+
+  let filename = 'reporte_propiedades.pdf';
+  if (q || tipo_propiedad_id || due_o_id) {
+    filename = 'reporte_propiedades_filtrado.pdf';
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
   res.send(buffer);
 };

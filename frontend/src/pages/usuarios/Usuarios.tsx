@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useUsers } from '@/hooks/use-users';
-import { usePermissions } from '@/hooks/use-permissions';
+import Can from '@/components/auth/Can';
 import { UsuariosTable } from './components/UsuariosTable';
 import { UsuarioModal } from './components/UsuarioModal';
 import { UsuarioInstanciasDialog } from './components/UsuarioInstanciasDialog';
@@ -30,8 +30,6 @@ import type { MasterUser } from '@/types/user';
 
 export default function Usuarios() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
-  const canCreate = hasPermission('usuarios', 'create');
 
   const {
     users,
@@ -124,14 +122,14 @@ export default function Usuarios() {
             />
           </div>
 
-          {canCreate && (
+          <Can screen="usuarios" action="create">
             <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
               <Plus className="size-5 text-white" />
               <span className="text-white">Nuevo usuario</span>
             </Button>
-          )}
+          </Can>
+          </div>
         </div>
-      </div>
 
       <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
         {isLoading ? (

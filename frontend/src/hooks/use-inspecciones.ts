@@ -35,12 +35,21 @@ export function useInspecciones(initialLimit = 10) {
 
   const createMutation = useMutation({
     mutationFn: inspectionsService.create,
-    onSuccess: () => {
+    onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['inspecciones'] });
       queryClient.invalidateQueries({ queryKey: ['planificaciones'] });
       queryClient.invalidateQueries({ queryKey: ['solicitudes'] });
       queryClient.invalidateQueries({ queryKey: ['propiedades'] });
       toast.success('Inspección registrada con éxito');
+
+      if (res?.data?.id) {
+        try {
+          await inspectionsService.openPdfReport(res.data.id);
+        } catch (pdfErr) {
+          console.error('Error auto-opening PDF:', pdfErr);
+          toast.error('No se pudo abrir el PDF automáticamente, pero la inspección fue guardada.');
+        }
+      }
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || 'Error al registrar la inspección');
@@ -77,16 +86,36 @@ export function useInspecciones(initialLimit = 10) {
   });
 
   const exportInspecciones = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
     try {
       await inspectionsService.export({
         status: debouncedStatus || undefined,
         planificacion_id: planificacionFilter,
         q: debouncedSearch || undefined,
       });
-      toast.success('Reporte Excel descargado');
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
     } catch (error) {
+      toast.dismiss(toastId);
       const axiosError = error as AxiosError<{ message?: string }>;
       toast.error(axiosError.response?.data?.message || 'Error al exportar inspecciones');
+    }
+  };
+
+  const exportInspeccionesPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await inspectionsService.exportPdf({
+        status: debouncedStatus || undefined,
+        planificacion_id: planificacionFilter,
+        q: debouncedSearch || undefined,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (error) {
+      toast.dismiss(toastId);
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(axiosError.response?.data?.message || 'Error al exportar inspecciones en PDF');
     }
   };
 
@@ -131,6 +160,7 @@ export function useInspecciones(initialLimit = 10) {
     updateInspeccion: updateMutation.mutateAsync,
     deleteInspeccion: deleteMutation.mutateAsync,
     exportInspecciones,
+    exportInspeccionesPdf,
     openPdfReport,
     pdfLoadingId,
     isCreating: createMutation.isPending,

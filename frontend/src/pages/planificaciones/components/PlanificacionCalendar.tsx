@@ -200,7 +200,7 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
                 }
               }}
               className={cn(
-                "min-h-[130px] p-2 rounded-xl flex flex-col justify-between transition-all relative border group border-border/20 select-none",
+                "min-h-32.5 p-2 rounded-xl flex flex-col justify-between transition-all relative border group border-border/20 select-none",
                 dayPlans.length > 0 ? "cursor-pointer hover:border-primary/40 hover:shadow-md hover:bg-primary/1" : "cursor-default",
                 cell.isCurrentMonth ? "bg-background" : "bg-muted/10 opacity-40",
                 cellIsToday && "ring-2 ring-primary/40 border-primary/40"
@@ -218,7 +218,7 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
                 </span>
 
                 {dayPlans.length > 0 && (
-                  <span className="text-[11px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 size-[18px] rounded-full flex items-center justify-center">
+                  <span className="text-4.5 font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 size-4.5 rounded-full flex items-center justify-center">
                     {dayPlans.length}
                   </span>
                 )}
@@ -320,7 +320,7 @@ export const PlanificacionCalendar: React.FC<PlanificacionCalendarProps> = ({
                           <span className="hidden sm:inline text-border">•</span>
                           <span className="min-w-0">
                             Finca:{' '}
-                            <span className="font-semibold text-foreground/80 break-words">
+                            <span className="font-semibold text-foreground/80 wrap-break-word">
                               {plan.solicitudes?.propiedades?.nombre || 'General'}
                             </span>
                           </span>

@@ -14,6 +14,7 @@ export const planificacionesService = {
     status?: string; 
     fecha_programada?: string; 
     q?: string; 
+    periodo?: string;
   }): Promise<PlanificacionResponse> => {
     const { data } = await apiClient.get<PlanificacionResponse>('/planificaciones', { params });
     return data;
@@ -39,14 +40,48 @@ export const planificacionesService = {
     return data;
   },
 
-  export: async () => {
-    const response = await apiClient.get('/planificaciones/export', { responseType: 'blob' });
+  export: async (params?: { 
+    status?: string; 
+    fecha_programada?: string; 
+    q?: string; 
+    periodo?: string; 
+  }) => {
+    const response = await apiClient.get('/planificaciones/export', { 
+      params,
+      responseType: 'blob' 
+    });
+    
+    let filename = 'reporte_planificaciones.xlsx';
+    if (params?.periodo === 'semana') {
+      filename = 'reporte_planificaciones_semanal.xlsx';
+    } else if (params?.periodo === 'mes') {
+      filename = 'reporte_planificaciones_mensual.xlsx';
+    } else if (params?.status || params?.fecha_programada || params?.q) {
+      filename = 'reporte_planificaciones_filtrado.xlsx';
+    }
+
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'reporte_planificaciones.xlsx');
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
+  },
+
+  exportPdf: async (params?: { 
+    status?: string; 
+    fecha_programada?: string; 
+    q?: string; 
+    periodo?: string; 
+  }) => {
+    const response = await apiClient.get('/planificaciones/export/pdf', { 
+      params,
+      responseType: 'blob' 
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   }
 };

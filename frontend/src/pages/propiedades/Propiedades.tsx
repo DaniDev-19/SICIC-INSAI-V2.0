@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft,
-  Plus,
   Loader2,
   AlertTriangle,
-  Download,
   Filter,
 } from 'lucide-react';
 import {
@@ -29,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { usePropiedades } from '@/hooks/use-propiedades';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { PropertyTable } from './components/PropertyTable';
 import { PropertyModal } from './components/PropertyModal';
 import type { Propiedad } from '@/types/propiedades';
@@ -48,6 +47,7 @@ const Propiedades: React.FC = () => {
     setTipoPropiedadId,
     deletePropiedad,
     exportPropiedades,
+    exportPropiedadesPdf,
   } = usePropiedades();
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -114,14 +114,17 @@ const Propiedades: React.FC = () => {
 
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportPropiedades} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
-              <Download className="size-5" />
-            </Button>
+            <ModuleToolbarActions
+              screen="propiedades"
+              onExport={exportPropiedades}
+              onExportPdf={exportPropiedadesPdf}
+              exportTitle="Exportar en excel"
+              exportPdfTitle="Exportar en PDF"
+              onCreate={() => navigate('/home/clientes')}
+              createLabel="Registrar en Productor"
+              createTitle="Registrar nuevo predio"
+            />
           </div>
-
-          <Button onClick={() => navigate('/home/clientes')} title="Registrar nuevo predio" variant="primary">
-            <Plus className="size-5 text-white" /> <span className="text-white">Registrar en Productor</span>
-          </Button>
         </div>
       </div>
 

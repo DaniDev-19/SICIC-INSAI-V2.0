@@ -30,7 +30,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useInspecciones } from '@/hooks/use-inspecciones';
-import { usePermissions } from '@/hooks/use-permissions';
+import Can from '@/components/auth/Can';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
+import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { InspeccionTable } from './components/InspeccionTable';
 import { InspeccionModal } from './components/InspeccionModal';
 import { InspeccionDetailsModal } from './components/InspeccionDetailsModal';
@@ -50,11 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function Inspecciones() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission } = usePermissions();
-
-  const canCreate = hasPermission('inspecciones', 'create');
-  const canUpdate = hasPermission('inspecciones', 'update');
-  const canDelete = hasPermission('inspecciones', 'delete');
+  const { canUpdate, canDelete } = useModulePermissions('inspecciones');
 
   const {
     inspecciones,
@@ -68,6 +66,7 @@ export default function Inspecciones() {
     setStatusFilter,
     deleteInspeccion,
     exportInspecciones,
+    exportInspeccionesPdf,
     openPdfReport,
     pdfLoadingId,
   } = useInspecciones();
@@ -186,7 +185,7 @@ export default function Inspecciones() {
 
               <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
 
-              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[12rem] lg:min-w-[16rem]">
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-[16rem]">
                 <SearchInput
                   placeholder="N° control, código, atendido..."
                   value={searchQuery}
@@ -198,27 +197,17 @@ export default function Inspecciones() {
 
               <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
 
-              <Button
-                title="Exportar en excel"
-                variant="ghost"
-                size="icon"
-                onClick={exportInspecciones}
-                className="h-10 w-10 shrink-0 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
-              >
-                <Download className="size-5" />
-              </Button>
+              <ModuleToolbarActions
+                screen="inspecciones"
+                onExport={exportInspecciones}
+                onExportPdf={exportInspeccionesPdf}
+                exportTitle="Exportar en excel"
+                exportPdfTitle="Exportar en PDF"
+                onCreate={handleOpenCreate}
+                createLabel="Nueva Inspección"
+                createTitle="Registrar nueva inspección"
+              />
             </div>
-
-            {canCreate && (
-              <Button
-                onClick={handleOpenCreate}
-                variant="primary"
-                className="w-full sm:w-auto shrink-0 text-white shadow-md shadow-primary/10 hover:shadow-lg transition-all cursor-pointer rounded-xl h-11 px-5"
-              >
-                <Plus className="size-5 text-white" />
-                <span className="text-white">Nueva Inspección</span>
-              </Button>
-            )}
           </div>
         </div>
 

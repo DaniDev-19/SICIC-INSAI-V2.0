@@ -44,6 +44,8 @@ export interface Planificacion {
     modelo: string | null;
   } | null;
   planificacion_empleados?: PlanificacionEmpleado[];
+  inspecciones?: any[];
+  acta_silos?: any[];
 }
 
 export interface CreatePlanificacionDto {

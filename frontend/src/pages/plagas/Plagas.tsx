@@ -17,6 +17,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import Can from '@/components/auth/Can';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -128,9 +129,11 @@ const Plagas: React.FC = () => {
                         </div>
                     </div>
 
-                    <Button onClick={handleOpenCreate} title='crea una nueva plaga' variant={"primary"}>
+                    <Can screen="plagas" action="create">
+                        <Button onClick={handleOpenCreate} title='crea una nueva plaga' variant={"primary"}>
                         <Plus className="size-5 text-white" /> <span className="text-white">Nueva plaga</span>
                     </Button>
+                    </Can>
                 </div>
             </div>
 

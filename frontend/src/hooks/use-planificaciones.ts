@@ -12,22 +12,24 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
   const [search, setSearch] = useState(initialSearch);
   const [status, setStatus] = useState<string>('all');
   const [fechaProgramada, setFechaProgramada] = useState<string>('');
+  const [periodo, setPeriodo] = useState<string>('all');
 
   const debouncedSearch = useDebounce(search, 500);
 
   // Reset page to 1 when filters change to prevent empty pages
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, fechaProgramada]);
+  }, [debouncedSearch, status, fechaProgramada, periodo]);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['planificaciones', page, limit, debouncedSearch, status, fechaProgramada],
+    queryKey: ['planificaciones', page, limit, debouncedSearch, status, fechaProgramada, periodo],
     queryFn: () => planificacionesService.getAll({
       page,
       limit,
       q: debouncedSearch || undefined,
       status: status === 'all' ? undefined : status,
       fecha_programada: fechaProgramada || undefined,
+      periodo: periodo === 'all' ? undefined : periodo,
     }),
   });
 
@@ -35,7 +37,6 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
     mutationFn: planificacionesService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planificaciones'] });
-      // Invalidate solicitudes as they status changes to PLANIFICADA
       queryClient.invalidateQueries({ queryKey: ['solicitudes'] });
       toast.success('Planificación creada correctamente');
     },
@@ -69,6 +70,54 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
     },
   });
 
+  const handleSetPeriodo = (p: string) => {
+    setPeriodo(p);
+    if (p !== 'all') {
+      setFechaProgramada('');
+    }
+  };
+
+  const handleSetFechaProgramada = (f: string) => {
+    setFechaProgramada(f);
+    if (f) {
+      setPeriodo('all');
+    }
+  };
+
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
+    try {
+      await planificacionesService.export({
+        status: status === 'all' ? undefined : status,
+        fecha_programada: fechaProgramada || undefined,
+        q: debouncedSearch || undefined,
+        periodo: periodo === 'all' ? undefined : periodo,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las planificaciones');
+    }
+  };
+
+  const handleExportPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await planificacionesService.exportPdf({
+        status: status === 'all' ? undefined : status,
+        fecha_programada: fechaProgramada || undefined,
+        q: debouncedSearch || undefined,
+        periodo: periodo === 'all' ? undefined : periodo,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las planificaciones en PDF');
+    }
+  };
+
   return {
     planificaciones: response?.data || [],
     pagination: response?.pagination || { totalCount: 0, totalPages: 0, currentPage: 1, limit: initialLimit },
@@ -79,15 +128,18 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
     search,
     status,
     fechaProgramada,
+    periodo,
     setPage,
     setLimit,
     setSearch,
     setStatus,
-    setFechaProgramada,
+    setFechaProgramada: handleSetFechaProgramada,
+    setPeriodo: handleSetPeriodo,
     createPlanificacion: createMutation.mutateAsync,
     updatePlanificacion: updateMutation.mutateAsync,
     deletePlanificacion: deleteMutation.mutateAsync,
-    exportPlanificaciones: planificacionesService.export,
+    exportPlanificaciones: handleExport,
+    exportPlanificacionesPdf: handleExportPdf,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
   };

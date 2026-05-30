@@ -67,14 +67,26 @@ export const solicitudesService = {
     return data;
   },
 
-  export: async () => {
-    const response = await apiClient.get('/solicitudes/export', { responseType: 'blob' });
+  export: async (params?: { estatus?: string; prioridad?: string; q?: string }) => {
+    const response = await apiClient.get('/solicitudes/export', { params, responseType: 'blob' });
+    let filename = 'reporte_solicitudes.xlsx';
+    if (params?.estatus || params?.prioridad || params?.q) {
+      filename = 'reporte_solicitudes_filtrado.xlsx';
+    }
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'reporte_solicitudes.xlsx');
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
+  },
+
+  exportPdf: async (params?: { estatus?: string; prioridad?: string; q?: string }) => {
+    const response = await apiClient.get('/solicitudes/export/pdf', { params, responseType: 'blob' });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   }
 };

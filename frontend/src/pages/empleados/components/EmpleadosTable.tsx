@@ -1,6 +1,7 @@
 import type { Empleado } from '@/types/empleados';
-import { User, Mail, Phone, Edit, Trash2, BadgeCheck, Building2, Briefcase } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { User, Mail, Phone, BadgeCheck, Building2, Briefcase } from 'lucide-react';
+import { useModulePermissions } from '@/hooks/use-module-permissions';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
@@ -30,6 +31,7 @@ export function EmpleadosTable({
   selectedIds = [],
   onSelectionChange,
 }: EmpleadosTableProps) {
+  const { canDelete } = useModulePermissions('empleados');
   const allSelected = empleados.length > 0 && selectedIds.length === empleados.length;
 
   const toggleAll = () => {
@@ -48,7 +50,9 @@ export function EmpleadosTable({
       <TableHeader className="bg-muted/30 border-b">
         <TableRow>
           <TableHead className="w-12 px-4">
-            <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="translate-y-[2px]" />
+            {canDelete && (
+              <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="translate-y-[2px]" />
+            )}
           </TableHead>
           <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Empleado</TableHead>
           <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Contacto</TableHead>
@@ -80,12 +84,14 @@ export function EmpleadosTable({
               className={`group transition-all duration-300 cursor-pointer ${selectedIds.includes(empleado.id) ? 'bg-primary/5' : selectedId === empleado.id ? 'bg-primary/10 border-l-4 border-l-primary' : 'hover:bg-primary/5'}`}
             >
               <TableCell className="px-4">
-                <Checkbox
-                  checked={selectedIds.includes(empleado.id)}
-                  onCheckedChange={() => toggleOne(empleado.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="translate-y-[2px]"
-                />
+                {canDelete && (
+                  <Checkbox
+                    checked={selectedIds.includes(empleado.id)}
+                    onCheckedChange={() => toggleOne(empleado.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="translate-y-[2px]"
+                  />
+                )}
               </TableCell>
               <TableCell className="px-6 py-5">
                 <div className="flex items-center gap-4">
@@ -151,26 +157,12 @@ export function EmpleadosTable({
               </TableCell>
 
               <TableCell className="px-6 py-5 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Editar"
-                    onClick={(e) => { e.stopPropagation(); onEdit(empleado); }}
-                    className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                  >
-                    <Edit className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title="Eliminar"
-                    onClick={(e) => { e.stopPropagation(); onDelete(empleado.id); }}
-                    className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
+                <CrudTableActions
+                  screen="empleados"
+                  onEdit={() => onEdit(empleado)}
+                  onDelete={() => onDelete(empleado.id)}
+                  stopPropagation
+                />
               </TableCell>
             </TableRow>
           ))

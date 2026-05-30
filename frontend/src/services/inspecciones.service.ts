@@ -97,14 +97,33 @@ export const inspectionsService = {
       params,
       responseType: 'blob',
     });
+    let filename = 'reporte_inspecciones.xlsx';
+    if (params?.status || params?.planificacion_id || params?.q) {
+      filename = 'reporte_inspecciones_filtrado.xlsx';
+    }
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'reporte_inspecciones.xlsx');
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+  },
+
+  exportPdf: async (params?: {
+    status?: string;
+    planificacion_id?: number;
+    q?: string;
+  }) => {
+    const response = await apiClient.get('/inspecciones/export/pdf', {
+      params,
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   },
 
   getReporte: async (id: number) => {

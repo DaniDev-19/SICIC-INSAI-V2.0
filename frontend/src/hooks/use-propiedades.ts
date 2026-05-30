@@ -111,6 +111,36 @@ export function usePropiedades(initialSearch = '', initialLimit = 10) {
     },
   });
 
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
+    try {
+      await propiedadesService.export({
+        q: debouncedSearch || undefined,
+        tipo_propiedad_id: tipoPropiedadId === 'all' ? undefined : parseInt(tipoPropiedadId),
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las propiedades');
+    }
+  };
+
+  const handleExportPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await propiedadesService.exportPdf({
+        q: debouncedSearch || undefined,
+        tipo_propiedad_id: tipoPropiedadId === 'all' ? undefined : parseInt(tipoPropiedadId),
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar las propiedades en PDF');
+    }
+  };
+
   return {
     propiedades: response?.data || [],
     tipos: tiposResponse?.data || [],
@@ -132,7 +162,8 @@ export function usePropiedades(initialSearch = '', initialLimit = 10) {
     createTipo: createTipoMutation.mutateAsync,
     updateTipo: updateTipoMutation.mutateAsync,
     deleteTipo: deleteTipoMutation.mutateAsync,
-    exportPropiedades: propiedadesService.export,
+    exportPropiedades: handleExport,
+    exportPropiedadesPdf: handleExportPdf,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
   };

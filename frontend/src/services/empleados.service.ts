@@ -49,11 +49,33 @@ export const empleadosService = {
     return response.data;
   },
 
-  exportExcel: async (): Promise<Blob> => {
-    const response = await apiClient.get('/empleados/export', {
-      responseType: 'blob'
+  export: async (params?: { search?: string; departamento_id?: string; status_laboral?: string }) => {
+    const response = await apiClient.get('/empleados/export', { 
+      params: { ...params, q: params?.search }, 
+      responseType: 'blob' 
     });
-    return response.data;
+    let filename = 'reporte_empleados.xlsx';
+    if (params?.search || params?.departamento_id || params?.status_laboral) {
+      filename = 'reporte_empleados_filtrado.xlsx';
+    }
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+
+  exportPdf: async (params?: { search?: string; departamento_id?: string; status_laboral?: string }) => {
+    const response = await apiClient.get('/empleados/export/pdf', { 
+      params: { ...params, q: params?.search }, 
+      responseType: 'blob' 
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   },
 
   // Catálogos - Cargos

@@ -33,6 +33,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEmpleados } from '@/hooks/use-empleados';
+import Can from '@/components/auth/Can';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { EmpleadosTable } from './components/EmpleadosTable';
 import { EmpleadoModal } from './components/EmpleadoModal';
 import { EmpleadoDetalles } from './components/EmpleadoDetalles';
@@ -54,6 +56,7 @@ const Empleados: React.FC = () => {
         setStatusLaboral,
         deleteEmpleado,
         exportEmpleados,
+        exportEmpleadosPdf,
         isExporting,
         isDeleting
     } = useEmpleados();
@@ -99,9 +102,7 @@ const Empleados: React.FC = () => {
         }
     };
 
-    const handleExport = async () => {
-        await exportEmpleados();
-    };
+
 
     return (
         <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
@@ -182,21 +183,17 @@ const Empleados: React.FC = () => {
 
                         <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleExport}
-                            disabled={isExporting}
-                            title="Exportar a Excel"
-                            className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
-                        >
-                            {isExporting ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
-                        </Button>
+                        <ModuleToolbarActions
+                            screen="empleados"
+                            onExport={exportEmpleados}
+                            onExportPdf={exportEmpleadosPdf}
+                            exportTitle="Exportar en excel"
+                            exportPdfTitle="Exportar en PDF"
+                            onCreate={handleOpenCreate}
+                            createLabel="Nuevo Registro"
+                            createTitle="Inscribir nuevo empleado"
+                        />
                     </div>
-
-                    <Button onClick={handleOpenCreate} variant={"primary"} className="rounded-xl shadow-lg shadow-primary/20">
-                        <Plus className="size-5 text-white mr-1" /> <span className="text-white">Nuevo Registro</span>
-                    </Button>
                 </div>
             </div>
 
@@ -250,8 +247,8 @@ const Empleados: React.FC = () => {
             {/* Floating bulk delete bar - igual que en Roles */}
             {selectedIds.length > 0 && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-                    <div className="bg-foreground text-background dark:bg-card dark:text-foreground px-6 py-4 rounded-2xl shadow-2xl border border-background/10 flex items-center gap-8 glass-effect">
-                        <div className="flex items-center gap-3 pr-8 border-r border-background/10 dark:border-foreground/10">
+                    <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
+                        <div className="flex items-center gap-3 pr-8 border-r border-border">
                             <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
                                 {selectedIds.length}
                             </div>
@@ -271,7 +268,7 @@ const Empleados: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 title="Limpiar selección"
-                                className="rounded-full hover:bg-white/10 dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
                                 onClick={() => setSelectedIds([])}
                             >
                                 <X className="size-4" />
