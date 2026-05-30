@@ -15,6 +15,7 @@ router.use(tenantMiddleware);
 
 router.get('/', checkPermission('propiedades', 'see'), propiedadesController.getPropiedades);
 router.get('/export', checkPermission('propiedades', 'export'), propiedadesController.exportPropiedades);
+router.get('/export/pdf', checkPermission('propiedades', 'export'), propiedadesController.exportPropiedadesPdf);
 router.get('/:id', checkPermission('propiedades', 'see'), propiedadesController.getPropiedadById);
 router.post('/', checkPermission('propiedades', 'create'), upload.single('hierro_img'), validateSchema(createPropiedadesSchema), propiedadesController.createPropiedad);
 router.put('/:id', checkPermission('propiedades', 'update'), upload.single('hierro_img'), validateSchema(updatePropiedadesSchema), propiedadesController.updatePropiedad);

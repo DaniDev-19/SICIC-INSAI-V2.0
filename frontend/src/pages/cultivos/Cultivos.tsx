@@ -28,6 +28,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useCultivos } from '@/hooks/use-cultivos';
+import Can from '@/components/auth/Can';
 
 import { CultivosTable } from './components/CultivosTable';
 import { CultivoModal } from './components/CultivoModal';
@@ -131,9 +132,11 @@ const Cultivos: React.FC = () => {
                         </div>
                     </div>
 
-                    <Button onClick={handleOpenCreate} title='crea un nuevo cultivo' variant={"primary"}>
-                        <Plus className="size-5 text-white" /> <span className="text-white">Nuevo cultivo</span>
-                    </Button>
+                    <Can screen="cultivos" action="create">
+                        <Button onClick={handleOpenCreate} title='crea un nuevo cultivo' variant={"primary"}>
+                            <Plus className="size-5 text-white" /> <span className="text-white">Nuevo cultivo</span>
+                        </Button>
+                    </Can>
                 </div>
             </div>
 

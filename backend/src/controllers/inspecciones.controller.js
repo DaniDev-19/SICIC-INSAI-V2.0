@@ -9,6 +9,7 @@ import { parseHoraInspeccion, formatHoraInspeccion } from '../utils/inspeccion-t
 import inspeccionReporteService, {
   INSPECCION_REPORT_INCLUDE,
 } from '../services/inspeccion-reporte.service.js';
+import * as statusSyncService from '../services/status-sync.service.js';
 
 function parseAreasBody(areas_inspeccion) {
   if (areas_inspeccion === undefined || areas_inspeccion === null) return undefined;
@@ -39,7 +40,6 @@ function canAccessInspeccion(inspeccion, req) {
   );
 }
 
-/** Inspector debe estar en planificacion_empleados; admin queda exento. */
 async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
   if (isAdminUser(req)) return;
 
@@ -354,32 +354,7 @@ export const createInspeccion = async (req, res) => {
       });
 
       if (plan) {
-        await tx.planificaciones.update({
-          where: { id: planificacion_id },
-          data: { status: status || 'PENDIENTE' }
-        });
-
-        await tx.solicitudes.update({
-          where: { id: plan.solicitud_id },
-          data: { estatus: status || 'PENDIENTE' }
-        });
-
-        if (plan.solicitudes?.propiedad_id) {
-          let propiedadStatus = 'ACTIVA';
-          if (status === 'CUARENTENA') {
-            propiedadStatus = 'CUARENTENA';
-          } else if (status === 'NO_APROBADA') {
-            propiedadStatus = 'NO_APROBADA';
-          } else if (status === 'SEGUIMIENTO') {
-            propiedadStatus = 'SEGUIMIENTO';
-          } else if (status === 'FINALIZADA') {
-            propiedadStatus = 'ACTIVA';
-          }
-          await tx.propiedades.update({
-            where: { id: plan.solicitudes.propiedad_id },
-            data: { status: propiedadStatus }
-          });
-        }
+        await statusSyncService.syncFromInspeccion(tx, planificacion_id, status || 'PENDIENTE');
       }
 
       return insp;
@@ -506,39 +481,8 @@ export const updateInspeccion = async (req, res) => {
       }
     });
 
-    if (data.status && existing.planificaciones) {
-      await tx.planificaciones.update({
-        where: { id: existing.planificacion_id },
-        data: { status: data.status }
-      });
-
-      await tx.solicitudes.update({
-        where: { id: existing.planificaciones.solicitud_id },
-        data: { estatus: data.status }
-      });
-
-      if (existing.planificaciones.solicitud_id) {
-        const solic = await tx.solicitudes.findUnique({
-          where: { id: existing.planificaciones.solicitud_id },
-          select: { propiedad_id: true }
-        });
-        if (solic?.propiedad_id) {
-          let propiedadStatus = 'ACTIVA';
-          if (data.status === 'CUARENTENA') {
-            propiedadStatus = 'CUARENTENA';
-          } else if (data.status === 'NO_APROBADA') {
-            propiedadStatus = 'NO_APROBADA';
-          } else if (data.status === 'SEGUIMIENTO') {
-            propiedadStatus = 'SEGUIMIENTO';
-          } else if (data.status === 'FINALIZADA') {
-            propiedadStatus = 'ACTIVA';
-          }
-          await tx.propiedades.update({
-            where: { id: solic.propiedad_id },
-            data: { status: propiedadStatus }
-          });
-        }
-      }
+    if (data.status && existing.planificacion_id) {
+      await statusSyncService.syncFromInspeccion(tx, existing.planificacion_id, data.status);
     }
 
     return updated;
@@ -608,6 +552,8 @@ export const deleteInspeccion = async (req, res) => {
       for (const foto of toDelete.inspeccion_fotos) {
         await storageService.deleteFile(foto.imagen);
       }
+
+      await statusSyncService.syncOnInspeccionDelete(tx, toDelete.planificacion_id);
 
       await tx.inspecciones.delete({ where: { id: Number(id) } });
     });

@@ -9,7 +9,9 @@ import {
   Activity,
   X,
   Download,
+  FileText,
   Calendar as CalendarIcon,
+  CalendarDays,
   List,
 } from 'lucide-react';
 import {
@@ -34,6 +36,8 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { usePlanificaciones } from '@/hooks/use-planificaciones';
+import Can from '@/components/auth/Can';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { PlanificacionTable } from './components/PlanificacionTable';
 import { PlanificacionModal } from './components/PlanificacionModal';
 import { PlanificacionCalendar } from './components/PlanificacionCalendar';
@@ -48,13 +52,16 @@ const Planificaciones: React.FC = () => {
     search,
     status,
     fechaProgramada,
+    periodo,
     setPage,
     setLimit,
     setSearch,
     setStatus,
     setFechaProgramada,
+    setPeriodo,
     deletePlanificacion,
     exportPlanificaciones,
+    exportPlanificacionesPdf,
   } = usePlanificaciones();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,7 +94,6 @@ const Planificaciones: React.FC = () => {
   return (
     <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
 
-      {/* Encabezado */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 border-b border-border/10 pb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -108,18 +114,20 @@ const Planificaciones: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={handleOpenCreate}
-          title="Agendar nueva inspección"
-          variant="primary"
-          className="w-full sm:w-auto text-white shadow-md shadow-primary/10 hover:shadow-lg transition-all"
-        >
-          <Plus className="size-5 text-white" /> <span className="text-white">Nueva Planificación</span>
-        </Button>
+        <Can screen="planificacion" action="create">
+          <Button
+            onClick={handleOpenCreate}
+            title="Agendar nueva inspección"
+            variant="primary"
+            className="w-full sm:w-auto text-white shadow-md shadow-primary/10 hover:shadow-lg transition-all"
+          >
+            <Plus className="size-5 text-white" /> <span className="text-white">Nueva Planificación</span>
+          </Button>
+        </Can>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-start xl:justify-end">
-        <div className="w-full flex items-center justify-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+      <div className="flex flex-col items-center gap-3 w-full xl:w-auto justify-start xl:justify-end">
+        <div className="w-auto flex items-center justify-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
 
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger
@@ -144,6 +152,25 @@ const Planificaciones: React.FC = () => {
             </SelectContent>
           </Select>
 
+          {/* Filtro Período */}
+          <Select value={periodo} onValueChange={setPeriodo}>
+            <SelectTrigger
+              title="Filtrar por Período"
+              className={cn(
+                "w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden",
+                periodo !== 'all' && "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
+              )}
+            >
+              <CalendarDays className={cn("size-4 shrink-0", periodo !== 'all' ? 'text-primary' : 'text-muted-foreground')} />
+              <span className="hidden"><SelectValue /></span>
+            </SelectTrigger>
+            <SelectContent position="popper" className="glass-effect border-border">
+              <SelectItem value="all" className="cursor-pointer">Sin Filtro Temporal</SelectItem>
+              <SelectItem value="semana" className="cursor-pointer">Esta Semana</SelectItem>
+              <SelectItem value="mes" className="cursor-pointer">Este Mes</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Filtro Fecha */}
           <div className="relative flex items-center shrink-0">
             <Input
@@ -151,7 +178,7 @@ const Planificaciones: React.FC = () => {
               value={fechaProgramada}
               onChange={(e) => setFechaProgramada(e.target.value)}
               className={cn(
-                "h-10 rounded-xl bg-background/80 border-border text-xs px-2.5 max-w-[140px] font-semibold transition-all cursor-pointer",
+                "h-10 rounded-xl bg-background/80 border-border text-xs px-2.5 max-w-35 font-semibold transition-all cursor-pointer",
                 fechaProgramada && "border-primary/50 bg-primary/5 ring-1 ring-primary/20 text-primary pr-8"
               )}
               title="Filtrar por Fecha Programada"
@@ -173,7 +200,7 @@ const Planificaciones: React.FC = () => {
           <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
           {/* Buscador */}
-          <div className="w-full sm:w-[18rem] lg:w-[22rem]">
+          <div className="w-full sm:w-[18rem] lg:w-88">
             <SearchInput
               placeholder="Buscar por código, actividad..."
               value={search}
@@ -186,15 +213,15 @@ const Planificaciones: React.FC = () => {
           <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
           {/* Botón Exportar */}
-          <Button
-            title="Exportar en excel"
-            variant="ghost"
-            size="icon"
-            onClick={exportPlanificaciones}
-            className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
-          >
-            <Download className="size-5" />
-          </Button>
+          <ModuleToolbarActions
+            screen="planificacion"
+            exportAction="see"
+            onExport={exportPlanificaciones}
+            onExportPdf={exportPlanificacionesPdf}
+            exportTitle="Exportar en excel"
+            exportPdfTitle="Exportar en PDF"
+            createLabel="Nueva Planificación"
+          />
         </div>
 
 

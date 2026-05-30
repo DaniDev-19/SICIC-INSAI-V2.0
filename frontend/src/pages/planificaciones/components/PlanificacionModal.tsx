@@ -249,7 +249,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
                 <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background">
                   <SelectValue placeholder="Seleccione solicitud..." />
                 </SelectTrigger>
-                <SelectContent className="glass-effect border-border max-h-[200px]" position="popper">
+                <SelectContent className="glass-effect border-border max-h-50" position="popper">
                   {filteredSolicitudes.map(sol => (
                     <SelectItem key={sol.id} value={sol.id.toString()} className="cursor-pointer">
                       {sol.codigo} - {sol.clientes?.nombre || 'Productor'} ({sol.propiedades?.nombre || 'Predio'})
@@ -398,7 +398,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[220px] overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-55 overflow-y-auto custom-scrollbar pr-2">
               {empleados.map((emp: any) => {
                 const isSelected = selectedEmpleados.includes(emp.id);
                 return (

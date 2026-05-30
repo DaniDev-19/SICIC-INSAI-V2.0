@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Planificacion } from '@/types/planificaciones';
-import { Calendar, Edit, Trash2, User, Users, MapPin, Car, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Calendar, User, Users, MapPin, Car, FileText } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import {
   Table,
   TableBody,
@@ -105,13 +105,13 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
                       <User className="size-3.5 text-primary" />
-                      <span className="text-sm font-bold text-foreground truncate max-w-[180px]">
+                      <span className="text-sm font-bold text-foreground truncate max-w-45">
                         {plan.solicitudes?.clientes?.nombre || 'Productor no especificado'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="size-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground font-medium truncate max-w-[180px]">
+                      <span className="text-xs text-muted-foreground font-medium truncate max-w-45">
                         {plan.solicitudes?.propiedades?.nombre || 'Predio rural no especificado'}
                       </span>
                     </div>
@@ -124,7 +124,7 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                       {plan.actividad || 'Visita Técnica'}
                     </div>
                     {plan.vehiculos ? (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium truncate max-w-[180px]">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium truncate max-w-45">
                         <Car className="size-3.5 text-muted-foreground" />
                         <span>{(plan.vehiculos.marca || 'Vehículo')} [{plan.vehiculos.placa}]</span>
                       </div>
@@ -138,7 +138,7 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                 </TableCell>
 
                 <TableCell className="px-6 py-5">
-                  <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                  <div className="flex flex-wrap gap-1.5 max-w-50">
                     {inspectors.length > 0 ? (
                       inspectors.map((pe) => (
                         <div
@@ -177,26 +177,11 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                 </TableCell>
 
                 <TableCell className="px-6 py-5 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Editar"
-                      onClick={() => onEdit(plan)}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all cursor-pointer"
-                    >
-                      <Edit className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Eliminar"
-                      onClick={() => onDelete(plan.id)}
-                      className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 transition-all cursor-pointer"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
+                  <CrudTableActions
+                    screen="planificacion"
+                    onEdit={() => onEdit(plan)}
+                    onDelete={() => onDelete(plan.id)}
+                  />
                 </TableCell>
               </TableRow>
             );

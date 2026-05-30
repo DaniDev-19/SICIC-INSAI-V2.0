@@ -1,6 +1,8 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 import inventoryService from '../services/inventory.service.js';
+import actaSiloReporteService, { ACTA_SILO_REPORT_INCLUDE } from '../services/acta-silo-reporte.service.js';
+import * as statusSyncService from '../services/status-sync.service.js';
 
 export const getActaSilos = async (req, res) => {
   const tenantPrisma = req.db;
@@ -31,7 +33,12 @@ export const getActaSilos = async (req, res) => {
       include: {
         planificaciones: {
           include: {
-            solicitudes: { select: { codigo: true, descripcion: true } }
+            solicitudes: {
+              include: {
+                clientes: true,
+                propiedades: true
+              }
+            }
           }
         },
         t_unidades: true,
@@ -63,7 +70,12 @@ export const getActaSiloById = async (req, res) => {
     include: {
       planificaciones: {
         include: {
-          solicitudes: true,
+          solicitudes: {
+            include: {
+              clientes: true,
+              propiedades: true
+            }
+          },
           vehiculos: true,
           planificacion_empleados: { include: { empleados: true } }
         }
@@ -92,7 +104,7 @@ export const createActaSilo = async (req, res) => {
     planificacion_id, insumos_consumidos
   } = req.body;
 
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || null;
 
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
@@ -163,15 +175,7 @@ export const createActaSilo = async (req, res) => {
       });
 
       if (plan) {
-        await tx.planificaciones.update({
-          where: { id: Number(planificacion_id) },
-          data: { status: 'FINALIZADA' }
-        });
-
-        await tx.solicitudes.update({
-          where: { id: plan.solicitud_id },
-          data: { estatus: 'FINALIZADA' }
-        });
+        await statusSyncService.syncFromInspeccion(tx, planificacion_id, 'FINALIZADA');
       }
 
       return acta;
@@ -241,6 +245,7 @@ export const updateActaSilo = async (req, res) => {
 export const deleteActaSilo = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
+  const empleado_id = req.user?.currentInstance?.empleado_id || null;
 
   const toDelete = await tenantPrisma.acta_silos.findUnique({
     where: { id: Number(id) },
@@ -271,6 +276,8 @@ export const deleteActaSilo = async (req, res) => {
         await storageService.deleteFile(foto.imagen);
       }
 
+      await statusSyncService.syncOnActaSiloDelete(tx, toDelete.planificacion_id);
+
       await tx.acta_silos.delete({ where: { id: Number(id) } });
     });
 
@@ -284,5 +291,27 @@ export const deleteActaSilo = async (req, res) => {
     res.status(200).json({ status: 'success', message: 'Acta de Silo eliminada y stock restaurado' });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+export const getActaSiloReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  const acta = await tenantPrisma.acta_silos.findUnique({
+    where: { id: Number(id) },
+    include: ACTA_SILO_REPORT_INCLUDE,
+  });
+
+  if (!acta) {
+    return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
+  }
+
+  try {
+    const reporte = await actaSiloReporteService.buildActaSiloReporte(acta);
+    res.status(200).json({ status: 'success', data: reporte });
+  } catch (error) {
+    console.error('Error preparando reporte de acta de silo:', error);
+    res.status(500).json({ status: 'error', message: 'No se pudo preparar el acta' });
   }
 };

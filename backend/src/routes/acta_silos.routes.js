@@ -14,6 +14,7 @@ router.use(tenantMiddleware);
 
 router.get('/', checkPermission('acta_silos', 'see'), actaSilosController.getActaSilos);
 router.get('/:id', checkPermission('acta_silos', 'see'), actaSilosController.getActaSiloById);
+router.get('/:id/reporte', checkPermission('acta_silos', 'see'), actaSilosController.getActaSiloReporte);
 
 router.post(
   '/',

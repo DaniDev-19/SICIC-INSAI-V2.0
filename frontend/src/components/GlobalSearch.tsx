@@ -27,7 +27,7 @@ export function GlobalSearch() {
   })
 
   return (
-    <div className="relative hidden w-full sm:block sm:max-w-[220px] lg:max-w-[350px] group transition-all duration-300">
+    <div className="relative hidden w-full sm:block sm:max-w-55 lg:max-w-87.5 group transition-all duration-300">
       <div className="relative">
         <SearchInput
           placeholder="Busca en todo el sistema..."

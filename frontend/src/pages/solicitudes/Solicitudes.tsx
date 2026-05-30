@@ -3,12 +3,10 @@ import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronLeft,
-  Plus,
   Loader2,
   AlertTriangle,
   Activity,
   AlertCircle,
-  Download
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSolicitudes } from '@/hooks/use-solicitudes';
+import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { SolicitudTable } from './components/SolicitudTable';
 import { SolicitudModal } from './components/SolicitudModal';
 import { SolicitudWizard } from './components/SolicitudWizard';
@@ -55,6 +54,7 @@ const Solicitudes: React.FC = () => {
     updateTipo,
     deleteTipo,
     exportSolicitudes,
+    exportSolicitudesPdf,
   } = useSolicitudes();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -179,14 +179,18 @@ const Solicitudes: React.FC = () => {
             </div>
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-            <Button title='Exportar en excel' variant="ghost" size="icon" onClick={exportSolicitudes} className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer">
-              <Download className="size-5" />
-            </Button>
+            <ModuleToolbarActions
+              screen="solicitudes"
+              onExport={exportSolicitudes}
+              onExportPdf={exportSolicitudesPdf}
+              exportAction="see"
+              exportTitle="Exportar en excel"
+              exportPdfTitle="Exportar en PDF"
+              onCreate={handleOpenCreate}
+              createLabel="Nueva Solicitud"
+              createTitle="Crear nueva solicitud"
+            />
           </div>
-
-          <Button onClick={handleOpenCreate} title="crear nueva solicitud" variant={"primary"}>
-            <Plus className="size-5 text-white" /> <span className="text-white">Nueva Solicitud</span>
-          </Button>
         </div>
       </div>
 

@@ -13,6 +13,7 @@ router.use(tenantMiddleware);
 
 router.get('/', checkPermission('clientes', 'see'), clientesController.getClientes);
 router.get('/export', checkPermission('clientes', 'export'), clientesController.exportClientes);
+router.get('/export/pdf', checkPermission('clientes', 'export'), clientesController.exportClientesPdf);
 router.get('/:id', checkPermission('clientes', 'see'), clientesController.getClienteById);
 router.post('/', checkPermission('clientes', 'create'), validateSchema(createClientesSchema), clientesController.createCliente);
 router.put('/:id', checkPermission('clientes', 'update'), validateSchema(updateClientesSchema), clientesController.updateCliente);

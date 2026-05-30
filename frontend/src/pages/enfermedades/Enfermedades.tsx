@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import Can from '@/components/auth/Can';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -128,9 +129,11 @@ const Enfermedades: React.FC = () => {
             </div>
           </div>
 
-          <Button onClick={handleOpenCreate} title="crea una nueva enfermedad" variant={"primary"}>
+          <Can screen="enfermedades" action="create">
+                        <Button onClick={handleOpenCreate} title="crea una nueva enfermedad" variant={"primary"}>
             <Plus className="size-5 text-white" /> <span className="text-white">Nueva enfermedad</span>
           </Button>
+                    </Can>
         </div>
       </div>
 

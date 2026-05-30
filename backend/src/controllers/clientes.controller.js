@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import excelService from '../services/excel.service.js';
+import pdfService from '../services/pdf.service.js';
 
 export const getClientes = async (req, res) => {
   const tenantPrisma = req.db;
@@ -283,9 +284,22 @@ export const deleteManyClientes = async (req, res) => {
 };
 
 export const exportClientes = async (req, res) => {
-
   const tenantPrisma = req.db;
-  const clientes = await tenantPrisma.clientes.findMany({ orderBy: { nombre: 'asc' } });
+  const { q } = req.query;
+
+  const where = q ? {
+    OR: [
+      { nombre: { contains: q, mode: 'insensitive' } },
+      { cedula_rif: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+      { codigo_runsai: { contains: q, mode: 'insensitive' } },
+    ]
+  } : {};
+
+  const clientes = await tenantPrisma.clientes.findMany({
+    where,
+    orderBy: { nombre: 'asc' }
+  });
 
   const buffer = await excelService.generate({
     title: 'Reporte de Clientes/Productores - INSAI',
@@ -301,7 +315,63 @@ export const exportClientes = async (req, res) => {
     sheetName: 'Clientes'
   });
 
+  let filename = 'reporte_clientes.xlsx';
+  if (q) {
+    filename = 'reporte_clientes_filtrado.xlsx';
+  }
+
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', 'attachment; filename=reporte_clientes.xlsx');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+  res.send(buffer);
+};
+
+export const exportClientesPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { q } = req.query;
+
+  const where = q ? {
+    OR: [
+      { nombre: { contains: q, mode: 'insensitive' } },
+      { cedula_rif: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+      { codigo_runsai: { contains: q, mode: 'insensitive' } },
+    ]
+  } : {};
+
+  const clientes = await tenantPrisma.clientes.findMany({
+    where,
+    orderBy: { nombre: 'asc' }
+  });
+
+  const data = clientes.map(c => ({
+    cedula_rif: c.cedula_rif,
+    nombre: c.nombre,
+    codigo_runsai: c.codigo_runsai || 'N/A',
+    telefono: c.telefono || 'N/A',
+    email: c.email || 'N/A',
+    direccion_fiscal: c.direccion_fiscal || 'N/A'
+  }));
+
+  const buffer = await pdfService.generateTable({
+    title: 'Reporte de Clientes/Productores - INSAI',
+    columns: [
+      { header: 'Cédula/RIF', key: 'cedula_rif', width: 70 },
+      { header: 'Nombre', key: 'nombre' },
+      { header: 'Código RUNSAI', key: 'codigo_runsai', width: 80 },
+      { header: 'Teléfono', key: 'telefono', width: 70 },
+      { header: 'Email', key: 'email' },
+      { header: 'Dirección Fiscal', key: 'direccion_fiscal' }
+    ],
+    data,
+    orientation: 'landscape'
+  });
+
+  let filename = 'reporte_clientes.pdf';
+  if (q) {
+    filename = 'reporte_clientes_filtrado.pdf';
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
   res.send(buffer);
 };

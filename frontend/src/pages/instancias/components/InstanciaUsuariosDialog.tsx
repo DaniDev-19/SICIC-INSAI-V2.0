@@ -22,7 +22,7 @@ export function InstanciaUsuariosDialog({ isOpen, onClose, instance }: Instancia
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[560px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
+      <DialogContent className="sm:max-w-140 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
         <div className="bg-primary/5 p-6 border-b border-border/50">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Propiedad } from '@/types/propiedades';
-import { Home, Edit, Trash2, MapPin, User, Scale, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Home, MapPin, User, Scale, ChevronDown } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import {
   Table,
   TableBody,
@@ -122,22 +122,12 @@ export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTablePr
 
                 <TableCell className="px-6 py-5 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => { e.stopPropagation(); onEdit(propiedad); }}
-                      className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                    >
-                      <Edit className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => { e.stopPropagation(); onDelete(propiedad.id); }}
-                      className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <CrudTableActions
+                      screen="propiedades"
+                      onEdit={() => onEdit(propiedad)}
+                      onDelete={() => onDelete(propiedad.id)}
+                      stopPropagation
+                    />
                     <div className={cn(
                       "ml-2 size-8 flex items-center justify-center rounded-full bg-muted/50 text-muted-foreground transition-transform duration-300",
                       expandedId === propiedad.id ? "rotate-180 bg-primary/20 text-primary" : ""

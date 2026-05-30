@@ -90,7 +90,7 @@ export function OficinaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
+      <DialogContent className="sm:max-w-125 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="bg-primary/5 p-6 border-b border-border/50">
             <DialogHeader>
@@ -164,7 +164,7 @@ export function OficinaModal({
                   id="direccion"
                   {...register('direccion')}
                   placeholder="Indique la dirección detallada..."
-                  className="min-h-[100px] pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
+                  className="min-h-25 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
                 />
               </div>
             </div>

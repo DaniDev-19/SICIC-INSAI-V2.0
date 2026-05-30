@@ -68,22 +68,37 @@ export function useEmpleados() {
     },
   });
 
-  const exportMutation = useMutation({
-    mutationFn: empleadosService.exportExcel,
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reporte_empleados_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast.success('Reporte exportado correctamente');
-    },
-    onError: () => {
-      toast.error('Error al exportar el reporte');
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
+    try {
+      await empleadosService.export({
+        search: debouncedSearch || undefined,
+        departamento_id: departamentoId === 'all' ? undefined : departamentoId,
+        status_laboral: statusLaboral === 'all' ? undefined : statusLaboral,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar los empleados');
     }
-  });
+  };
+
+  const handleExportPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await empleadosService.exportPdf({
+        search: debouncedSearch || undefined,
+        departamento_id: departamentoId === 'all' ? undefined : departamentoId,
+        status_laboral: statusLaboral === 'all' ? undefined : statusLaboral,
+      });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar los empleados en PDF');
+    }
+  };
 
   // Mutaciones de Catálogos
   const createCargoMutation = useMutation({
@@ -178,12 +193,13 @@ export function useEmpleados() {
     createEmpleado: createMutation.mutateAsync,
     updateEmpleado: updateMutation.mutateAsync,
     deleteEmpleado: deleteMutation.mutateAsync,
-    exportEmpleados: exportMutation.mutateAsync,
+    exportEmpleados: handleExport,
+    exportEmpleadosPdf: handleExportPdf,
     
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    isExporting: exportMutation.isPending,
+    isExporting: false,
 
     // Mutaciones de Catálogos
     createCargo: createCargoMutation.mutateAsync,

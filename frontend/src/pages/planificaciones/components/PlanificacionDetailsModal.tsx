@@ -41,6 +41,7 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
   const canCreateInspeccion = hasPermission('inspecciones', 'create');
+  const canUpdatePlan = hasPermission('planificacion', 'update');
   const { planificacion, isLoading, error } = usePlanificacion(planId);
 
   const formatTime = (isoTimeStr: string | null) => {
@@ -310,7 +311,7 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
                   Registrar Inspección
                 </Button>
               )}
-              {onEdit && (
+              {canUpdatePlan && onEdit && (
                 <Button
                   onClick={() => {
                     onClose();

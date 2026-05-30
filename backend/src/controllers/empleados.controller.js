@@ -1,6 +1,7 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 import excelService from '../services/excel.service.js';
+import pdfService from '../services/pdf.service.js';
 
 export const getEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
@@ -226,11 +227,26 @@ export const deleteEmpleado = async (req, res) => {
 
   res.status(200).json({ status: 'success', message: 'Empleado eliminado exitosamente' });
 };
-
 export const exportEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
+  const { q, departamento_id, status_laboral } = req.query;
+
+  const where = {
+    AND: [
+      departamento_id ? { departamento_id: Number(departamento_id) } : {},
+      status_laboral ? { status_laboral } : {},
+      q ? {
+        OR: [
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { apellido: { contains: q, mode: 'insensitive' } },
+          { cedula: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
 
   const empleados = await tenantPrisma.empleados.findMany({
+    where,
     include: {
       departamentos: { select: { nombre: true } },
       cargos: { select: { nombre: true } },
@@ -266,12 +282,90 @@ export const exportEmpleados = async (req, res) => {
     sheetName: 'Empleados'
   });
 
+  let filename = 'reporte_empleados.xlsx';
+  if (q || departamento_id || status_laboral) {
+    filename = 'reporte_empleados_filtrado.xlsx';
+  }
+
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', 'attachment; filename=reporte_empleados.xlsx');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
 
   bitacoraService.registrar({
     req,
     accion: 'EXPORTAR_EXCEL',
+    modulo: 'Empleados',
+    payload_nuevo: { registros_exportados: data.length }
+  });
+
+  res.send(buffer);
+};
+
+export const exportEmpleadosPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { q, departamento_id, status_laboral } = req.query;
+
+  const where = {
+    AND: [
+      departamento_id ? { departamento_id: Number(departamento_id) } : {},
+      status_laboral ? { status_laboral } : {},
+      q ? {
+        OR: [
+          { nombre: { contains: q, mode: 'insensitive' } },
+          { apellido: { contains: q, mode: 'insensitive' } },
+          { cedula: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
+
+  const empleados = await tenantPrisma.empleados.findMany({
+    where,
+    include: {
+      departamentos: { select: { nombre: true } },
+      cargos: { select: { nombre: true } },
+      oficinas: { select: { nombre: true } }
+    },
+    orderBy: { apellido: 'asc' }
+  });
+
+  const data = empleados.map(e => ({
+    cedula: e.cedula,
+    nombre_completo: `${e.nombre} ${e.apellido}`,
+    email: e.email || 'N/A',
+    telefono: e.telefono || 'N/A',
+    departamento: e.departamentos?.nombre || 'N/A',
+    cargo: e.cargos?.nombre || 'N/A',
+    oficina: e.oficinas?.nombre || 'N/A',
+    status: e.status_laboral
+  }));
+
+  const buffer = await pdfService.generateTable({
+    title: 'Reporte Nacional de Empleados - INSAI',
+    columns: [
+      { header: 'Cédula', key: 'cedula', width: 55 },
+      { header: 'Nombre Completo', key: 'nombre_completo' },
+      { header: 'Email', key: 'email' },
+      { header: 'Teléfono', key: 'telefono', width: 65 },
+      { header: 'Departamento', key: 'departamento' },
+      { header: 'Cargo', key: 'cargo' },
+      { header: 'Oficina', key: 'oficina' },
+      { header: 'Estatus', key: 'status', width: 55 }
+    ],
+    data,
+    orientation: 'landscape'
+  });
+
+  let filename = 'reporte_empleados.pdf';
+  if (q || departamento_id || status_laboral) {
+    filename = 'reporte_empleados_filtrado.pdf';
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+  bitacoraService.registrar({
+    req,
+    accion: 'EXPORTAR_PDF',
     modulo: 'Empleados',
     payload_nuevo: { registros_exportados: data.length }
   });

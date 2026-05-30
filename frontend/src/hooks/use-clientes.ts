@@ -70,6 +70,30 @@ export function useClientes(initialSearch = '', initialLimit = 10) {
     },
   });
 
+  const handleExport = async () => {
+    const toastId = toast.loading('Generando reporte Excel...');
+    try {
+      await clientesService.export({ q: debouncedSearch || undefined });
+      toast.dismiss(toastId);
+      toast.success('Reporte Excel generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar los productores');
+    }
+  };
+
+  const handleExportPdf = async () => {
+    const toastId = toast.loading('Generando reporte PDF...');
+    try {
+      await clientesService.exportPdf({ q: debouncedSearch || undefined });
+      toast.dismiss(toastId);
+      toast.success('Reporte PDF generado');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al exportar los productores en PDF');
+    }
+  };
+
   return {
     clientes: response?.data || [],
     pagination: response?.pagination || { totalCount: 0, totalPages: 0, currentPage: 1, limit: initialLimit },
@@ -85,7 +109,8 @@ export function useClientes(initialSearch = '', initialLimit = 10) {
     updateCliente: updateMutation.mutateAsync,
     deleteCliente: deleteMutation.mutateAsync,
     deleteManyClientes: deleteManyMutation.mutateAsync,
-    exportClientes: clientesService.export,
+    exportClientes: handleExport,
+    exportClientesPdf: handleExportPdf,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
   };

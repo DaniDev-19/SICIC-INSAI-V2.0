@@ -137,8 +137,8 @@ export function InspeccionTable({
   onView,
   onPdf,
   pdfLoadingId = null,
-  canEdit = true,
-  canDelete = true,
+  canEdit = false,
+  canDelete = false,
 }: InspeccionTableProps) {
   if (inspecciones.length === 0) {
     return <EmptyState />;

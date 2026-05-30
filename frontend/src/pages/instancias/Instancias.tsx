@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useInstances } from '@/hooks/use-instances';
-import { usePermissions } from '@/hooks/use-permissions';
+import Can from '@/components/auth/Can';
 import { InstanciasTable } from './components/InstanciasTable';
 import { InstanciaModal } from './components/InstanciaModal';
 import { InstanciaUsuariosDialog } from './components/InstanciaUsuariosDialog';
@@ -30,8 +30,6 @@ import type { MasterInstance } from '@/types/instance';
 
 export default function Instancias() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
-  const canCreate = hasPermission('instancias', 'create');
 
   const {
     instances,
@@ -104,7 +102,7 @@ export default function Instancias() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[140px] rounded-xl">
+            <SelectTrigger className="w-35 rounded-xl">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +112,7 @@ export default function Instancias() {
             </SelectContent>
           </Select>
 
-          <div className="w-[240px] lg:w-[280px]">
+          <div className="w-60 lg:w-60">
             <SearchInput
               placeholder="Buscar por nombre o DB..."
               value={search}
@@ -124,12 +122,12 @@ export default function Instancias() {
             />
           </div>
 
-          {canCreate && (
+          <Can screen="instancias" action="create">
             <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
               <Plus className="size-5 text-white" />
               <span className="text-white">Nueva instancia</span>
             </Button>
-          )}
+          </Can>
         </div>
       </div>
 

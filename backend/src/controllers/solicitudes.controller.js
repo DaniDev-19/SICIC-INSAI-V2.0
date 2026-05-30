@@ -1,5 +1,7 @@
 import bitacoraService from '../services/bitacora.service.js';
 import excelService from '../services/excel.service.js';
+import * as statusSyncService from '../services/status-sync.service.js';
+import pdfService from '../services/pdf.service.js';
 
 const parseTimeInput = (timeStr) => {
   if (!timeStr) return null;
@@ -193,9 +195,10 @@ export const createSolicitud = async (req, res) => {
       }
 
       if (propiedad_id) {
+        const initialStatus = planificacion ? 'PLANIFICADA' : (estatus || 'CREADA');
         await tx.propiedades.update({
           where: { id: propiedad_id },
-          data: { status: 'SOLICITUD_EN_PROCESO' }
+          data: { status: statusSyncService.mapStatusToPropiedad(initialStatus) }
         });
       }
 
@@ -242,13 +245,8 @@ export const updateSolicitud = async (req, res) => {
         data,
       });
 
-      // Update property status based on solicitud estatus
-      if (data.estatus && existing.propiedad_id) {
-        const isFinalState = ['FINALIZADA', 'RECHAZADA', 'CANCELADA'].includes(data.estatus.toUpperCase());
-        await tx.propiedades.update({
-          where: { id: existing.propiedad_id },
-          data: { status: isFinalState ? 'ACTIVA' : 'EN_PROCESO_INSPECCION' }
-        });
+      if (data.estatus) {
+        await statusSyncService.syncFromSolicitud(tx, id, data.estatus);
       }
 
       return { response: updated, existing };
@@ -397,11 +395,27 @@ export const deleteManySolicitudes = async (req, res) => {
 
 export const exportSolicitudes = async (req, res) => {
   const tenantPrisma = req.db;
+  const { estatus, prioridad, q } = req.query;
+
+  const where = {
+    AND: [
+      estatus ? { estatus } : {},
+      prioridad ? { prioridad } : {},
+      q ? {
+        OR: [
+          { codigo: { contains: q, mode: 'insensitive' } },
+          { descripcion: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
+
   const solicitudes = await tenantPrisma.solicitudes.findMany({
+    where,
     include: {
       clientes: { select: { nombre: true, cedula_rif: true } },
       propiedades: { select: { nombre: true, codigo_insai: true } },
-      t_solicitud: { select: { nombre: true } }
+      t_solicitud: { select: { font: true, nombre: true } }
     },
     orderBy: { created_at: 'desc' }
   });
@@ -439,7 +453,80 @@ export const exportSolicitudes = async (req, res) => {
     sheetName: 'Solicitudes'
   });
 
+  let filename = 'reporte_solicitudes.xlsx';
+  if (estatus || prioridad || q) {
+    filename = 'reporte_solicitudes_filtrado.xlsx';
+  }
+
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', 'attachment; filename=reporte_solicitudes.xlsx');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+  res.send(buffer);
+};
+
+export const exportSolicitudesPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { estatus, prioridad, q } = req.query;
+
+  const where = {
+    AND: [
+      estatus ? { estatus } : {},
+      prioridad ? { prioridad } : {},
+      q ? {
+        OR: [
+          { codigo: { contains: q, mode: 'insensitive' } },
+          { descripcion: { contains: q, mode: 'insensitive' } },
+        ]
+      } : {}
+    ]
+  };
+
+  const solicitudes = await tenantPrisma.solicitudes.findMany({
+    where,
+    include: {
+      clientes: { select: { nombre: true, cedula_rif: true } },
+      propiedades: { select: { nombre: true, codigo_insai: true } },
+      t_solicitud: { select: { nombre: true } }
+    },
+    orderBy: { created_at: 'desc' }
+  });
+
+  const data = solicitudes.map(s => ({
+    codigo: s.codigo,
+    descripcion: s.descripcion || 'N/A',
+    fecha: s.created_at ? new Date(s.created_at).toLocaleDateString() : 'N/A',
+    estatus: s.estatus,
+    prioridad: s.prioridad,
+    medio: s.medio_recepcion || 'PRESENCIAL',
+    tipo: s.t_solicitud?.nombre || 'N/A',
+    solicitante: s.clientes?.nombre || 'N/A',
+    cedula: s.clientes?.cedula_rif || 'N/A',
+    propiedad: s.propiedades?.nombre || 'N/A',
+    insai: s.propiedades?.codigo_insai || 'N/A'
+  }));
+
+  const buffer = await pdfService.generateTable({
+    title: 'Reporte Nacional de Solicitudes y Trámites - INSAI',
+    columns: [
+      { header: 'Código', key: 'codigo', width: 70 },
+      { header: 'Tipo de Trámite', key: 'tipo' },
+      { header: 'Fecha', key: 'fecha', width: 55 },
+      { header: 'Estatus', key: 'estatus', width: 70 },
+      { header: 'Prioridad', key: 'prioridad', width: 60 },
+      { header: 'Solicitante', key: 'solicitante' },
+      { header: 'Cédula/RIF', key: 'cedula', width: 65 },
+      { header: 'Predio Rural', key: 'propiedad' },
+      { header: 'INSAI Predio', key: 'insai', width: 80 }
+    ],
+    data,
+    orientation: 'landscape'
+  });
+
+  let filename = 'reporte_solicitudes.pdf';
+  if (estatus || prioridad || q) {
+    filename = 'reporte_solicitudes_filtrado.pdf';
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
   res.send(buffer);
 };
