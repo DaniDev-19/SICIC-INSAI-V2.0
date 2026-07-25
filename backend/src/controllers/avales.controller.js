@@ -9,12 +9,29 @@ export const getAvales = async (req, res) => {
   const skip = (page - 1) * limit;
   const { q } = req.query;
 
-  const where = q ? {
-    OR: [
-      { numero_aval: { contains: q, mode: 'insensitive' } },
-      { codigo_predio: { contains: q, mode: 'insensitive' } }
-    ]
-  } : {};
+  const where = { AND: [] };
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { numero_aval: { contains: token, mode: 'insensitive' } },
+          { codigo_predio: { contains: token, mode: 'insensitive' } },
+          { inspecciones: { n_control: { contains: token, mode: 'insensitive' } } },
+          {
+            empleados_avales_sanitarios_medico_responsable_idToempleados: {
+              nombre: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            empleados_avales_sanitarios_medico_responsable_idToempleados: {
+              apellido: { contains: token, mode: 'insensitive' }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   const [avales, totalCount] = await Promise.all([
     tenantPrisma.avales_sanitarios.findMany({

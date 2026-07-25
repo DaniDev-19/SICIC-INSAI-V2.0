@@ -28,14 +28,40 @@ export const getSolicitudes = async (req, res) => {
       prioridad ? { prioridad } : {},
       solicitante_id ? { solicitante_id: Number(solicitante_id) } : {},
       propiedad_id ? { propiedad_id: Number(propiedad_id) } : {},
-      q ? {
-        OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { descripcion: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { codigo: { contains: token, mode: 'insensitive' } },
+          { descripcion: { contains: token, mode: 'insensitive' } },
+          {
+            clientes: {
+              nombre: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            clientes: {
+              cedula_rif: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            propiedades: {
+              nombre: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            propiedades: {
+              codigo_insai: { contains: token, mode: 'insensitive' }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   const [solicitudes, totalCount] = await Promise.all([
     tenantPrisma.solicitudes.findMany({

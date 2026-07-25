@@ -14,15 +14,32 @@ export const getPropiedades = async (req, res) => {
     AND: [
       tipo_propiedad_id ? { tipo_propiedad_id: Number(tipo_propiedad_id) } : {},
       due_o_id ? { due_o_id: Number(due_o_id) } : {},
-      q ? {
-        OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { codigo_insai: { contains: q, mode: 'insensitive' } },
-          { rif: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { codigo_insai: { contains: token, mode: 'insensitive' } },
+          { rif: { contains: token, mode: 'insensitive' } },
+          { punto_referencia: { contains: token, mode: 'insensitive' } },
+          {
+            clientes: {
+              nombre: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            clientes: {
+              cedula_rif: { contains: token, mode: 'insensitive' }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   const [propiedades, totalCount] = await Promise.all([
     tenantPrisma.propiedades.findMany({

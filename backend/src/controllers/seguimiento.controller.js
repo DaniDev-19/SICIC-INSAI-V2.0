@@ -2,6 +2,25 @@ import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 import inventoryService from '../services/inventory.service.js';
 
+const SEGUIMIENTO_INCLUDE = {
+  inspecciones: {
+    include: {
+      planificaciones: {
+        include: {
+          solicitudes: {
+            include: {
+              clientes: { select: { id: true, nombre: true } },
+              propiedades: { select: { id: true, nombre: true } }
+            }
+          }
+        }
+      }
+    }
+  },
+  acta_silos: { select: { semana_epid: true, lugar_ubicacion: true } },
+  seguimiento_fotos: true
+};
+
 export const getSeguimientos = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
@@ -13,14 +32,57 @@ export const getSeguimientos = async (req, res) => {
     AND: [
       inspeccion_id ? { inspeccion_id: Number(inspeccion_id) } : {},
       acta_silo_id ? { acta_silo_id: Number(acta_silo_id) } : {},
-      q ? {
-        OR: [
-          { hallazgos_seguimiento: { contains: q, mode: 'insensitive' } },
-          { status: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { hallazgos_seguimiento: { contains: token, mode: 'insensitive' } },
+          { status: { contains: token, mode: 'insensitive' } },
+          {
+            inspecciones: {
+              n_control: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            inspecciones: {
+              planificaciones: {
+                solicitudes: {
+                  propiedades: {
+                    nombre: { contains: token, mode: 'insensitive' }
+                  }
+                }
+              }
+            }
+          },
+          {
+            inspecciones: {
+              planificaciones: {
+                solicitudes: {
+                  clientes: {
+                    nombre: { contains: token, mode: 'insensitive' }
+                  }
+                }
+              }
+            }
+          },
+          {
+            acta_silos: {
+              semana_epid: { contains: token, mode: 'insensitive' }
+            }
+          },
+          {
+            acta_silos: {
+              lugar_ubicacion: { contains: token, mode: 'insensitive' }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   const [seguimientos, totalCount] = await Promise.all([
     tenantPrisma.seguimiento_inspecciones.findMany({
@@ -28,11 +90,7 @@ export const getSeguimientos = async (req, res) => {
       skip,
       take: limit,
       orderBy: { fecha_seguimiento: 'desc' },
-      include: {
-        inspecciones: { select: { n_control: true, fecha_inspeccion: true } },
-        acta_silos: { select: { semana_epid: true, lugar_ubicacion: true } },
-        seguimiento_fotos: true
-      }
+      include: SEGUIMIENTO_INCLUDE
     }),
     tenantPrisma.seguimiento_inspecciones.count({ where }),
   ]);
@@ -55,12 +113,7 @@ export const getSeguimientoById = async (req, res) => {
 
   const seguimiento = await tenantPrisma.seguimiento_inspecciones.findUnique({
     where: { id: Number(id) },
-    include: {
-      inspecciones: true,
-      acta_silos: true,
-      seguimiento_fotos: true,
-      movimientos_insumos: true
-    }
+    include: SEGUIMIENTO_INCLUDE
   });
 
   if (!seguimiento) {
@@ -100,7 +153,8 @@ export const createSeguimiento = async (req, res) => {
           seguimiento_fotos: {
             create: photoUrls.map(url => ({ imagen: url }))
           }
-        }
+        },
+        include: SEGUIMIENTO_INCLUDE
       });
 
       if (insumos_consumidos) {
@@ -162,6 +216,8 @@ export const updateSeguimiento = async (req, res) => {
   if (data.recomendaciones_cumplidas !== undefined) {
     data.recomendaciones_cumplidas = data.recomendaciones_cumplidas === 'true' || data.recomendaciones_cumplidas === true;
   }
+  if (!data.inspeccion_id) delete data.inspeccion_id;
+  if (!data.acta_silo_id) delete data.acta_silo_id;
 
   const response = await tenantPrisma.seguimiento_inspecciones.update({
     where: { id: Number(id) },
@@ -170,7 +226,8 @@ export const updateSeguimiento = async (req, res) => {
       seguimiento_fotos: newPhotoUrls.length > 0 ? {
         create: newPhotoUrls.map(url => ({ imagen: url }))
       } : undefined
-    }
+    },
+    include: SEGUIMIENTO_INCLUDE
   });
 
   bitacoraService.registrar({

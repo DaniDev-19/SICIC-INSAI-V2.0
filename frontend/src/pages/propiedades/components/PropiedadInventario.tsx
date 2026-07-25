@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePropiedadInventario } from '@/hooks/use-propiedades-inventario';
 import { useCultivos } from '@/hooks/use-cultivos';
 import { useAnimales } from '@/hooks/use-animales';
 import apiClient from '@/lib/api-client';
-import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield, FileText } from 'lucide-react';
+import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield, FileText, Activity, Calendar, CheckCircle2, AlertTriangle, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,7 +43,9 @@ function resolveImageUrl(url: string): string {
 }
 
 export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
-  const [activeTab, setActiveTab] = useState<'cultivos' | 'animales' | 'hierros' | 'solicitudes'>('cultivos');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'cultivos' | 'animales' | 'hierros' | 'solicitudes' | 'historial'>('cultivos');
+  const [expandedInspId, setExpandedInspId] = useState<number | null>(null);
 
   const { inventario, isLoading, addCultivo, removeCultivo, addAnimal, removeAnimal, addHierro, removeHierro, isAddingCultivo, isAddingAnimal, isAddingHierro } = usePropiedadInventario(propiedadId);
   const { cultivos, setLimit: setCultivosLimit } = useCultivos();
@@ -50,6 +53,9 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
 
   const [solicitudesPropiedad, setSolicitudesPropiedad] = useState<any[]>([]);
   const [isLoadingSolicitudes, setIsLoadingSolicitudes] = useState(false);
+
+  const [inspeccionesPropiedad, setInspeccionesPropiedad] = useState<any[]>([]);
+  const [isLoadingInspecciones, setIsLoadingInspecciones] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'solicitudes') {
@@ -63,6 +69,24 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
         })
         .finally(() => {
           setIsLoadingSolicitudes(false);
+        });
+    }
+
+    if (activeTab === 'historial') {
+      setIsLoadingInspecciones(true);
+      apiClient.get(`/inspecciones?limit=100`)
+        .then(res => {
+          const all: any[] = res.data?.data || [];
+          const filtered = all.filter(
+            (i: any) => i.planificaciones?.solicitudes?.propiedades?.id === propiedadId || i.planificaciones?.solicitudes?.propiedad_id === propiedadId
+          );
+          setInspeccionesPropiedad(filtered);
+        })
+        .catch(err => {
+          console.error("Error loading property inspections:", err);
+        })
+        .finally(() => {
+          setIsLoadingInspecciones(false);
         });
     }
   }, [activeTab, propiedadId]);
@@ -187,6 +211,17 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
         >
           <FileText className="size-4" />
           Solicitudes
+        </button>
+        <button
+          title="Historial de Inspecciones y Seguimientos de la propiedad"
+          onClick={() => setActiveTab('historial')}
+          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'historial'
+            ? 'bg-rose-500/10 text-rose-600 shadow-sm'
+            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+        >
+          <Activity className="size-4" />
+          Inspecciones y Seguimientos
         </button>
       </div>
 
@@ -485,26 +520,180 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                               {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
                             </TableCell>
                             <TableCell className="text-xs">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.prioridad === 'URGENTE' ? 'bg-rose-100 text-rose-700' :
-                                item.prioridad === 'ALTA' ? 'bg-amber-100 text-amber-700' :
-                                item.prioridad === 'MEDIA' ? 'bg-blue-100 text-blue-700' :
-                                'bg-slate-100 text-slate-700'
-                              }`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${item.prioridad === 'URGENTE' ? 'bg-rose-100 text-rose-700' :
+                                  item.prioridad === 'ALTA' ? 'bg-amber-100 text-amber-700' :
+                                    item.prioridad === 'MEDIA' ? 'bg-blue-100 text-blue-700' :
+                                      'bg-slate-100 text-slate-700'
+                                }`}>
                                 {item.prioridad}
                               </span>
                             </TableCell>
                             <TableCell className="text-xs">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                ['FINALIZADA', 'APROBADA'].includes(item.estatus) ? 'bg-emerald-100 text-emerald-700' :
-                                ['NO_APROBADA', 'RECHAZADA', 'CANCELADA'].includes(item.estatus) ? 'bg-rose-100 text-rose-700' :
-                                'bg-amber-100 text-amber-700'
-                              }`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${['FINALIZADA', 'APROBADA'].includes(item.estatus) ? 'bg-emerald-100 text-emerald-700' :
+                                  ['NO_APROBADA', 'RECHAZADA', 'CANCELADA'].includes(item.estatus) ? 'bg-rose-100 text-rose-700' :
+                                    'bg-amber-100 text-amber-700'
+                                }`}>
                                 {item.estatus?.replace(/_/g, ' ')}
                               </span>
                             </TableCell>
                           </TableRow>
                         ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── HISTORIAL DE INSPECCIONES Y SEGUIMIENTOS ── */}
+        {activeTab === 'historial' && (
+          <div className="space-y-6 animate-in fade-in">
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-background">
+              {isLoadingInspecciones ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                  <Loader2 className="size-6 text-primary animate-spin" />
+                  <p className="text-xs text-muted-foreground">Cargando historial sanitario de la propiedad...</p>
+                </div>
+              ) : (
+                <div className="max-h-87.5 overflow-y-auto custom-scrollbar">
+                  <Table>
+                    <TableHeader className="bg-muted/30 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead className="w-10"></TableHead>
+                        <TableHead className="font-bold text-xs">N° Control</TableHead>
+                        <TableHead className="font-bold text-xs">Fecha Inspección</TableHead>
+                        <TableHead className="font-bold text-xs">Áreas Eval.</TableHead>
+                        <TableHead className="font-bold text-xs">Estatus Inspección</TableHead>
+                        <TableHead className="font-bold text-xs text-center">Visitas Seguimiento</TableHead>
+                        <TableHead className="font-bold text-xs text-right">Acción</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inspeccionesPropiedad.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground italic">
+                            No existen inspecciones registradas para esta propiedad
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        inspeccionesPropiedad.map((insp: any) => {
+                          const segs = insp.seguimiento_inspecciones || [];
+                          const segsCount = segs.length;
+                          const isExpanded = expandedInspId === insp.id;
+
+                          return (
+                            <React.Fragment key={insp.id}>
+                              <TableRow
+                                onClick={() => setExpandedInspId(isExpanded ? null : insp.id)}
+                                className="hover:bg-muted/10 transition-colors cursor-pointer"
+                              >
+                                <TableCell className="w-10">
+                                  {segsCount > 0 && (
+                                    <Button variant="ghost" size="icon" className="size-6 p-0">
+                                      {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                                    </Button>
+                                  )}
+                                </TableCell>
+                                <TableCell className="font-bold text-primary text-xs">{insp.n_control}</TableCell>
+                                <TableCell className="text-muted-foreground text-xs">
+                                  {insp.fecha_inspeccion ? new Date(insp.fecha_inspeccion).toLocaleDateString() : '-'}
+                                </TableCell>
+                                <TableCell className="text-xs max-w-xs truncate">
+                                  {Array.isArray(insp.areas_inspeccion)
+                                    ? insp.areas_inspeccion.join(', ')
+                                    : insp.areas_inspeccion || 'General'}
+                                </TableCell>
+                                <TableCell className="text-xs">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    insp.status === 'FINALIZADA' ? 'bg-emerald-100 text-emerald-700' :
+                                      insp.status === 'CUARENTENA' ? 'bg-rose-100 text-rose-700 font-black' :
+                                        insp.status === 'SEGUIMIENTO' ? 'bg-indigo-100 text-indigo-700' :
+                                          'bg-amber-100 text-amber-700'
+                                    }`}>
+                                    {insp.status}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-center text-xs">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted font-bold text-foreground border border-border">
+                                    <Activity className="size-3 text-indigo-500" />
+                                    {segsCount} seguimiento(s)
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right text-xs">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/home/seguimientos?inspeccion_id=${insp.id}&openModal=true`);
+                                    }}
+                                    className="h-7 text-[11px] font-bold gap-1 rounded-lg hover:bg-indigo-500/10 hover:text-indigo-600 cursor-pointer"
+                                  >
+                                    <Plus className="size-3" />
+                                    Seguimiento
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+
+                              {/* Subtabla de Seguimientos si está expandida */}
+                              {isExpanded && (
+                                <TableRow className="bg-muted/5 hover:bg-muted/5">
+                                  <TableCell colSpan={7} className="p-4 pl-12">
+                                    <div className="space-y-3 bg-card p-4 rounded-xl border border-border">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-1.5">
+                                          <Activity className="size-3.5" />
+                                          Historial de Visitas de Seguimiento para {insp.n_control}
+                                        </h4>
+                                      </div>
+
+                                      {segs.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground italic">
+                                          No hay visitas de seguimiento registradas aún para esta inspección.
+                                        </p>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          {segs.map((seg: any) => (
+                                            <div
+                                              key={seg.id}
+                                              className="p-3 bg-muted/20 rounded-lg border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                                            >
+                                              <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="font-bold text-foreground">
+                                                    Visita del {seg.fecha_seguimiento ? new Date(seg.fecha_seguimiento).toLocaleDateString() : 'N/A'}
+                                                  </span>
+                                                  {seg.recomendaciones_cumplidas ? (
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">
+                                                      Recomendaciones Cumplidas
+                                                    </span>
+                                                  ) : (
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600">
+                                                      Recomendaciones Pendientes
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <p className="text-muted-foreground text-[11px]">
+                                                  {seg.hallazgos_seguimiento || 'Sin hallazgos detallados'}
+                                                </p>
+                                              </div>
+
+                                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-muted text-muted-foreground border shrink-0 self-start sm:self-center">
+                                                {seg.status || 'EN_PROCESO'}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </React.Fragment>
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
