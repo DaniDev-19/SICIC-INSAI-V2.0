@@ -28,15 +28,35 @@ export const getPlanificaciones = async (req, res) => {
     AND: [
       status ? { status } : {},
       fecha_programada ? { fecha_programada: new Date(fecha_programada) } : {},
-      q ? {
-        OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { actividad: { contains: q, mode: 'insensitive' } },
-          { objetivo: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { codigo: { contains: token, mode: 'insensitive' } },
+          { actividad: { contains: token, mode: 'insensitive' } },
+          { objetivo: { contains: token, mode: 'insensitive' } },
+          {
+            solicitudes: {
+              clientes: {
+                nombre: { contains: token, mode: 'insensitive' }
+              }
+            }
+          },
+          {
+            solicitudes: {
+              propiedades: {
+                nombre: { contains: token, mode: 'insensitive' }
+              }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   if (rol === 'INSPECTOR' && empleado_id) {
     where.AND.push({

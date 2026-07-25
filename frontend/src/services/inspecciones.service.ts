@@ -83,6 +83,11 @@ export const inspectionsService = {
     return data;
   },
 
+  patchStatus: async (id: number, status: string): Promise<ApiResponse<Inspeccion>> => {
+    const { data } = await apiClient.patch<ApiResponse<Inspeccion>>(`/inspecciones/${id}/status`, { status });
+    return data;
+  },
+
   delete: async (id: number): Promise<SimpleResponse> => {
     const { data } = await apiClient.delete<SimpleResponse>(`/inspecciones/${id}`);
     return data;

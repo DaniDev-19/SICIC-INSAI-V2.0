@@ -5,11 +5,29 @@ export const getVehiculos = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 40;
   const skip = (page - 1) * limit;
-  const { status, tipo } = req.query;
+  const { status, tipo, q } = req.query;
 
-  const where = {};
-  if (status) where.status = status;
-  if (tipo) where.tipo = tipo;
+  const where = {
+    AND: [
+      status ? { status } : {},
+      tipo ? { tipo } : {},
+    ]
+  };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { placa: { contains: token, mode: 'insensitive' } },
+          { marca: { contains: token, mode: 'insensitive' } },
+          { modelo: { contains: token, mode: 'insensitive' } },
+          { color: { contains: token, mode: 'insensitive' } },
+          { tipo: { contains: token, mode: 'insensitive' } },
+        ]
+      });
+    });
+  }
 
   const [vehiculos, totalCount] = await Promise.all([
     tenantPrisma.vehiculos.findMany({

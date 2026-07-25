@@ -18,11 +18,15 @@ import {
   Link as LinkIcon,
   ClipboardList,
   Image as ImageIcon,
+  Activity,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media-url';
 import { formatHoraInspeccion12h } from '@/utils/inspeccion-time';
 import type { InspeccionStatus } from '@/types/inspecciones';
+import { isEligibleSeguimiento, isEligibleAval } from './InspeccionTable';
+import Can from '@/components/auth/Can';
 
 const STATUS_STYLES: Record<InspeccionStatus, string> = {
   PENDIENTE: 'bg-zinc-500/10 text-zinc-600 border-zinc-500/20',
@@ -39,6 +43,8 @@ interface InspeccionDetailsModalProps {
   onClose: () => void;
   inspeccionId: number | null;
   onPdf?: (id: number) => void;
+  onSeguimiento?: (inspeccion: any) => void;
+  onAval?: (inspeccion: any) => void;
   pdfLoadingId?: number | null;
 }
 
@@ -47,12 +53,16 @@ export function InspeccionDetailsModal({
   onClose,
   inspeccionId,
   onPdf,
+  onSeguimiento,
+  onAval,
   pdfLoadingId = null,
 }: InspeccionDetailsModalProps) {
   const { inspeccion, isLoading } = useInspeccion(isOpen ? inspeccionId : null);
 
   const plan = inspeccion?.planificaciones;
   const solic = plan?.solicitudes;
+  const showSeguimiento = inspeccion ? isEligibleSeguimiento(inspeccion) && !!onSeguimiento : false;
+  const showAval = inspeccion ? isEligibleAval(inspeccion) && !!onAval : false;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -72,22 +82,58 @@ export function InspeccionDetailsModal({
                 </DialogDescription>
               </div>
             </div>
-            {inspeccionId && onPdf && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pdfLoadingId !== null}
-                onClick={() => onPdf(inspeccionId)}
-                className="cursor-pointer w-full sm:w-auto shrink-0 gap-2 disabled:opacity-60"
-              >
-                {pdfLoadingId === inspeccionId ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <FileText className="size-4" />
-                )}
-                {pdfLoadingId === inspeccionId ? 'Generando acta...' : 'Acta PDF'}
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              {showSeguimiento && (
+                <Can screen="seguimientos" action="create">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      onSeguimiento?.(inspeccion);
+                    }}
+                    className="cursor-pointer bg-indigo-500/10 text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/20 gap-1.5 text-xs font-bold"
+                  >
+                    <Activity className="size-3.5" />
+                    + Seguimiento
+                  </Button>
+                </Can>
+              )}
+              {showAval && (
+                <Can screen="avales" action="create">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      onAval?.(inspeccion);
+                    }}
+                    className="cursor-pointer bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20 gap-1.5 text-xs font-bold"
+                  >
+                    <ShieldCheck className="size-3.5" />
+                    + Aval Sanitario
+                  </Button>
+                </Can>
+              )}
+              {inspeccionId && onPdf && (
+                <Can screen="inspecciones" action="see">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pdfLoadingId !== null}
+                    onClick={() => onPdf(inspeccionId)}
+                    className="cursor-pointer shrink-0 gap-2 disabled:opacity-60 text-xs font-bold"
+                  >
+                    {pdfLoadingId === inspeccionId ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <FileText className="size-4" />
+                    )}
+                    {pdfLoadingId === inspeccionId ? 'Generando...' : 'Acta PDF'}
+                  </Button>
+                </Can>
+              )}
+            </div>
           </div>
         </DialogHeader>
 

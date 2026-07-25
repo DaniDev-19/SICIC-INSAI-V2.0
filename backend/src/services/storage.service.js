@@ -88,7 +88,11 @@ class StorageService {
         const fileName = fileUrl.split('/uploads/')[1];
         if (fileName) {
           const fullPath = path.resolve('uploads', fileName);
-          await fs.unlink(fullPath);
+          try {
+            await fs.unlink(fullPath);
+          } catch (unlinkErr) {
+            if (unlinkErr.code !== 'ENOENT') throw unlinkErr;
+          }
         }
       }
     } catch (error) {

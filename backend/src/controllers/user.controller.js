@@ -15,13 +15,18 @@ export const getUsers = async (req, res) => {
   const skip = (page - 1) * limit;
   const { search, status } = req.query;
 
-  const where = {};
+  const where = { AND: [] };
 
-  if (search) {
-    where.OR = [
-      { username: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
+  if (search && search.trim()) {
+    const tokens = search.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { username: { contains: token, mode: 'insensitive' } },
+          { email: { contains: token, mode: 'insensitive' } },
+        ]
+      });
+    });
   }
 
   if (status !== undefined && status !== 'all') {

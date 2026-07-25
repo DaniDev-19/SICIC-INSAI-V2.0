@@ -7,17 +7,25 @@ export const getProgramas = async (req, res) => {
   const skip = (page - 1) * limit;
   const { tipo_programa_id, search } = req.query;
 
-  const where = {};
+  const where = { AND: [] };
 
   if (tipo_programa_id && tipo_programa_id !== 'all') {
-    where.tipo_programa_id = Number(tipo_programa_id);
+    where.AND.push({ tipo_programa_id: Number(tipo_programa_id) });
   }
 
-  if (search) {
-    where.OR = [
-      { nombre: { contains: search, mode: 'insensitive' } },
-      { descripcion: { contains: search, mode: 'insensitive' } },
-    ];
+  const querySearch = search || req.query.q;
+
+  if (querySearch && querySearch.trim()) {
+    const tokens = querySearch.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { descripcion: { contains: token, mode: 'insensitive' } },
+          { t_programa: { nombre: { contains: token, mode: 'insensitive' } } }
+        ]
+      });
+    });
   }
 
   const [programas, totalCount] = await Promise.all([

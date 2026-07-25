@@ -71,6 +71,22 @@ export function useInspecciones(initialLimit = 10) {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      inspectionsService.patchStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inspecciones'] });
+      queryClient.invalidateQueries({ queryKey: ['inspeccion'] });
+      queryClient.invalidateQueries({ queryKey: ['planificaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitudes'] });
+      queryClient.invalidateQueries({ queryKey: ['propiedades'] });
+      toast.success('Estatus de inspección y sincronizaciones actualizados con éxito');
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Error al cambiar el estatus de la inspección');
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: inspectionsService.delete,
     onSuccess: () => {
@@ -158,6 +174,7 @@ export function useInspecciones(initialLimit = 10) {
     setSearchQuery,
     createInspeccion: createMutation.mutateAsync,
     updateInspeccion: updateMutation.mutateAsync,
+    updateInspeccionStatus: (id: number, status: string) => updateStatusMutation.mutateAsync({ id, status }),
     deleteInspeccion: deleteMutation.mutateAsync,
     exportInspecciones,
     exportInspeccionesPdf,
@@ -165,6 +182,7 @@ export function useInspecciones(initialLimit = 10) {
     pdfLoadingId,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isUpdatingStatus: updateStatusMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 }

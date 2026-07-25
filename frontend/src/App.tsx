@@ -21,6 +21,7 @@ import Vehiculos from './pages/vehiculos/Vehiculos';
 import Planificaciones from './pages/planificaciones/Planificaciones';
 import Inspecciones from './pages/inspecciones/Inspecciones';
 import InspeccionesSilos from './pages/inspecciones-silos/InspeccionesSilos';
+import Seguimientos from './pages/seguimientos/Seguimientos';
 
 import { ProtectedRoute } from './components/auth/protected-route';
 import { PublicRoute } from './components/auth/public-route';
@@ -89,6 +90,9 @@ function App() {
               </Route>
               <Route element={<PermissionRoute screen="inspecciones" />}>
                 <Route path='inspecciones' element={<Inspecciones />} />
+              </Route>
+              <Route element={<PermissionRoute screen="seguimientos" />}>
+                <Route path='seguimientos' element={<Seguimientos />} />
               </Route>
               <Route element={<PermissionRoute screen="acta_silos" />}>
                 <Route path='inspecciones-silos' element={<InspeccionesSilos />} />

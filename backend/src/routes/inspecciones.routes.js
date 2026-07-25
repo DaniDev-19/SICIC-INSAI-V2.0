@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as inspeccionesController from '../controllers/inspecciones.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
-import { createInspeccionSchema, updateInspeccionSchema } from '../schemas/inspecciones.schema.js';
+import {
+  createInspeccionSchema,
+  updateInspeccionSchema,
+  patchStatusInspeccionSchema,
+} from '../schemas/inspecciones.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 import { checkPermission } from '../middlewares/permission.middleware.js';
@@ -49,6 +53,13 @@ router.put(
   upload.array('fotos', 10),
   validateSchema(updateInspeccionSchema),
   inspeccionesController.updateInspeccion
+);
+
+router.patch(
+  '/:id/status',
+  checkPermission('inspecciones', 'update'),
+  validateSchema(patchStatusInspeccionSchema),
+  inspeccionesController.updateInspeccionStatus
 );
 
 router.delete('/:id', checkPermission('inspecciones', 'delete'), inspeccionesController.deleteInspeccion);

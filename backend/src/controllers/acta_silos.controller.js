@@ -14,15 +14,47 @@ export const getActaSilos = async (req, res) => {
   const where = {
     AND: [
       planificacion_id ? { planificacion_id: Number(planificacion_id) } : {},
-      q ? {
-        OR: [
-          { semana_epid: { contains: q, mode: 'insensitive' } },
-          { lugar_ubicacion: { contains: q, mode: 'insensitive' } },
-          { n_silos: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { semana_epid: { contains: token, mode: 'insensitive' } },
+          { lugar_ubicacion: { contains: token, mode: 'insensitive' } },
+          { n_silos: { contains: token, mode: 'insensitive' } },
+          { observaciones: { contains: token, mode: 'insensitive' } },
+          {
+            planificaciones: {
+              solicitudes: {
+                clientes: {
+                  nombre: { contains: token, mode: 'insensitive' }
+                }
+              }
+            }
+          },
+          {
+            planificaciones: {
+              solicitudes: {
+                propiedades: {
+                  nombre: { contains: token, mode: 'insensitive' }
+                }
+              }
+            }
+          },
+          {
+            planificaciones: {
+              solicitudes: {
+                codigo: { contains: token, mode: 'insensitive' }
+              }
+            }
+          }
+        ]
+      });
+    });
+  }
 
   const [actas, totalCount] = await Promise.all([
     tenantPrisma.acta_silos.findMany({

@@ -87,17 +87,41 @@ function buildInspeccionesWhere(req) {
     AND: [
       status ? { status } : {},
       planificacion_id ? { planificacion_id: Number(planificacion_id) } : {},
-      q
-        ? {
-            OR: [
-              { n_control: { contains: q, mode: 'insensitive' } },
-              { t_codigo: { contains: q, mode: 'insensitive' } },
-              { atendido_por_nombre: { contains: q, mode: 'insensitive' } },
-            ],
-          }
-        : {},
     ],
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { n_control: { contains: token, mode: 'insensitive' } },
+          { t_codigo: { contains: token, mode: 'insensitive' } },
+          { atendido_por_nombre: { contains: token, mode: 'insensitive' } },
+          { aspectos_constatados: { contains: token, mode: 'insensitive' } },
+          { medidas_ordenadas: { contains: token, mode: 'insensitive' } },
+          {
+            planificaciones: {
+              solicitudes: {
+                clientes: {
+                  nombre: { contains: token, mode: 'insensitive' },
+                },
+              },
+            },
+          },
+          {
+            planificaciones: {
+              solicitudes: {
+                propiedades: {
+                  nombre: { contains: token, mode: 'insensitive' },
+                },
+              },
+            },
+          },
+        ],
+      });
+    });
+  }
 
   if (!isAdmin && empleadoId) {
     where.AND.push({
@@ -130,14 +154,19 @@ export const getInspecciones = async (req, res) => {
           include: {
             solicitudes: {
               include: {
-                clientes: { select: { nombre: true } },
-                propiedades: { select: { nombre: true } }
+                clientes: { select: { id: true, nombre: true } },
+                propiedades: { select: { id: true, nombre: true } }
               }
             }
           }
         },
         finalidad_inspeccion: { include: { finalidad: true } },
-        inspeccion_fotos: true
+        inspeccion_fotos: true,
+        seguimiento_inspecciones: {
+          include: {
+            seguimiento_fotos: true
+          }
+        }
       }
     }),
     tenantPrisma.inspecciones.count({ where }),
@@ -378,7 +407,7 @@ export const createInspeccion = async (req, res) => {
 export const updateInspeccion = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const { finalidades, estado_abrev, fotos_eliminadas, areas_inspeccion, ...data } = req.body;
+  const { finalidades, estado_abrev, fotos_eliminadas, areas_inspeccion, planificacion_id, ...data } = req.body;
 
   const isAdmin = isAdminUser(req);
   const empleadoId = req.user?.currentInstance?.empleado_id;
@@ -448,14 +477,23 @@ export const updateInspeccion = async (req, res) => {
       updatePayload.areas_inspeccion = areasParsed;
     }
 
+    // Conectar planificacion via relación Prisma (no como escalar directo)
+    const effectivePlanificacionId = planificacion_id
+      ? Number(planificacion_id)
+      : existing.planificacion_id;
+
+    if (planificacion_id) {
+      updatePayload.planificaciones = { connect: { id: Number(planificacion_id) } };
+    }
+
     if (
       codigosService.debenRegenerarCodigos(
-        { ...data, estado_abrev, planificacion_id: data.planificacion_id },
+        { ...data, estado_abrev, planificacion_id: effectivePlanificacionId },
         existing
       )
     ) {
       const codigos = await codigosService.resolverCodigosInspeccion(tx, {
-        planificacionId: data.planificacion_id ?? existing.planificacion_id,
+        planificacionId: effectivePlanificacionId,
         fechaInspeccion: data.fecha_inspeccion ?? existing.fecha_inspeccion,
         estadoAbrev: estado_abrev ?? existing.n_control?.split('-')[0],
         excludeId: Number(id),
@@ -481,8 +519,8 @@ export const updateInspeccion = async (req, res) => {
       }
     });
 
-    if (data.status && existing.planificacion_id) {
-      await statusSyncService.syncFromInspeccion(tx, existing.planificacion_id, data.status);
+    if (data.status && effectivePlanificacionId) {
+      await statusSyncService.syncFromInspeccion(tx, effectivePlanificacionId, data.status);
     }
 
     return updated;
@@ -689,4 +727,52 @@ export const getInspeccionReporte = async (req, res) => {
     console.error('Error preparando reporte de inspecci?n:', error);
     res.status(500).json({ status: 'error', message: 'No se pudo preparar el acta' });
   }
+};
+
+export const updateInspeccionStatus = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const existing = await tenantPrisma.inspecciones.findUnique({
+    where: { id: Number(id) },
+    include: {
+      planificaciones: {
+        include: {
+          planificacion_empleados: true,
+        },
+      },
+    },
+  });
+
+  if (!existing) {
+    return res.status(404).json({ status: 'error', message: 'Inspección no encontrada' });
+  }
+
+  if (!canAccessInspeccion(existing, req)) {
+    return res.status(403).json({ status: 'error', message: 'Acceso denegado a esta inspección.' });
+  }
+
+  const updatedInspeccion = await tenantPrisma.$transaction(async (tx) => {
+    const updated = await tx.inspecciones.update({
+      where: { id: Number(id) },
+      data: { status },
+    });
+
+    if (existing.planificacion_id) {
+      await statusSyncService.syncFromInspeccion(tx, existing.planificacion_id, status);
+    }
+
+    return updated;
+  });
+
+  bitacoraService.registrar({
+    req,
+    accion: 'ACTUALIZAR_STATUS',
+    modulo: 'Inspecciones',
+    payload_previo: existing,
+    payload_nuevo: updatedInspeccion,
+  });
+
+  res.status(200).json({ status: 'success', data: updatedInspeccion });
 };

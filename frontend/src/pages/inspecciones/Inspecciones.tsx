@@ -3,11 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
-  Plus,
   Loader2,
   AlertTriangle,
   Activity,
-  Download,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -30,13 +28,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useInspecciones } from '@/hooks/use-inspecciones';
-import Can from '@/components/auth/Can';
 import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { InspeccionTable } from './components/InspeccionTable';
 import { InspeccionModal } from './components/InspeccionModal';
 import { InspeccionDetailsModal } from './components/InspeccionDetailsModal';
 import type { Inspeccion } from '@/types/inspecciones';
+
+import { toast } from 'sonner';
 
 const STATUS_LABELS: Record<string, string> = {
   all: 'Todos',
@@ -65,10 +64,12 @@ export default function Inspecciones() {
     setSearchQuery,
     setStatusFilter,
     deleteInspeccion,
+    updateInspeccionStatus,
     exportInspecciones,
     exportInspeccionesPdf,
     openPdfReport,
     pdfLoadingId,
+    isUpdatingStatus,
   } = useInspecciones();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,6 +104,16 @@ export default function Inspecciones() {
   const handleOpenView = (inspeccion: Inspeccion) => {
     setDetailsId(inspeccion.id);
     setIsDetailsOpen(true);
+  };
+
+  const handleSeguimiento = (inspeccion: Inspeccion) => {
+    toast.info(`Derivando a Seguimiento de Inspección: ${inspeccion.n_control}`);
+    navigate(`/home/seguimientos?inspeccion_id=${inspeccion.id}&openModal=true`);
+  };
+
+  const handleAval = (inspeccion: Inspeccion) => {
+    toast.info(`Derivando a Aval Sanitario para Inspección: ${inspeccion.n_control}`);
+    navigate(`/home/avales?inspeccion_id=${inspeccion.id}&openModal=true`);
   };
 
   const confirmDelete = async () => {
@@ -238,6 +249,10 @@ export default function Inspecciones() {
               onEdit={handleOpenEdit}
               onDelete={setDeleteId}
               onPdf={openPdfReport}
+              onSeguimiento={handleSeguimiento}
+              onAval={handleAval}
+              onStatusChange={updateInspeccionStatus}
+              isUpdatingStatus={isUpdatingStatus}
               pdfLoadingId={pdfLoadingId}
               canEdit={canUpdate}
               canDelete={canDelete}
@@ -268,6 +283,8 @@ export default function Inspecciones() {
         }}
         inspeccionId={detailsId}
         onPdf={openPdfReport}
+        onSeguimiento={handleSeguimiento}
+        onAval={handleAval}
         pdfLoadingId={pdfLoadingId}
       />
 

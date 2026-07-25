@@ -14,15 +14,26 @@ export const getEmpleados = async (req, res) => {
     AND: [
       departamento_id ? { departamento_id: Number(departamento_id) } : {},
       status_laboral ? { status_laboral } : {},
-      q ? {
-        OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { apellido: { contains: q, mode: 'insensitive' } },
-          { cedula: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
     ]
   };
+
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { apellido: { contains: token, mode: 'insensitive' } },
+          { cedula: { contains: token, mode: 'insensitive' } },
+          { email: { contains: token, mode: 'insensitive' } },
+          { telefono: { contains: token, mode: 'insensitive' } },
+          { cargos: { nombre: { contains: token, mode: 'insensitive' } } },
+          { departamentos: { nombre: { contains: token, mode: 'insensitive' } } },
+          { oficinas: { nombre: { contains: token, mode: 'insensitive' } } },
+        ]
+      });
+    });
+  }
 
   const [empleados, totalCount] = await Promise.all([
     tenantPrisma.empleados.findMany({

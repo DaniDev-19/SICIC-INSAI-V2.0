@@ -84,3 +84,9 @@ export const updateInspeccionSchema = z.object({
     ),
   }),
 });
+
+export const patchStatusInspeccionSchema = z.object({
+  body: z.object({
+    status: statusEnum,
+  }),
+});

@@ -9,14 +9,21 @@ export const getClientes = async (req, res) => {
   const skip = (page - 1) * limit;
   const { q } = req.query;
 
-  const where = q ? {
-    OR: [
-      { nombre: { contains: q, mode: 'insensitive' } },
-      { cedula_rif: { contains: q, mode: 'insensitive' } },
-      { email: { contains: q, mode: 'insensitive' } },
-      { codigo_runsai: { contains: q, mode: 'insensitive' } },
-    ]
-  } : {};
+  const where = { AND: [] };
+  if (q && q.trim()) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean);
+    tokens.forEach((token) => {
+      where.AND.push({
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { cedula_rif: { contains: token, mode: 'insensitive' } },
+          { email: { contains: token, mode: 'insensitive' } },
+          { codigo_runsai: { contains: token, mode: 'insensitive' } },
+          { telefono: { contains: token, mode: 'insensitive' } },
+        ]
+      });
+    });
+  }
 
   const [clientes, totalCount] = await Promise.all([
     tenantPrisma.clientes.findMany({
