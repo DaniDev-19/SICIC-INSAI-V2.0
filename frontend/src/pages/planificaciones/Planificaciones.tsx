@@ -8,8 +8,6 @@ import {
   AlertTriangle,
   Activity,
   X,
-  Download,
-  FileText,
   Calendar as CalendarIcon,
   CalendarDays,
   List,

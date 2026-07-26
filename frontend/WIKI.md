@@ -14,6 +14,8 @@ Para profundizar en el funcionamiento técnico del frontend, consulta los siguie
 *   [**Manual de Navegación, Búsqueda y UX V2**](./docs/modernizacion-sidebar-v2.md): Guía completa sobre la arquitectura de dominios, motores de búsqueda (Global/Local) y gestión masiva de datos.
 *   [**Integración de Seguridad y Robustez**](./docs/integracion_seguridad_frontend.md): Guía sobre el manejo de idempotencia y límites de tasa en el cliente API.
 *   [**Gestión de Tipos y Estructura de Archivos**](./docs/gestion_tipos_y_archivos.md): Manual sobre la organización de interfaces TypeScript y jerarquía del proyecto.
+*   [**Módulo de Perfil de Usuario y MFA**](./docs/modulo-perfil-mfa-frontend.md): Guía de la página de perfil (3 pestañas), el modal multi-funcional de MFA y los hooks `useProfile` y `useMfa`.
+*   [**Flujo de Autenticación MFA (2FA) en Login**](./docs/flujo-mfa-login-frontend.md): Manual del flujo de doble paso MFA durante el login, el token temporal `mfaPendingToken` y el hook `useVerifyMfaLogin`.
 
 
 ---

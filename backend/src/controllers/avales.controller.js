@@ -70,6 +70,10 @@ export const createAval = async (req, res) => {
 
   const empleado_id = req.user?.empleado_id || null;
 
+  const parsedInspeccionId = (inspeccion_id && inspeccion_id !== 'none' && inspeccion_id !== 'null' && !isNaN(Number(inspeccion_id))) ? Number(inspeccion_id) : null;
+  const parsedMedicoId = (medico_responsable_id && medico_responsable_id !== 'none' && medico_responsable_id !== 'null' && !isNaN(Number(medico_responsable_id))) ? Number(medico_responsable_id) : null;
+  const parsedJefeOsaId = (jefe_osa_id && jefe_osa_id !== 'none' && jefe_osa_id !== 'null' && !isNaN(Number(jefe_osa_id))) ? Number(jefe_osa_id) : null;
+
   let hierroUrls = [];
   if (req.files && req.files.length > 0) {
     const uploadPromises = req.files.map((file, index) =>
@@ -78,63 +82,78 @@ export const createAval = async (req, res) => {
     hierroUrls = await Promise.all(uploadPromises);
   }
 
+  let cleanBov = null;
+  if (hallazgos_bov_buf) {
+    try {
+      const parsed = typeof hallazgos_bov_buf === 'string' ? JSON.parse(hallazgos_bov_buf) : hallazgos_bov_buf;
+      const { id, aval_id, created_at, updated_at, ...rest } = parsed;
+      cleanBov = {};
+      for (const [k, v] of Object.entries(rest)) {
+        cleanBov[k] = Number(v) || 0;
+      }
+      cleanBov.total_bov_buf = Object.values(cleanBov).reduce((a, b) => a + (Number(b) || 0), 0);
+    } catch (e) {
+      console.error('Error parsing hallazgos_bov_buf:', e);
+    }
+  }
+
+  let cleanOtras = null;
+  if (hallazgos_otras) {
+    try {
+      const parsed = typeof hallazgos_otras === 'string' ? JSON.parse(hallazgos_otras) : hallazgos_otras;
+      cleanOtras = parsed.map(h => ({
+        tipo_animal_id: Number(h.tipo_animal_id),
+        machos: Number(h.machos) || 0,
+        hembras: Number(h.hembras) || 0,
+        crias: Number(h.crias) || 0,
+        total: (Number(h.machos) || 0) + (Number(h.hembras) || 0) + (Number(h.crias) || 0)
+      }));
+    } catch (e) {
+      console.error('Error parsing hallazgos_otras:', e);
+    }
+  }
+
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
-
       const aval = await tx.avales_sanitarios.create({
         data: {
           numero_aval,
-          codigo_predio,
+          codigo_predio: codigo_predio || null,
           fecha_emision: fecha_emision ? new Date(fecha_emision) : new Date(),
           fecha_vencimiento: fecha_vencimiento ? new Date(fecha_vencimiento) : null,
-          certificado_vacunacion_n,
-          observaciones,
-          inspeccion_id,
-          medico_responsable_id,
-          jefe_osa_id,
-          aval_hallazgos_bov_buf: hallazgos_bov_buf ? {
-            create: {
-              ...JSON.parse(hallazgos_bov_buf),
-              total_bov_buf: Object.values(JSON.parse(hallazgos_bov_buf)).reduce((a, b) => a + (Number(b) || 0), 0)
-            }
-          } : undefined,
-          aval_hallazgos_otras: hallazgos_otras ? {
-            create: JSON.parse(hallazgos_otras).map(h => ({
-              tipo_animal_id: h.tipo_animal_id,
-              machos: h.machos,
-              hembras: h.hembras,
-              crias: h.crias,
-              total: (h.machos || 0) + (h.hembras || 0) + (h.crias || 0)
-            }))
-          } : undefined,
+          certificado_vacunacion_n: certificado_vacunacion_n || null,
+          observaciones: observaciones || null,
+          inspeccion_id: parsedInspeccionId,
+          medico_responsable_id: parsedMedicoId,
+          jefe_osa_id: parsedJefeOsaId,
+          aval_hallazgos_bov_buf: cleanBov ? { create: cleanBov } : undefined,
+          aval_hallazgos_otras: cleanOtras && cleanOtras.length > 0 ? { create: cleanOtras } : undefined,
           aval_hierros: hierroUrls.length > 0 ? {
             create: hierroUrls.map(url => ({ hierro_img_url: url }))
           } : undefined
         }
       });
 
-
       if (biologicos) {
-        const parsedBiologicos = JSON.parse(biologicos);
+        const parsedBiologicos = typeof biologicos === 'string' ? JSON.parse(biologicos) : biologicos;
         for (const bio of parsedBiologicos) {
-
+          if (!bio.insumo_id) continue;
           await tx.aval_biologicos.create({
             data: {
               aval_id: aval.id,
-              insumo_id: bio.insumo_id,
+              insumo_id: Number(bio.insumo_id),
               fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
-              pruebas_diagnosticas: bio.pruebas_diagnosticas
+              pruebas_diagnosticas: bio.pruebas_diagnosticas || null
             }
           });
 
-
           await inventoryService.registrarMovimiento({
             tx,
-            insumo_id: bio.insumo_id,
-            oficina_id: bio.oficina_id,
+            insumo_id: Number(bio.insumo_id),
+            oficina_id: Number(bio.oficina_id),
             tipo_movimiento: 'CONSUMO',
-            cantidad: bio.cantidad || 1,
-            lote: bio.lote,
+            cantidad: Number(bio.cantidad) || 1,
+            lote: bio.lote || null,
             aval_id: aval.id,
             empleado_id,
             observaciones: `Consumo automático por Aval ${numero_aval}`
@@ -154,6 +173,7 @@ export const createAval = async (req, res) => {
 
     res.status(201).json({ status: 'success', data: response });
   } catch (error) {
+    console.error('Error en createAval:', error);
     res.status(400).json({ status: 'error', message: error.message });
   }
 };
@@ -203,6 +223,40 @@ export const updateAval = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
   }
 
+  const parsedMedicoId = (medico_responsable_id && medico_responsable_id !== 'none' && medico_responsable_id !== 'null' && !isNaN(Number(medico_responsable_id))) ? Number(medico_responsable_id) : null;
+  const parsedJefeOsaId = (jefe_osa_id && jefe_osa_id !== 'none' && jefe_osa_id !== 'null' && !isNaN(Number(jefe_osa_id))) ? Number(jefe_osa_id) : null;
+
+  let cleanBov = null;
+  if (hallazgos_bov_buf) {
+    try {
+      const parsed = typeof hallazgos_bov_buf === 'string' ? JSON.parse(hallazgos_bov_buf) : hallazgos_bov_buf;
+      const { id, aval_id, created_at, updated_at, ...rest } = parsed;
+      cleanBov = {};
+      for (const [k, v] of Object.entries(rest)) {
+        cleanBov[k] = Number(v) || 0;
+      }
+      cleanBov.total_bov_buf = Object.values(cleanBov).reduce((a, b) => a + (Number(b) || 0), 0);
+    } catch (e) {
+      console.error('Error parsing hallazgos_bov_buf in update:', e);
+    }
+  }
+
+  let cleanOtras = null;
+  if (hallazgos_otras) {
+    try {
+      const parsed = typeof hallazgos_otras === 'string' ? JSON.parse(hallazgos_otras) : hallazgos_otras;
+      cleanOtras = parsed.map(h => ({
+        tipo_animal_id: Number(h.tipo_animal_id),
+        machos: Number(h.machos) || 0,
+        hembras: Number(h.hembras) || 0,
+        crias: Number(h.crias) || 0,
+        total: (Number(h.machos) || 0) + (Number(h.hembras) || 0) + (Number(h.crias) || 0)
+      }));
+    } catch (e) {
+      console.error('Error parsing hallazgos_otras in update:', e);
+    }
+  }
+
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
 
@@ -214,28 +268,27 @@ export const updateAval = async (req, res) => {
           empleado_id
         });
 
-
         await tx.aval_biologicos.deleteMany({ where: { aval_id: existing.id } });
 
-
-        const parsedBiologicos = JSON.parse(biologicos);
+        const parsedBiologicos = typeof biologicos === 'string' ? JSON.parse(biologicos) : biologicos;
         for (const bio of parsedBiologicos) {
+          if (!bio.insumo_id) continue;
           await tx.aval_biologicos.create({
             data: {
               aval_id: existing.id,
-              insumo_id: bio.insumo_id,
+              insumo_id: Number(bio.insumo_id),
               fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
-              pruebas_diagnosticas: bio.pruebas_diagnosticas
+              pruebas_diagnosticas: bio.pruebas_diagnosticas || null
             }
           });
 
           await inventoryService.registrarMovimiento({
             tx,
-            insumo_id: bio.insumo_id,
-            oficina_id: bio.oficina_id,
+            insumo_id: Number(bio.insumo_id),
+            oficina_id: Number(bio.oficina_id),
             tipo_movimiento: 'CONSUMO',
-            cantidad: bio.cantidad || 1,
-            lote: bio.lote,
+            cantidad: Number(bio.cantidad) || 1,
+            lote: bio.lote || null,
             aval_id: existing.id,
             empleado_id,
             observaciones: `Consumo actualizado por Aval ${existing.numero_aval}`
@@ -246,29 +299,20 @@ export const updateAval = async (req, res) => {
       const updated = await tx.avales_sanitarios.update({
         where: { id: Number(id) },
         data: {
-          codigo_predio,
+          codigo_predio: codigo_predio || undefined,
           fecha_emision: fecha_emision ? new Date(fecha_emision) : undefined,
           fecha_vencimiento: fecha_vencimiento ? new Date(fecha_vencimiento) : undefined,
-          certificado_vacunacion_n,
-          observaciones,
-          medico_responsable_id,
-          jefe_osa_id,
-          aval_hallazgos_bov_buf: hallazgos_bov_buf ? {
+          certificado_vacunacion_n: certificado_vacunacion_n || undefined,
+          observaciones: observaciones || undefined,
+          medico_responsable_id: parsedMedicoId,
+          jefe_osa_id: parsedJefeOsaId,
+          aval_hallazgos_bov_buf: cleanBov ? {
             deleteMany: {},
-            create: {
-              ...JSON.parse(hallazgos_bov_buf),
-              total_bov_buf: Object.values(JSON.parse(hallazgos_bov_buf)).reduce((a, b) => a + (Number(b) || 0), 0)
-            }
+            create: cleanBov
           } : undefined,
-          aval_hallazgos_otras: hallazgos_otras ? {
+          aval_hallazgos_otras: cleanOtras && cleanOtras.length > 0 ? {
             deleteMany: {},
-            create: JSON.parse(hallazgos_otras).map(h => ({
-              tipo_animal_id: h.tipo_animal_id,
-              machos: h.machos,
-              hembras: h.hembras,
-              crias: h.crias,
-              total: (h.machos || 0) + (h.hembras || 0) + (h.crias || 0)
-            }))
+            create: cleanOtras
           } : undefined
         }
       });
@@ -286,6 +330,7 @@ export const updateAval = async (req, res) => {
 
     res.status(200).json({ status: 'success', data: response });
   } catch (error) {
+    console.error('Error en updateAval:', error);
     res.status(400).json({ status: 'error', message: error.message });
   }
 };
@@ -329,6 +374,7 @@ export const deleteAval = async (req, res) => {
 
     res.status(200).json({ status: 'success', message: 'Aval eliminado y stock restaurado' });
   } catch (error) {
+    console.error('Error en deleteAval:', error);
     res.status(400).json({ status: 'error', message: error.message });
   }
 };

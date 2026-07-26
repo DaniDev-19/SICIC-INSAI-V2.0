@@ -21,6 +21,8 @@ Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y
 - [**Gestión Centralizada (Master)**](./docs/gestion_centralizada_master.md): Manual sobre la administración global de usuarios, instancias y roles multi-tenant.
 - [**Gestión de Errores Estandarizada**](./docs/gestion_errores_estandarizada.md): Detalle de códigos de error de base de datos, validación y respuestas HTTP.
 - [**Patrones de Diseño y Arquitectura**](./docs/patrones_diseno_arquitectura.md): Explicación de los patrones Strategy, Factory, Singleton y la estructura modular del sistema.
+- [**Autenticación de Dos Factores (MFA/TOTP)**](./docs/autenticacion-mfa-backend.md): Manual técnico completo del sistema MFA: utilidad TOTP, endpoints de activación/desactivación, códigos de respaldo y eventos de bitácora.
+- [**Gestión de Perfil de Usuario**](./docs/gestion-perfil-usuario-backend.md): Manual sobre los endpoints para que un usuario actualice sus propios datos de cuenta y cambie su contraseña.
 
 ---
 

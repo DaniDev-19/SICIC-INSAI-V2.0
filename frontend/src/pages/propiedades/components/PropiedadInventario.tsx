@@ -4,7 +4,7 @@ import { usePropiedadInventario } from '@/hooks/use-propiedades-inventario';
 import { useCultivos } from '@/hooks/use-cultivos';
 import { useAnimales } from '@/hooks/use-animales';
 import apiClient from '@/lib/api-client';
-import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield, FileText, Activity, Calendar, CheckCircle2, AlertTriangle, Eye, ChevronDown, ChevronRight } from 'lucide-react';
+import { Leaf, PawPrint, Trash2, Plus, Loader2, Shield, FileText, Activity, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

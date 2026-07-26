@@ -55,7 +55,8 @@ const STATUSES_SEGUIMIENTO = ['FINALIZADA', 'NO_APROBADA', 'SEGUIMIENTO', 'CUARE
 const STATUSES_AVAL = ['FINALIZADA', 'SEGUIMIENTO', 'CUARENTENA'];
 const AREA_ANIMAL = 'Salud Animal Integral';
 
-export function isEligibleSeguimiento(inspeccion: Inspeccion): boolean {
+export function isEligibleSeguimiento(inspeccion?: Inspeccion | null): boolean {
+  if (!inspeccion?.status) return false;
   return STATUSES_SEGUIMIENTO.includes(inspeccion.status);
 }
 

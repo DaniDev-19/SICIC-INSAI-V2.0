@@ -23,13 +23,13 @@ import {
   Loader2,
   Calendar,
   CheckCircle2,
-  AlertTriangle,
   UploadCloud,
   FileCheck,
   Building2,
   Search,
 } from 'lucide-react';
 import { useInspecciones } from '@/hooks/use-inspecciones';
+import { isEligibleSeguimiento } from '@/pages/inspecciones/components/InspeccionTable';
 import type { Seguimiento, CreateSeguimientoDTO, UpdateSeguimientoDTO } from '@/types/seguimientos';
 
 interface SeguimientoModalProps {
@@ -87,6 +87,10 @@ export function SeguimientoModal({
   }, [isOpen, seguimiento, preselectedInspeccionId]);
 
   const filteredInspecciones = inspecciones.filter((insp) => {
+    // Filtrar solo inspecciones con estados coherentes para seguimiento
+    const isEligible = isEligibleSeguimiento(insp) || String(insp.id) === inspeccionId;
+    if (!isEligible) return false;
+
     if (!inspSearch.trim()) return true;
     const tokens = inspSearch.toLowerCase().trim().split(/\s+/).filter(Boolean);
     const nControl = (insp.n_control || '').toLowerCase();
@@ -204,7 +208,9 @@ export function SeguimientoModal({
                   <SelectContent className="glass-effect max-h-60 border-border">
                     {filteredInspecciones.length === 0 ? (
                       <div className="p-4 text-xs text-center text-muted-foreground italic">
-                        No se encontraron inspecciones que coincidan con "{inspSearch}"
+                        {inspSearch.trim()
+                          ? `No se encontraron inspecciones elegibles que coincidan con "${inspSearch}"`
+                          : 'No existen inspecciones en estado elegible para seguimiento (FINALIZADA, NO APROBADA, SEGUIMIENTO, CUARENTENA)'}
                       </div>
                     ) : (
                       filteredInspecciones.map((insp) => (

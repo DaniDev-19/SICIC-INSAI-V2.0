@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     ChevronLeft,
-    Plus,
     Loader2,
     Users,
     AlertTriangle,
-    Download,
     Filter,
     Trash2,
     X
@@ -33,7 +31,6 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEmpleados } from '@/hooks/use-empleados';
-import Can from '@/components/auth/Can';
 import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { EmpleadosTable } from './components/EmpleadosTable';
 import { EmpleadoModal } from './components/EmpleadoModal';
@@ -57,7 +54,6 @@ const Empleados: React.FC = () => {
         deleteEmpleado,
         exportEmpleados,
         exportEmpleadosPdf,
-        isExporting,
         isDeleting
     } = useEmpleados();
 
