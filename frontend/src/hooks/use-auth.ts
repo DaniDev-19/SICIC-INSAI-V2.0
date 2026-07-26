@@ -41,8 +41,10 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (response) => {
-      queryClient.setQueryData(['auth-user'], response);
-      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+      if (!response.data?.mfaRequired) {
+        queryClient.setQueryData(['auth-user'], response);
+        queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+      }
     },
   });
 

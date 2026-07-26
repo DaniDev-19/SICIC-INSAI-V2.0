@@ -43,6 +43,9 @@ model usuarios {
   username          String              @unique @db.VarChar(100)
   email             String              @unique @db.VarChar(100)
   password_hash     String
+  mfa_secret        String?
+  mfa_enabled       Boolean?            @default(false)
+  mfa_backup_codes  Json?               @default("[]")
   status            Boolean?            @default(true)
   created_at        DateTime?           @default(now()) @db.Timestamp(6)
   updated_at        DateTime?           @default(now()) @db.Timestamp(6)

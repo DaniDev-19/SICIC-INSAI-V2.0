@@ -2,6 +2,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  mfa_enabled?: boolean;
 }
 
 export interface LoginCredentials {
@@ -24,8 +25,10 @@ export interface LoginResponse {
   status: 'success' | 'error';
   message: string;
   data: {
-    user: User | null;
-    currentInstance: Instance | null;
+    user?: User | null;
+    currentInstance?: Instance | null;
+    mfaRequired?: boolean;
+    mfaPendingToken?: string;
   };
 }
 
@@ -35,3 +38,4 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+

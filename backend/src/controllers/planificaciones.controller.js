@@ -2,6 +2,7 @@ import bitacoraService from '../services/bitacora.service.js';
 import excelService from '../services/excel.service.js';
 import * as statusSyncService from '../services/status-sync.service.js';
 import pdfService from '../services/pdf.service.js';
+import mailService from '../services/mail.service.js';
 
 const parseTimeInput = (timeStr) => {
   if (!timeStr) return null;
@@ -253,6 +254,38 @@ export const createPlanificacion = async (req, res) => {
       payload_nuevo: response
     });
 
+    // Envío de notificación por correo en segundo plano (no bloqueante)
+    setImmediate(async () => {
+      try {
+        const fullPlan = await tenantPrisma.planificaciones.findUnique({
+          where: { id: response.id },
+          include: {
+            solicitudes: {
+              include: {
+                clientes: true,
+                propiedades: {
+                  include: {
+                    sectores: {
+                      include: {
+                        parroquias: { include: { municipios: { include: { estados: true } } } }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            planificacion_empleados: {
+              include: { empleados: { include: { cargos: true } } }
+            }
+          }
+        });
+        const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
+        await mailService.sendPlanificacionNotification({ tipoEvento: 'CREACION', planificacion: fullPlan, inspectores });
+      } catch (err) {
+        console.error('⚠️  Error al enviar correo de notificación (crear planificación):', err.message);
+      }
+    });
+
     res.status(201).json({ status: 'success', data: response });
   } catch (error) {
     if (error.statusCode === 400) {
@@ -306,6 +339,38 @@ export const updatePlanificacion = async (req, res) => {
     modulo: 'Planificaciones',
     payload_previo: existing,
     payload_nuevo: response
+  });
+
+  // Envío de notificación por correo en segundo plano (no bloqueante)
+  setImmediate(async () => {
+    try {
+      const fullPlan = await tenantPrisma.planificaciones.findUnique({
+        where: { id: response.id },
+        include: {
+          solicitudes: {
+            include: {
+              clientes: true,
+              propiedades: {
+                include: {
+                  sectores: {
+                    include: {
+                      parroquias: { include: { municipios: { include: { estados: true } } } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          planificacion_empleados: {
+            include: { empleados: { include: { cargos: true } } }
+          }
+        }
+      });
+      const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
+      await mailService.sendPlanificacionNotification({ tipoEvento: 'ACTUALIZACION', planificacion: fullPlan, inspectores });
+    } catch (err) {
+      console.error('⚠️  Error al enviar correo de notificación (actualizar planificación):', err.message);
+    }
   });
 
   res.status(200).json({ status: 'success', data: response });

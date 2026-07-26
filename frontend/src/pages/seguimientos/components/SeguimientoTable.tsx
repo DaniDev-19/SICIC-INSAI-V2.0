@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Table,
   TableBody,
@@ -15,7 +14,6 @@ import {
   User,
   CheckCircle2,
   AlertTriangle,
-  FileText,
   Eye,
   Edit,
   Trash2,

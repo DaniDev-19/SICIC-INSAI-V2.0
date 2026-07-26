@@ -11,6 +11,8 @@ const router = Router();
 router.use(protect);
 router.use(tenantMiddleware);
 
+router.get('/', checkPermission('insumos', 'see'), stockCtrl.getAllStock);
+router.get('/kpis', checkPermission('insumos', 'see'), stockCtrl.getInventoryKPIs);
 router.get('/oficina/:oficina_id', checkPermission('insumos', 'see'), stockCtrl.getStockByOficina);
 router.get('/movimientos', checkPermission('insumos', 'see'), stockCtrl.getMovimientos);
 
@@ -18,6 +20,11 @@ router.post('/movimiento-manual',
   checkPermission('insumos', 'update'),
   validateSchema(manualMovementSchema),
   stockCtrl.registrarMovimientoManual
+);
+
+router.patch('/:id',
+  checkPermission('insumos', 'update'),
+  stockCtrl.updateStockItem
 );
 
 export default router;

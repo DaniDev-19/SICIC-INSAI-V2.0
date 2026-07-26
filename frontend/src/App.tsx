@@ -22,6 +22,10 @@ import Planificaciones from './pages/planificaciones/Planificaciones';
 import Inspecciones from './pages/inspecciones/Inspecciones';
 import InspeccionesSilos from './pages/inspecciones-silos/InspeccionesSilos';
 import Seguimientos from './pages/seguimientos/Seguimientos';
+import Inventario from './pages/inventario/Inventario';
+import Avales from './pages/avales/Avales';
+
+import PerfilPage from './pages/perfil/PerfilPage';
 
 import { ProtectedRoute } from './components/auth/protected-route';
 import { PublicRoute } from './components/auth/public-route';
@@ -91,6 +95,9 @@ function App() {
               <Route element={<PermissionRoute screen="inspecciones" />}>
                 <Route path='inspecciones' element={<Inspecciones />} />
               </Route>
+              <Route element={<PermissionRoute screen="avales" />}>
+                <Route path='avales' element={<Avales />} />
+              </Route>
               <Route element={<PermissionRoute screen="seguimientos" />}>
                 <Route path='seguimientos' element={<Seguimientos />} />
               </Route>
@@ -112,6 +119,10 @@ function App() {
               <Route element={<PermissionRoute screen="vehiculos" />}>
                 <Route path='vehiculos' element={<Vehiculos />} />
               </Route>
+              <Route element={<PermissionRoute screen="insumos" />}>
+                <Route path='inventario' element={<Inventario />} />
+              </Route>
+              <Route path='perfil' element={<PerfilPage />} />
               <Route path='help' element={<HelpMe />} />
             </Route>
           </Route>

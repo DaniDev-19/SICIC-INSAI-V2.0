@@ -163,7 +163,7 @@ export default function InspeccionesSilos() {
               canDelete={canDelete}
             />
 
-            {pagination.totalPages > 1 && (
+            {actaSilos.length > 0 && (
               <div className="p-4 sm:p-5 border-t border-border/50 bg-muted/10">
                 <Pagination
                   pagination={pagination}

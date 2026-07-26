@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Lock, Mail, Loader2, Eye, EyeOff, Building2 } from 'lucide-react';
+import { Lock, Mail, Loader2, Eye, EyeOff, Building2, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { type AxiosError } from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,6 +19,8 @@ import {
 import image from '@/components/image';
 import { useAuth } from '@/hooks/use-auth';
 import { useLoginInstances } from '@/hooks/use-login-instances';
+import { useVerifyMfaLogin } from '@/hooks/use-mfa';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 const loginSchema = z.object({
   email: z.string().email('Introduce un correo electrónico válido'),
@@ -29,8 +32,16 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  
+  // Estado para el segundo paso MFA
+  const [mfaPendingToken, setMfaPendingToken] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+
   const { login, isLoggingIn, isAuthenticated } = useAuth();
+  const verifyMfaMutation = useVerifyMfaLogin();
 
   const {
     register,
@@ -69,7 +80,16 @@ export default function Login() {
     }
 
     try {
-      await login(data);
+      const res = await login(data);
+
+      if (res?.data?.mfaRequired && res.data.mfaPendingToken) {
+        setMfaPendingToken(res.data.mfaPendingToken);
+        toast.info('Autenticación de Dos Factores requerida', {
+          description: 'Ingrese el código de su app autenticadora o un código de respaldo.',
+        });
+        return;
+      }
+
       toast.success('¡Bienvenido al sistema SICIC-INSAI!');
       navigate('/home');
     } catch (err: unknown) {
@@ -96,7 +116,27 @@ export default function Login() {
     }
   };
 
+  const handleVerifyMfaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaPendingToken || !mfaCode.trim()) return;
+
+    verifyMfaMutation.mutate(
+      { mfaPendingToken, code: mfaCode.trim() },
+      {
+        onSuccess: (res) => {
+          queryClient.setQueryData(['auth-user'], res);
+          queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+          toast.success('¡Autenticación MFA Exitosa!', {
+            description: 'Bienvenido al sistema SICIC-INSAI.',
+          });
+          navigate('/home');
+        },
+      }
+    );
+  };
+
   const instancesLoading = emailIsValid && (isLoadingInstances || isFetching);
+
 
   return (
     <div
@@ -120,105 +160,161 @@ export default function Login() {
               <p className="text-emerald-50/60 dark:text-emerald-50/40 mt-1 sm:mt-2 text-xs sm:text-sm font-medium tracking-wide">Vigilancia y Control</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Correo Electrónico</label>
-                <div className="relative group/input">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
-                  <Input
-                    {...register('email')}
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    className="pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
-                    disabled={isLoggingIn}
+            {mfaPendingToken ? (
+              <form onSubmit={handleVerifyMfaSubmit} className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col items-center justify-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center space-y-2">
+                  <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-white">Verificación de Segundo Factor</h3>
+                  <p className="text-xs text-emerald-100/70 leading-relaxed">
+                    Ingrese el código de 6 dígitos generado por su app autenticadora o uno de sus códigos de respaldo.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Código de Seguridad (TOTP / Respaldo)</label>
+                  <div className="relative group/input">
+                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
+                    <Input
+                      type="text"
+                      autoFocus
+                      required
+                      maxLength={9}
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value)}
+                      placeholder="123456"
+                      className="pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-emerald-400 placeholder:text-white/20 font-mono tracking-widest text-center text-lg focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
+                      disabled={verifyMfaMutation.isPending}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={verifyMfaMutation.isPending || !mfaCode.trim()}
+                  className="w-full h-12 sm:h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] text-sm sm:text-base cursor-pointer"
+                >
+                  {verifyMfaMutation.isPending ? (
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verificando...</>
+                  ) : 'Verificar y Acceder'}
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMfaPendingToken(null);
+                    setMfaCode('');
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 py-2 text-xs text-emerald-200/60 hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Volver al inicio de sesión</span>
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Correo Electrónico</label>
+                  <div className="relative group/input">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
+                    <Input
+                      {...register('email')}
+                      type="email"
+                      placeholder="correo@ejemplo.com"
+                      className="pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
+                      disabled={isLoggingIn}
+                    />
+                  </div>
+                  {errors.email && <p className="text-xs text-red-400 font-medium ml-2">{errors.email.message}</p>}
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Estado / Instancia</label>
+                  <Controller
+                    name="instanceId"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="relative group/input">
+                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 z-10 pointer-events-none transition-colors group-focus-within/input:text-emerald-400" />
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isLoggingIn || !emailIsValid || instancesLoading}
+                        >
+                          <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
+                            <SelectValue
+                              placeholder={
+                                !emailIsValid
+                                  ? 'Ingrese su correo primero...'
+                                  : instancesLoading
+                                    ? 'Cargando sedes...'
+                                    : instances.length === 0
+                                      ? 'Sin sedes asignadas'
+                                      : 'Seleccione su estado...'
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-[200px] max-h-[300px]">
+                            <div className="p-2">
+                              {instances.map((inst) => (
+                                <SelectItem
+                                  key={inst.id}
+                                  value={inst.id.toString()}
+                                  className="hover:bg-white/20 focus:bg-white/20 cursor-pointer py-2.5 px-4 rounded-2xl transition-all outline-none border-none ring-0 focus:ring-0 mb-1 last:mb-0 group/item"
+                                >
+                                  <span className="font-semibold text-sm text-white/90 group-hover/item:text-white transition-colors">{inst.nombre_mostrable}</span>
+                                </SelectItem>
+                              ))}
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   />
+                  {errors.instanceId && <p className="text-xs text-red-400 font-medium ml-2">{errors.instanceId.message}</p>}
                 </div>
-                {errors.email && <p className="text-xs text-red-400 font-medium ml-2">{errors.email.message}</p>}
-              </div>
 
-              <div className="space-y-1.5 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Estado / Instancia</label>
-                <Controller
-                  name="instanceId"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative group/input">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 z-10 pointer-events-none transition-colors group-focus-within/input:text-emerald-400" />
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={isLoggingIn || !emailIsValid || instancesLoading}
-                      >
-                        <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
-                          <SelectValue
-                            placeholder={
-                              !emailIsValid
-                                ? 'Ingrese su correo primero...'
-                                : instancesLoading
-                                  ? 'Cargando sedes...'
-                                  : instances.length === 0
-                                    ? 'Sin sedes asignadas'
-                                    : 'Seleccione su estado...'
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-[200px] max-h-[300px]">
-                          <div className="p-2">
-                            {instances.map((inst) => (
-                              <SelectItem
-                                key={inst.id}
-                                value={inst.id.toString()}
-                                className="hover:bg-white/20 focus:bg-white/20 cursor-pointer py-2.5 px-4 rounded-2xl transition-all outline-none border-none ring-0 focus:ring-0 mb-1 last:mb-0 group/item"
-                              >
-                                <span className="font-semibold text-sm text-white/90 group-hover/item:text-white transition-colors">{inst.nombre_mostrable}</span>
-                              </SelectItem>
-                            ))}
-                          </div>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                />
-                {errors.instanceId && <p className="text-xs text-red-400 font-medium ml-2">{errors.instanceId.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90">Contraseña</label>
-                  <button type="button" className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer transition-colors focus:outline-none">
-                    ¿Olvidaste tu contraseña?
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-xs sm:text-sm font-semibold text-emerald-50/90">Contraseña</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotModalOpen(true)}
+                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer transition-colors focus:outline-none"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                  <div className="relative group/input">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
+                    <Input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      className="pl-12 pr-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
+                      disabled={isLoggingIn}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white cursor-pointer transition-colors focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-red-400 font-medium ml-2">{errors.password.message}</p>}
                 </div>
-                <div className="relative group/input">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
-                  <Input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    className="pl-12 pr-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
-                    disabled={isLoggingIn}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white cursor-pointer transition-colors focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-red-400 font-medium ml-2">{errors.password.message}</p>}
-              </div>
 
-              <Button
-                type="submit"
-                disabled={isLoggingIn || instancesLoading}
-                className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-2 text-sm sm:text-base cursor-pointer"
-              >
-                {isLoggingIn ? (
-                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Iniciando...</>
-                ) : 'Iniciar Sesión'}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={isLoggingIn || instancesLoading}
+                  className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-2 text-sm sm:text-base cursor-pointer"
+                >
+                  {isLoggingIn ? (
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Iniciando...</>
+                  ) : 'Iniciar Sesión'}
+                </Button>
+              </form>
+            )}
           </div>
 
           <div className="p-4 sm:p-6 bg-white/5 dark:bg-black/20 border-t border-white/5 text-center">
@@ -228,6 +324,13 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+        defaultEmail={email}
+        defaultInstanceId={instanceId}
+      />
 
       <div className="absolute top-[-10%] right-[-10%] w-60 sm:w-96 h-60 sm:h-96 bg-emerald-500/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-48 sm:w-80 h-48 sm:h-80 bg-blue-500/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />

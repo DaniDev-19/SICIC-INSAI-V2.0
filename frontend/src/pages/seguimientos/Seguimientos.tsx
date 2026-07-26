@@ -5,8 +5,6 @@ import {
   Loader2,
   AlertTriangle,
   Filter,
-  Activity,
-  Plus,
 } from 'lucide-react';
 import {
   AlertDialog,
