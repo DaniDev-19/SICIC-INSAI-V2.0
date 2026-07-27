@@ -78,6 +78,14 @@ export const empleadosService = {
     setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
   },
 
+  openFichaPdf: async (id: number): Promise<void> => {
+    const { openEmpleadoFichaPdf } = await import('@/reports/empleado-ficha/generateEmpleadoFichaPdf');
+    const response = await apiClient.get<SingleEmpleadoResponse>(`/empleados/${id}`);
+    if (response.data?.data) {
+      await openEmpleadoFichaPdf(response.data.data as any);
+    }
+  },
+
   // Catálogos - Cargos
   getCargos: async (): Promise<CatalogoResponse<Cargo>> => {
     const response = await apiClient.get<CatalogoResponse<Cargo>>('/cargos');

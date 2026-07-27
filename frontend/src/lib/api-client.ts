@@ -15,9 +15,18 @@ apiClient.interceptors.request.use((config) => {
 
   const methods = ['post', 'put', 'patch', 'delete'];
   if (methods.includes(config.method?.toLowerCase() || '')) {
-    // Generar un UUID si no existe ya en los headers
     if (!config.headers['X-Idempotency-Key']) {
-      config.headers['X-Idempotency-Key'] = crypto.randomUUID();
+      // Intenta usar la API nativa si existe, de lo contrario usa el reemplazo compatible
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        config.headers['X-Idempotency-Key'] = crypto.randomUUID();
+      } else {
+        // Reemplazo matemático compatible con HTTP estándar
+        config.headers['X-Idempotency-Key'] = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
     }
   }
   return config;

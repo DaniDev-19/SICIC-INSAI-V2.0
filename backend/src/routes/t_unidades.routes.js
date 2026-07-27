@@ -3,7 +3,7 @@ import * as tUnidadesController from '../controllers/t_unidades.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createTUnidadSchema, updateTUnidadSchema } from '../schemas/t_unidades.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware.js';
+//import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
@@ -13,38 +13,38 @@ router.use(tenantMiddleware);
 
 /**
  * @route GET /api/t_unidades
- * @access Private
+ * @access Public
  */
-router.get('/', checkPermission('t_unidades', 'see'), tUnidadesController.getTUnidades);
+router.get('/', tUnidadesController.getTUnidades);
 
 /**
  * @route GET /api/t_unidades/:id
- * @access Private
+ * @access Public
  */
-router.get('/:id', checkPermission('t_unidades', 'see'), tUnidadesController.getTUnidadById);
+router.get('/:id', tUnidadesController.getTUnidadById);
 
 /**
  * @route POST /api/t_unidades
- * @access Private
+ * @access Public
  */
-router.post('/', checkPermission('t_unidades', 'create'), validateSchema(createTUnidadSchema), tUnidadesController.createTUnidad);
+router.post('/', validateSchema(createTUnidadSchema), tUnidadesController.createTUnidad);
 
 /**
  * @route PUT /api/t_unidades/:id
- * @access Private
+ * @access Public
  */
-router.put('/:id', checkPermission('t_unidades', 'update'), validateSchema(updateTUnidadSchema), tUnidadesController.updateTUnidad);
+router.put('/:id', validateSchema(updateTUnidadSchema), tUnidadesController.updateTUnidad);
 
 /**
  * @route DELETE /api/t_unidades/:id
- * @access Private
+ * @access Public
  */
-router.delete('/:id', checkPermission('t_unidades', 'delete'), tUnidadesController.deleteTUnidad);
+router.delete('/:id', tUnidadesController.deleteTUnidad);
 
 /**
  * @route POST /api/t_unidades/bulk-delete
- * @access Private
+ * @access Public
  */
-router.post('/bulk-delete', checkPermission('t_unidades', 'delete'), tUnidadesController.deleteManyTUnidades);
+router.post('/bulk-delete', tUnidadesController.deleteManyTUnidades);
 
 export default router;

@@ -81,6 +81,23 @@ export const getClienteById = async (req, res) => {
       propiedades: {
         include: {
           t_propiedad: true,
+          propiedad_hierro: true,
+          propiedad_cultivo: {
+            include: {
+              cultivo: {
+                include: {
+                  t_cultivo: true
+                }
+              },
+              t_unidades_propiedad_cultivo_cantidad_unidad_idTot_unidades: true
+            }
+          },
+          propiedad_animales: {
+            include: {
+              animales: true,
+              t_unidades: true
+            }
+          },
           propiedad_ubicacion: {
             include: {
               sectores: {

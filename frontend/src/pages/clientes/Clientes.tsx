@@ -24,6 +24,7 @@ import type { Cliente } from '@/types/clientes';
 import { ProducerTable } from './components/ProducerTable';
 import { ProducerWizard } from './components/ProducerWizard';
 import { ProducerModal } from './components/ProducerModal';
+import { ProducerDetallesModal } from './components/ProducerDetallesModal';
 
 const Clientes: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const Clientes: React.FC = () => {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProducer, setEditingProducer] = useState<Cliente | null>(null);
+  const [viewingProducerId, setViewingProducerId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const handleEdit = (cliente: Cliente) => {
@@ -121,6 +123,7 @@ const Clientes: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <ProducerTable
                 clientes={clientes}
+                onView={(cliente) => setViewingProducerId(cliente.id)}
                 onEdit={handleEdit}
                 onDelete={setDeleteId}
               />
@@ -149,6 +152,12 @@ const Clientes: React.FC = () => {
           setEditingProducer(null);
         }}
         producer={editingProducer}
+      />
+
+      <ProducerDetallesModal
+        isOpen={!!viewingProducerId}
+        onClose={() => setViewingProducerId(null)}
+        producerId={viewingProducerId}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

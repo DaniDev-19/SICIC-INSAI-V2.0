@@ -48,6 +48,23 @@ export const getEmpleados = async (req, res) => {
         oficinas: { select: { nombre: true } },
         contrato: { select: { nombre: true } },
         empleado_foto: { select: { foto_url: true }, take: 1, orderBy: { created_at: 'desc' } },
+        empleado_residencia: {
+          include: {
+            sectores: {
+              include: {
+                parroquias: {
+                  include: {
+                    municipios: {
+                      include: {
+                        estados: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }),
     tenantPrisma.empleados.count({ where }),
@@ -78,7 +95,23 @@ export const getEmpleadoById = async (req, res) => {
       oficinas: true,
       contrato: true,
       empleado_foto: { orderBy: { created_at: 'desc' } },
-      empleado_residencia: { include: { sectores: true } },
+      empleado_residencia: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       empleados_programas: { include: { programas: true } },
     }
   });
@@ -108,20 +141,58 @@ export const createEmpleado = async (req, res) => {
     finalFotoUrl = await storageService.uploadImage(req.file.buffer, `${nombre}-${apellido}`, 'empleados');
   }
 
+  let parsedResidencia = residencia;
+  if (typeof residencia === 'string') {
+    try {
+      parsedResidencia = JSON.parse(residencia);
+    } catch (e) {
+      console.error('Error parsing residencia JSON:', e);
+    }
+  }
+
+  const residenciaData = parsedResidencia ? {
+    sector_id: parsedResidencia.sector_id ? Number(parsedResidencia.sector_id) : null,
+    direccion_detallada: parsedResidencia.direccion_detallada || null,
+    punto_referencia: parsedResidencia.punto_referencia || null,
+    google_maps_url: parsedResidencia.google_maps_url || null,
+  } : undefined;
+
   const response = await tenantPrisma.empleados.create({
     data: {
       cedula, nombre, apellido, telefono, email,
       fechas_ingreso: fechas_ingreso ? new Date(fechas_ingreso) : null,
-      status_laboral, contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
+      status_laboral,
+      contrato_id: contrato_id ? Number(contrato_id) : null,
+      cargo_id: cargo_id ? Number(cargo_id) : null,
+      departamento_id: departamento_id ? Number(departamento_id) : null,
+      profesion_id: profesion_id ? Number(profesion_id) : null,
+      oficina_id: oficina_id ? Number(oficina_id) : null,
+      usuario_global_id: usuario_global_id ? Number(usuario_global_id) : null,
       empleado_foto: finalFotoUrl ? { create: { foto_url: finalFotoUrl } } : undefined,
-      empleado_residencia: residencia ? { create: residencia } : undefined,
+      empleado_residencia: residenciaData ? { create: residenciaData } : undefined,
       empleados_programas: programas_ids ? {
-        create: programas_ids.map(id => ({ programa_id: id }))
+        create: (Array.isArray(programas_ids) ? programas_ids : JSON.parse(programas_ids || '[]')).map((id) => ({ programa_id: Number(id) }))
       } : undefined,
     },
     include: {
       empleado_foto: true,
-      empleado_residencia: true,
+      empleado_residencia: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       empleados_programas: true,
     }
   });
@@ -171,25 +242,72 @@ export const updateEmpleado = async (req, res) => {
     }
   }
 
+  let parsedResidencia = residencia;
+  if (typeof residencia === 'string') {
+    try {
+      parsedResidencia = JSON.parse(residencia);
+    } catch (e) {
+      console.error('Error parsing residencia JSON:', e);
+    }
+  }
+
+  const residenciaData = parsedResidencia ? {
+    sector_id: parsedResidencia.sector_id ? Number(parsedResidencia.sector_id) : null,
+    direccion_detallada: parsedResidencia.direccion_detallada || null,
+    punto_referencia: parsedResidencia.punto_referencia || null,
+    google_maps_url: parsedResidencia.google_maps_url || null,
+  } : undefined;
+
+  let parsedProgramasIds = programas_ids;
+  if (typeof programas_ids === 'string') {
+    try {
+      parsedProgramasIds = JSON.parse(programas_ids);
+    } catch (e) {
+      console.error('Error parsing programas_ids JSON:', e);
+    }
+  }
+
   const response = await tenantPrisma.empleados.update({
     where: { id: Number(id) },
     data: {
       cedula, nombre, apellido, telefono, email,
       fechas_ingreso: fechas_ingreso ? new Date(fechas_ingreso) : undefined,
-      status_laboral, contrato_id, cargo_id, departamento_id, profesion_id, oficina_id, usuario_global_id,
-      empleado_foto: finalFotoUrl ? { create: { foto_url: finalFotoUrl } } : undefined, // Agregamos una nueva foto si viene
-      empleado_residencia: residencia ? {
+      status_laboral,
+      contrato_id: contrato_id !== undefined ? (contrato_id ? Number(contrato_id) : null) : undefined,
+      cargo_id: cargo_id !== undefined ? (cargo_id ? Number(cargo_id) : null) : undefined,
+      departamento_id: departamento_id !== undefined ? (departamento_id ? Number(departamento_id) : null) : undefined,
+      profesion_id: profesion_id !== undefined ? (profesion_id ? Number(profesion_id) : null) : undefined,
+      oficina_id: oficina_id !== undefined ? (oficina_id ? Number(oficina_id) : null) : undefined,
+      usuario_global_id: usuario_global_id !== undefined ? (usuario_global_id ? Number(usuario_global_id) : null) : undefined,
+      empleado_foto: finalFotoUrl ? { create: { foto_url: finalFotoUrl } } : undefined,
+      empleado_residencia: residenciaData ? {
         deleteMany: {},
-        create: residencia
+        create: residenciaData
       } : undefined,
-      empleados_programas: programas_ids ? {
+      empleados_programas: parsedProgramasIds ? {
         deleteMany: {},
-        create: programas_ids.map(pid => ({ programa_id: pid }))
+        create: parsedProgramasIds.map((pid) => ({ programa_id: Number(pid) }))
       } : undefined,
     },
     include: {
       empleado_foto: true,
-      empleado_residencia: true,
+      empleado_residencia: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       empleados_programas: true,
     }
   });

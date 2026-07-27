@@ -154,8 +154,8 @@ export function SeguimientoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl border-none shadow-2xl glass-effect p-0 custom-scrollbar max-h-[92vh] overflow-y-auto">
-        <DialogHeader className="p-6 pb-4 bg-muted/40 border-b border-border/50 sticky top-0 backdrop-blur-md z-10">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-4xl border-none shadow-2xl glass-effect p-0 custom-scrollbar max-h-[92vh] overflow-y-auto">
+        <DialogHeader className="p-6 pb-4 bg-muted/40 border-b border-border/50 top-0 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
             <div className="size-11 rounded-2xl bg-indigo-500/20 text-indigo-600 flex items-center justify-center shrink-0">
               <Activity className="size-6" />
@@ -174,7 +174,6 @@ export function SeguimientoModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Inspección Seleccionada / Picker */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <FileCheck className="size-3.5 text-primary" />
@@ -243,7 +242,6 @@ export function SeguimientoModal({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Fecha Seguimiento */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Calendar className="size-3.5 text-indigo-500" />
@@ -258,7 +256,6 @@ export function SeguimientoModal({
               />
             </div>
 
-            {/* Estatus del Seguimiento */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Activity className="size-3.5 text-emerald-500" />
@@ -278,7 +275,6 @@ export function SeguimientoModal({
             </div>
           </div>
 
-          {/* Switch Recomendaciones Cumplidas */}
           <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-border">
             <div className="space-y-0.5">
               <label className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -301,7 +297,6 @@ export function SeguimientoModal({
             />
           </div>
 
-          {/* Hallazgos y Observaciones */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Hallazgos de la Visita de Seguimiento <span className="text-rose-500">*</span>
@@ -316,7 +311,6 @@ export function SeguimientoModal({
             />
           </div>
 
-          {/* Carga de Fotos / Evidencias */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <UploadCloud className="size-3.5 text-blue-500" />
@@ -336,17 +330,19 @@ export function SeguimientoModal({
             )}
           </div>
 
-          <DialogFooter className="pt-4 border-t border-border/50 gap-2 sm:gap-0">
+          <DialogFooter className="pt-4 border-t border-border/50 gap-6 sm:gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
+              title="Cancelar"
               className="cursor-pointer font-bold rounded-xl"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
+              title='Confirmar'
               disabled={isSubmitting || (!inspeccionId && !seguimiento?.inspeccion_id) || !hallazgos.trim()}
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl gap-2 cursor-pointer shadow-lg shadow-indigo-500/20"
             >

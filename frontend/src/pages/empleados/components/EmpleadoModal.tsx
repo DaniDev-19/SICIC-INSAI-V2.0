@@ -25,6 +25,7 @@ import { useEmpleados } from '@/hooks/use-empleados';
 import { useProgramas } from '@/hooks/use-programas';
 import type { Empleado } from '@/types/empleados';
 import { empleadosService } from '@/services/empleados.service';
+import { ubicacionService, type UbicacionBase } from '@/services/ubicacion.service';
 import { cn } from '@/lib/utils';
 
 const empleadoSchema = z.object({
@@ -41,6 +42,7 @@ const empleadoSchema = z.object({
   profesion_id: z.string().optional().or(z.literal('')),
   oficina_id: z.string().optional().or(z.literal('')),
   residencia: z.object({
+    sector_id: z.string().optional().or(z.literal('')),
     direccion_detallada: z.string().optional().or(z.literal('')),
     punto_referencia: z.string().optional().or(z.literal('')),
     google_maps_url: z.string().optional().or(z.literal('')),
@@ -140,6 +142,7 @@ export function EmpleadoModal({
       profesion_id: '',
       oficina_id: '',
       residencia: {
+        sector_id: '',
         direccion_detallada: '',
         punto_referencia: '',
         google_maps_url: '',
@@ -149,9 +152,69 @@ export function EmpleadoModal({
 
   const isLoading = isCreating || isUpdating;
 
+  // Location data
+  const [estados, setEstados] = useState<UbicacionBase[]>([]);
+  const [municipios, setMunicipios] = useState<UbicacionBase[]>([]);
+  const [parroquias, setParroquias] = useState<UbicacionBase[]>([]);
+  const [sectores, setSectores] = useState<UbicacionBase[]>([]);
+
+  const [selectedEstadoId, setSelectedEstadoId] = useState<string>('');
+  const [selectedMunicipioId, setSelectedMunicipioId] = useState<string>('');
+  const [selectedParroquiaId, setSelectedParroquiaId] = useState<string>('');
+
+  useEffect(() => {
+    if (isOpen) {
+      ubicacionService.getEstados().then(res => setEstados(res.data || []));
+    }
+  }, [isOpen]);
+
+  const handleEstadoChange = (estadoId: string) => {
+    setSelectedEstadoId(estadoId);
+    setSelectedMunicipioId('');
+    setSelectedParroquiaId('');
+    setMunicipios([]);
+    setParroquias([]);
+    setSectores([]);
+    setValue('residencia.sector_id', '');
+    if (estadoId) {
+      ubicacionService.getMunicipios(parseInt(estadoId)).then(res => setMunicipios(res.data || []));
+    }
+  };
+
+  const handleMunicipioChange = (municipioId: string) => {
+    setSelectedMunicipioId(municipioId);
+    setSelectedParroquiaId('');
+    setParroquias([]);
+    setSectores([]);
+    setValue('residencia.sector_id', '');
+    if (municipioId) {
+      ubicacionService.getParroquias(parseInt(municipioId)).then(res => setParroquias(res.data || []));
+    }
+  };
+
+  const handleParroquiaChange = (parroquiaId: string) => {
+    setSelectedParroquiaId(parroquiaId);
+    setSectores([]);
+    setValue('residencia.sector_id', '');
+    if (parroquiaId) {
+      ubicacionService.getSectores(parseInt(parroquiaId)).then(res => setSectores(res.data || []));
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       if (empleado && fullEmpleado) {
+        const resObj = fullEmpleado.empleado_residencia?.[0];
+        const secObj = resObj?.sectores as any;
+        const secId = secObj?.id ? secObj.id.toString() : (resObj?.sector_id ? resObj.sector_id.toString() : '');
+        const parObj = secObj?.parroquias;
+        const munObj = parObj?.municipios;
+        const estObj = munObj?.estados;
+
+        const estId = estObj?.id ? estObj.id.toString() : '';
+        const munId = munObj?.id ? munObj.id.toString() : '';
+        const parId = parObj?.id ? parObj.id.toString() : (secObj?.parroquia_id ? secObj.parroquia_id.toString() : '');
+
         reset({
           cedula: fullEmpleado.cedula,
           nombre: fullEmpleado.nombre,
@@ -166,13 +229,33 @@ export function EmpleadoModal({
           profesion_id: fullEmpleado.profesion_id?.toString() || '',
           oficina_id: fullEmpleado.oficina_id?.toString() || '',
           residencia: {
-            direccion_detallada: fullEmpleado.empleado_residencia?.[0]?.direccion_detallada || '',
-            punto_referencia: fullEmpleado.empleado_residencia?.[0]?.punto_referencia || '',
-            google_maps_url: fullEmpleado.empleado_residencia?.[0]?.google_maps_url || '',
+            sector_id: secId,
+            direccion_detallada: resObj?.direccion_detallada || '',
+            punto_referencia: resObj?.punto_referencia || '',
+            google_maps_url: resObj?.google_maps_url || '',
           },
         });
         setFotoPreview(fullEmpleado.empleado_foto?.[0]?.foto_url || null);
         setSelectedProgramas(fullEmpleado.empleados_programas?.map((ep) => ep.programas.id) || []);
+
+        if (estId) {
+          setSelectedEstadoId(estId);
+          ubicacionService.getMunicipios(parseInt(estId)).then(resM => {
+            setMunicipios(resM.data || []);
+            if (munId) {
+              setSelectedMunicipioId(munId);
+              ubicacionService.getParroquias(parseInt(munId)).then(resP => {
+                setParroquias(resP.data || []);
+                if (parId) {
+                  setSelectedParroquiaId(parId);
+                  ubicacionService.getSectores(parseInt(parId)).then(resS => {
+                    setSectores(resS.data || []);
+                  });
+                }
+              });
+            }
+          });
+        }
       } else if (!empleado) {
         reset({
           cedula: '',
@@ -188,6 +271,7 @@ export function EmpleadoModal({
           profesion_id: '',
           oficina_id: '',
           residencia: {
+            sector_id: '',
             direccion_detallada: '',
             punto_referencia: '',
             google_maps_url: '',
@@ -195,6 +279,12 @@ export function EmpleadoModal({
         });
         setFotoPreview(null);
         setSelectedProgramas([]);
+        setSelectedEstadoId('');
+        setSelectedMunicipioId('');
+        setSelectedParroquiaId('');
+        setMunicipios([]);
+        setParroquias([]);
+        setSectores([]);
       }
       setFotoFile(null);
     }
@@ -697,7 +787,64 @@ export function EmpleadoModal({
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-foreground/80">Ubicación y Residencia</h3>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Estado</Label>
+                  <Select value={selectedEstadoId} onValueChange={handleEstadoChange}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/50">
+                      <SelectValue placeholder="Seleccione Estado..." />
+                    </SelectTrigger>
+                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                      {estados.map(e => (
+                        <SelectItem key={e.id} value={e.id.toString()} className="cursor-pointer">{e.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Municipio</Label>
+                  <Select value={selectedMunicipioId} onValueChange={handleMunicipioChange} disabled={!selectedEstadoId}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
+                      <SelectValue placeholder="Seleccione Municipio..." />
+                    </SelectTrigger>
+                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                      {municipios.map(m => (
+                        <SelectItem key={m.id} value={m.id.toString()} className="cursor-pointer">{m.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Parroquia</Label>
+                  <Select value={selectedParroquiaId} onValueChange={handleParroquiaChange} disabled={!selectedMunicipioId}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
+                      <SelectValue placeholder="Seleccione Parroquia..." />
+                    </SelectTrigger>
+                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                      {parroquias.map(p => (
+                        <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">{p.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Sector</Label>
+                  <Select value={watch('residencia.sector_id') || ''} onValueChange={(val) => setValue('residencia.sector_id', val)} disabled={!selectedParroquiaId}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
+                      <SelectValue placeholder="Seleccione Sector..." />
+                    </SelectTrigger>
+                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                      {sectores.map(s => (
+                        <SelectItem key={s.id} value={s.id.toString()} className="cursor-pointer">{s.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2 md:col-span-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Dirección Detallada</Label>
                   <Input {...register('residencia.direccion_detallada')} placeholder="Calle 1, Casa #2..." className="h-10 rounded-xl bg-background/50" />

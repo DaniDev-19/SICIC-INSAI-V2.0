@@ -408,7 +408,6 @@ export function InspeccionModal({
       setFinalidadesRows([{ finalidad_id: 0, objetivo: '' }]);
       setAreasSeleccionadas([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset estable; no re-ejecutar al cambiar su referencia
   }, [isOpen, inspeccion, initialPlanificacionId]);
 
   const toggleArea = (area: string) => {

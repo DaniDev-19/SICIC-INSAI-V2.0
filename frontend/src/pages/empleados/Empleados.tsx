@@ -54,6 +54,8 @@ const Empleados: React.FC = () => {
         deleteEmpleado,
         exportEmpleados,
         exportEmpleadosPdf,
+        openFichaPdf,
+        pdfLoadingId,
         isDeleting
     } = useEmpleados();
 
@@ -209,6 +211,8 @@ const Empleados: React.FC = () => {
                                 empleados={empleados}
                                 onEdit={handleOpenEdit}
                                 onDelete={(id) => setDeleteId(id)}
+                                onPdf={openFichaPdf}
+                                pdfLoadingId={pdfLoadingId}
                                 onSelect={(empleado) => setSelectedEmpleadoForDetails(empleado.id === selectedEmpleadoForDetails?.id ? null : empleado)}
                                 selectedId={selectedEmpleadoForDetails?.id}
                                 selectedIds={selectedIds}

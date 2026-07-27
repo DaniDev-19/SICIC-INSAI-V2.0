@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { empleadosService } from '@/services/empleados.service';
 import { Loader2, User, FileText, Activity, MapPin, Briefcase, Mail, Phone, Calendar, BadgeCheck, ClipboardList } from 'lucide-react';
@@ -10,6 +11,8 @@ interface EmpleadoDetallesProps {
 }
 
 export function EmpleadoDetalles({ empleadoId, empleadoNombre }: EmpleadoDetallesProps) {
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   const { data: fullEmpleadoResp, isLoading } = useQuery({
     queryKey: ['empleado-detail', empleadoId],
     queryFn: () => empleadosService.getById(empleadoId),
@@ -18,14 +21,24 @@ export function EmpleadoDetalles({ empleadoId, empleadoNombre }: EmpleadoDetalle
 
   const empleado = fullEmpleadoResp?.data;
 
-  const handleGenerarPDF = () => {
-    toast.success('Generando ficha PDF del empleado...');
-    // Lógica futura para exportar a PDF
+  const handleGenerarPDF = async () => {
+    if (pdfLoading || !empleado) return;
+    setPdfLoading(true);
+    const toastId = toast.loading('Generando ficha PDF del empleado...');
+    try {
+      await empleadosService.openFichaPdf(empleado.id);
+      toast.dismiss(toastId);
+      toast.success('Ficha PDF abierta en nueva pestaña');
+    } catch {
+      toast.dismiss(toastId);
+      toast.error('Error al generar la ficha PDF');
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const handleVerHistorial = () => {
     toast.info('Mostrando historial de actividades (Próximamente)');
-    // Lógica futura para ver historial en bitácora
   };
 
   if (isLoading || !empleado) {
@@ -66,9 +79,15 @@ export function EmpleadoDetalles({ empleadoId, empleadoNombre }: EmpleadoDetalle
             <Activity className="size-4 mr-2" />
             Historial
           </Button>
-          <Button onClick={handleGenerarPDF} className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer">
-            <FileText className="size-4 mr-2" />
-            Ficha PDF
+          <Button
+            onClick={handleGenerarPDF}
+            disabled={pdfLoading}
+            className="rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100"
+          >
+            {pdfLoading
+              ? <><Loader2 className="size-4 mr-2 animate-spin" />Generando...</>
+              : <><FileText className="size-4 mr-2" />Ficha PDF</>
+            }
           </Button>
         </div>
       </div>
@@ -142,12 +161,28 @@ export function EmpleadoDetalles({ empleadoId, empleadoNombre }: EmpleadoDetalle
         <div className="space-y-4 bg-muted/10 p-5 rounded-2xl border border-border/50">
           <div className="flex items-center gap-2 mb-2 border-b border-border/50 pb-2">
             <MapPin className="size-5 text-rose-500" />
-            <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/80">Residencia</h3>
+            <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/80">Ubicación / Residencia</h3>
           </div>
           <div className="space-y-3">
-            <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Sector</p>
-              <p className="text-sm font-medium text-foreground">{residencia?.sectores?.nombre || 'N/A'}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Estado</p>
+                <p className="text-xs font-bold text-foreground">{residencia?.sectores?.parroquias?.municipios?.estados?.nombre || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Municipio</p>
+                <p className="text-xs font-bold text-foreground">{residencia?.sectores?.parroquias?.municipios?.nombre || 'N/A'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Parroquia</p>
+                <p className="text-xs font-bold text-foreground">{residencia?.sectores?.parroquias?.nombre || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Sector</p>
+                <p className="text-xs font-bold text-foreground">{residencia?.sectores?.nombre || 'N/A'}</p>
+              </div>
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-muted-foreground mb-0.5">Dirección Detallada</p>

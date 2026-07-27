@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface PlanificacionTableProps {
   planificaciones: Planificacion[];
+  onView: (id: number) => void;
   onEdit: (planificacion: Planificacion) => void;
   onDelete: (id: number) => void;
 }
@@ -37,6 +38,7 @@ const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
 
 export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
   planificaciones,
+  onView,
   onEdit,
   onDelete,
 }) => {
@@ -179,6 +181,7 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="planificacion"
+                    onView={() => onView(plan.id)}
                     onEdit={() => onEdit(plan)}
                     onDelete={() => onDelete(plan.id)}
                   />

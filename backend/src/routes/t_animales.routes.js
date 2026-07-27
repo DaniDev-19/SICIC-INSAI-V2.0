@@ -3,7 +3,7 @@ import * as tAnimalesController from '../controllers/t_animales.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createTAnimalesSchema, updateTAnimalesSchema } from '../schemas/t_animales.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware.js';
+//import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
@@ -13,39 +13,39 @@ router.use(tenantMiddleware);
 
 /**
  * @route Get /api/t_animales
- * @access Private
+ * @access Public
 */
-router.get('/', checkPermission('t_animales', 'see'), tAnimalesController.getTAnimales);
+router.get('/', tAnimalesController.getTAnimales);
 
 
 /**
  * @route Get /api/t_animales/:id
- * @access Private
+ * @access Public
 */
-router.get('/:id', checkPermission('t_animales', 'see'), tAnimalesController.getTAnimalesById);
+router.get('/:id', tAnimalesController.getTAnimalesById);
 
 /**
  * @route POST /api/t_animales
- * @access Private
+ * @access Public
 */
-router.post('/', checkPermission('t_animales', 'create'), validateSchema(createTAnimalesSchema), tAnimalesController.createTAnimales);
+router.post('/', validateSchema(createTAnimalesSchema), tAnimalesController.createTAnimales);
 
 /**
  * @route PUT /api/t_animales
- * @access Private
+ * @access Public
 */
-router.put('/:id', checkPermission('t_animales', 'update'), validateSchema(updateTAnimalesSchema), tAnimalesController.updateTAnimales);
+router.put('/:id', validateSchema(updateTAnimalesSchema), tAnimalesController.updateTAnimales);
 
 /**
  * @route DELETE /api/t_animales/:id
- * @access Private
+ * @access Public
 */
-router.delete('/:id', checkPermission('t_animales', 'delete'), tAnimalesController.deleteTAnimal);
+router.delete('/:id', tAnimalesController.deleteTAnimal);
 
 /**
  * @route POST /api/t_animales/bulk-delete
- * @access Private
+ * @access Public
 */
-router.post('/bulk-delete', checkPermission('t_animales', 'delete'), tAnimalesController.deleteManyTAnimal);
+router.post('/bulk-delete', tAnimalesController.deleteManyTAnimal);
 
 export default router;

@@ -3,7 +3,7 @@ import * as tEventoController from '../controllers/t_evento.controller.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createTEventoSchema, updateTEventoSchema } from '../schemas/t_evento.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware.js';
+//import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
@@ -13,39 +13,39 @@ router.use(tenantMiddleware);
 
 /**
  * @route Get /api/t_evento
- * @access Private
+ * @access Public
 */
-router.get('/', checkPermission('t_evento', 'see'), tEventoController.getTEvento);
+router.get('/', tEventoController.getTEvento);
 
 
 /**
  * @route Get /api/t_evento/:id
- * @access Private
+ * @access Public
 */
-router.get('/:id', checkPermission('t_evento', 'see'), tEventoController.getTEventoById);
+router.get('/:id', tEventoController.getTEventoById);
 
 /**
  * @route POST /api/t_evento
- * @access Private
+ * @access Public
 */
-router.post('/', checkPermission('t_evento', 'create'), validateSchema(createTEventoSchema), tEventoController.createTEvento);
+router.post('/', validateSchema(createTEventoSchema), tEventoController.createTEvento);
 
 /**
  * @route PUT /api/t_evento
- * @access Private
+ * @access Public
 */
-router.put('/:id', checkPermission('t_evento', 'update'), validateSchema(updateTEventoSchema), tEventoController.updateTEvento);
+router.put('/:id', validateSchema(updateTEventoSchema), tEventoController.updateTEvento);
 
 /**
  * @route DELETE /api/t_evento/:id
- * @access Private
+ * @access Public
 */
-router.delete('/:id', checkPermission('t_evento', 'delete'), tEventoController.deleteTEvento);
+router.delete('/:id', tEventoController.deleteTEvento);
 
 /**
  * @route POST /api/t_evento/bulk-delete
- * @access Private
+ * @access Public
 */
-router.post('/bulk-delete', checkPermission('t_evento', 'delete'), tEventoController.deleteManyTEvento);
+router.post('/bulk-delete', tEventoController.deleteManyTEvento);
 
 export default router;

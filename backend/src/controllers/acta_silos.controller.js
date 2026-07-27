@@ -232,7 +232,7 @@ export const createActaSilo = async (req, res) => {
 export const updateActaSilo = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const data = req.body;
+  const { fotos_eliminadas, ...data } = req.body;
 
   const existing = await tenantPrisma.acta_silos.findUnique({
     where: { id: Number(id) },
@@ -253,14 +253,35 @@ export const updateActaSilo = async (req, res) => {
 
   if (data.fecha_notificacion) data.fecha_notificacion = new Date(data.fecha_notificacion);
 
-  const response = await tenantPrisma.acta_silos.update({
-    where: { id: Number(id) },
-    data: {
-      ...data,
-      silo_fotos: newPhotoUrls.length > 0 ? {
-        create: newPhotoUrls.map(url => ({ imagen: url }))
-      } : undefined
+  const fotoIdsToDelete = fotos_eliminadas
+    ? (Array.isArray(fotos_eliminadas) ? fotos_eliminadas : JSON.parse(fotos_eliminadas))
+        .map(Number)
+        .filter((id) => Number.isFinite(id))
+    : [];
+
+  const response = await tenantPrisma.$transaction(async (tx) => {
+    if (fotoIdsToDelete.length > 0) {
+      const fotosToRemove = existing.silo_fotos.filter((f) => fotoIdsToDelete.includes(f.id));
+      for (const foto of fotosToRemove) {
+        await storageService.deleteFile(foto.imagen);
+      }
+      await tx.silo_fotos.deleteMany({
+        where: {
+          id: { in: fotoIdsToDelete },
+          acta_silo_id: Number(id),
+        },
+      });
     }
+
+    return await tx.acta_silos.update({
+      where: { id: Number(id) },
+      data: {
+        ...data,
+        silo_fotos: newPhotoUrls.length > 0 ? {
+          create: newPhotoUrls.map(url => ({ imagen: url }))
+        } : undefined
+      }
+    });
   });
 
   bitacoraService.registrar({

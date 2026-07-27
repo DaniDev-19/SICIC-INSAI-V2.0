@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Activity,
   ShieldCheck,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,7 @@ interface InspeccionTableProps {
   onEdit: (inspeccion: Inspeccion) => void;
   onDelete: (id: number) => void;
   onView: (inspeccion: Inspeccion) => void;
+  onPhotos?: (inspeccion: Inspeccion) => void;
   onPdf: (id: number) => void;
   onSeguimiento?: (inspeccion: Inspeccion) => void;
   onAval?: (inspeccion: Inspeccion) => void;
@@ -86,6 +88,7 @@ function getStatus(inspeccion: Inspeccion) {
 function InspeccionActions({
   inspeccion,
   onView,
+  onPhotos,
   onPdf,
   onEdit,
   onDelete,
@@ -98,6 +101,7 @@ function InspeccionActions({
 }: {
   inspeccion: Inspeccion;
   onView: (i: Inspeccion) => void;
+  onPhotos?: (i: Inspeccion) => void;
   onPdf: (id: number) => void;
   onEdit: (i: Inspeccion) => void;
   onDelete: (id: number) => void;
@@ -110,6 +114,7 @@ function InspeccionActions({
 }) {
   const showSeguimiento = isEligibleSeguimiento(inspeccion) && !!onSeguimiento;
   const showAval = isEligibleAval(inspeccion) && !!onAval;
+  const photoCount = inspeccion.inspeccion_fotos?.length ?? 0;
 
   return (
     <div className={cn('flex items-center gap-1 sm:gap-1.5', className)}>
@@ -124,6 +129,24 @@ function InspeccionActions({
           <Eye className="size-4" />
         </Button>
       </Can>
+      {onPhotos && (
+        <Can screen="inspecciones" action="see">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Ver / Editar Fotografías"
+            onClick={() => onPhotos(inspeccion)}
+            className="size-9 rounded-lg hover:bg-purple-500/10 hover:text-purple-600 cursor-pointer relative"
+          >
+            <ImageIcon className="size-4 text-purple-600" />
+            {photoCount > 0 && (
+              <span className="absolute -top-1 -right-1 size-4 rounded-full bg-purple-600 text-white text-[9px] font-black flex items-center justify-center border border-background">
+                {photoCount}
+              </span>
+            )}
+          </Button>
+        </Can>
+      )}
       <Can screen="inspecciones" action="see">
         <Button
           variant="ghost"
@@ -222,6 +245,7 @@ export function InspeccionTable({
   onEdit,
   onDelete,
   onView,
+  onPhotos,
   onPdf,
   onSeguimiento,
   onAval,
@@ -346,6 +370,7 @@ export function InspeccionTable({
               <InspeccionActions
                 inspeccion={inspeccion}
                 onView={onView}
+                onPhotos={onPhotos}
                 onPdf={onPdf}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -508,6 +533,7 @@ export function InspeccionTable({
                     <InspeccionActions
                       inspeccion={inspeccion}
                       onView={onView}
+                      onPhotos={onPhotos}
                       onPdf={onPdf}
                       onEdit={onEdit}
                       onDelete={onDelete}

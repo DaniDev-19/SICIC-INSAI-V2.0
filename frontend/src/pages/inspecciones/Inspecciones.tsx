@@ -33,6 +33,7 @@ import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { InspeccionTable } from './components/InspeccionTable';
 import { InspeccionModal } from './components/InspeccionModal';
 import { InspeccionDetailsModal } from './components/InspeccionDetailsModal';
+import { FotosModal, type FotoItem } from '@/components/modals/FotosModal';
 import type { Inspeccion } from '@/types/inspecciones';
 
 import { toast } from 'sonner';
@@ -63,6 +64,7 @@ export default function Inspecciones() {
     setLimit,
     setSearchQuery,
     setStatusFilter,
+    updateInspeccion,
     deleteInspeccion,
     updateInspeccionStatus,
     exportInspecciones,
@@ -78,6 +80,10 @@ export default function Inspecciones() {
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [initialPlanificacionId, setInitialPlanificacionId] = useState<number | undefined>();
+
+  // Fotos modal state
+  const [isPhotosOpen, setIsPhotosOpen] = useState(false);
+  const [photosInspeccion, setPhotosInspeccion] = useState<Inspeccion | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -104,6 +110,36 @@ export default function Inspecciones() {
   const handleOpenView = (inspeccion: Inspeccion) => {
     setDetailsId(inspeccion.id);
     setIsDetailsOpen(true);
+  };
+
+  const handleOpenPhotos = (inspeccion: Inspeccion) => {
+    setPhotosInspeccion(inspeccion);
+    setIsPhotosOpen(true);
+  };
+
+  const handleUploadPhotos = async (newFiles: File[]) => {
+    if (!photosInspeccion) return;
+    const res = await updateInspeccion({
+      id: photosInspeccion.id,
+      data: {},
+      fotos: newFiles,
+    });
+    if (res?.data) {
+      setPhotosInspeccion(res.data);
+    }
+  };
+
+  const handleDeletePhoto = async (fotoId: number) => {
+    if (!photosInspeccion) return;
+    const res = await updateInspeccion({
+      id: photosInspeccion.id,
+      data: {
+        fotos_eliminadas: [fotoId],
+      },
+    });
+    if (res?.data) {
+      setPhotosInspeccion(res.data);
+    }
   };
 
   const handleSeguimiento = (inspeccion: Inspeccion) => {
@@ -246,6 +282,7 @@ export default function Inspecciones() {
             <InspeccionTable
               inspecciones={inspecciones}
               onView={handleOpenView}
+              onPhotos={handleOpenPhotos}
               onEdit={handleOpenEdit}
               onDelete={setDeleteId}
               onPdf={openPdfReport}
@@ -282,11 +319,28 @@ export default function Inspecciones() {
           setDetailsId(null);
         }}
         inspeccionId={detailsId}
+        onPhotos={handleOpenPhotos}
         onPdf={openPdfReport}
         onSeguimiento={handleSeguimiento}
         onAval={handleAval}
         pdfLoadingId={pdfLoadingId}
       />
+
+      {photosInspeccion && (
+        <FotosModal
+          isOpen={isPhotosOpen}
+          onClose={() => {
+            setIsPhotosOpen(false);
+            setPhotosInspeccion(null);
+          }}
+          title={`Fotos: ${photosInspeccion.n_control}`}
+          subtitle={`Predio: ${photosInspeccion.planificaciones?.solicitudes?.propiedades?.nombre || 'General'}`}
+          fotos={photosInspeccion.inspeccion_fotos || []}
+          onUploadPhotos={handleUploadPhotos}
+          onDeletePhoto={handleDeletePhoto}
+          canEdit={canUpdate}
+        />
+      )}
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="glass-effect border-rose-500/20 w-[calc(100vw-1.5rem)] sm:max-w-md">

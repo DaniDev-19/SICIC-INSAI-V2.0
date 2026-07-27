@@ -30,6 +30,7 @@ import { usePropiedades } from '@/hooks/use-propiedades';
 import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { PropertyTable } from './components/PropertyTable';
 import { PropertyModal } from './components/PropertyModal';
+import { PropertyDetallesModal } from './components/PropertyDetallesModal';
 import type { Propiedad } from '@/types/propiedades';
 
 const Propiedades: React.FC = () => {
@@ -52,6 +53,7 @@ const Propiedades: React.FC = () => {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingPropiedad, setEditingPropiedad] = useState<Propiedad | null>(null);
+  const [viewingPropertyId, setViewingPropertyId] = useState<number | null>(null);
 
   const confirmDelete = async () => {
     if (deleteId) {
@@ -139,6 +141,7 @@ const Propiedades: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <PropertyTable
                 propiedades={propiedades}
+                onView={(propiedad) => setViewingPropertyId(propiedad.id)}
                 onEdit={setEditingPropiedad}
                 onDelete={setDeleteId}
               />
@@ -184,6 +187,12 @@ const Propiedades: React.FC = () => {
         isOpen={!!editingPropiedad}
         onClose={() => setEditingPropiedad(null)}
         propiedad={editingPropiedad}
+      />
+
+      <PropertyDetallesModal
+        isOpen={!!viewingPropertyId}
+        onClose={() => setViewingPropertyId(null)}
+        propertyId={viewingPropertyId}
       />
     </div>
   );

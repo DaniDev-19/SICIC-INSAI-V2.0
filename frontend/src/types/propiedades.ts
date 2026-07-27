@@ -20,6 +20,18 @@ export interface PropiedadUbicacion {
     id: number;
     nombre: string;
     parroquia_id: number;
+    parroquias?: {
+      id: number;
+      nombre: string;
+      municipios?: {
+        id: number;
+        nombre: string;
+        estados?: {
+          id: number;
+          nombre: string;
+        };
+      };
+    };
   };
 }
 

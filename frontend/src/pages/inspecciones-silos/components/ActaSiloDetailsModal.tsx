@@ -25,6 +25,7 @@ interface ActaSiloDetailsModalProps {
   onClose: () => void;
   actaSiloId: number | null;
   onPdf?: (id: number) => void;
+  onPhotos?: (actaSilo: any) => void;
   pdfLoadingId?: number | null;
 }
 
@@ -33,6 +34,7 @@ export function ActaSiloDetailsModal({
   onClose,
   actaSiloId,
   onPdf,
+  onPhotos,
   pdfLoadingId = null,
 }: ActaSiloDetailsModalProps) {
   const { actaSilo, isLoading } = useActaSilo(isOpen ? actaSiloId : null);
@@ -44,7 +46,7 @@ export function ActaSiloDetailsModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-5 sm:p-8 pb-4 bg-muted/40 border-b border-border/50 sticky top-0 backdrop-blur-md z-10">
+        <DialogHeader className="p-5 sm:p-8 pb-4 bg-muted/40 border-b border-border/50 top-0 backdrop-blur-md z-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className="size-11 sm:size-12 shrink-0 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
@@ -211,29 +213,41 @@ export function ActaSiloDetailsModal({
 
             {actaSilo.silo_fotos && actaSilo.silo_fotos.length > 0 && (
               <section className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <ImageIcon className="size-4" />
-                  Evidencias de la inspección
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <ImageIcon className="size-4 text-purple-600" />
+                    Evidencias de la inspección ({actaSilo.silo_fotos.length})
+                  </h4>
+                  {onPhotos && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onPhotos(actaSilo)}
+                      className="h-7 text-xs font-bold text-purple-600 hover:text-purple-700 hover:bg-purple-500/10 cursor-pointer gap-1.5"
+                    >
+                      <ImageIcon className="size-3.5" />
+                      Gestionar Fotos
+                    </Button>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {actaSilo.silo_fotos.map((foto) => (
-                    <a
+                    <button
                       key={foto.id}
-                      href={resolveMediaUrl(foto.imagen)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="aspect-square rounded-xl overflow-hidden border border-border hover:ring-2 ring-primary/30 transition-all"
+                      type="button"
+                      onClick={() => onPhotos?.(actaSilo)}
+                      className="aspect-square rounded-xl overflow-hidden border border-border hover:ring-2 ring-purple-500/50 transition-all cursor-pointer group relative"
                     >
                       <img
                         src={resolveMediaUrl(foto.imagen)}
                         alt="Evidencia Silo"
-                        className="w-full h-full object-cover bg-muted"
+                        className="w-full h-full object-cover bg-muted group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                    </a>
+                    </button>
                   ))}
                 </div>
               </section>

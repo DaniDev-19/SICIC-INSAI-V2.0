@@ -3,7 +3,7 @@ import * as TPlagasController from '../controllers/t_plagas.controller.js';
 import { createTPlagasSchema, updateTPlagasSchema } from '../schemas/t_plagas.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { validateSchema } from '../middlewares/validate.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware.js';
+//import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
@@ -12,39 +12,39 @@ router.use(tenantMiddleware);
 
 /**
  * @route Get /api/t_plaga
- * @access Private
+ * @access Public
 */
-router.get('/', checkPermission('t_plaga', 'see'), TPlagasController.getTPlaga);
+router.get('/', TPlagasController.getTPlaga);
 
 
 /**
  * @route Get /api/t_plaga/:id
- * @access Private
+ * @access Public
 */
-router.get('/:id', checkPermission('t_plaga', 'see'), TPlagasController.getTPlagaById);
+router.get('/:id', TPlagasController.getTPlagaById);
 
 /**
  * @route POST /api/t_plaga
- * @access Private
+ * @access Public
 */
-router.post('/', checkPermission('t_plaga', 'create'), validateSchema(createTPlagasSchema), TPlagasController.createTPlaga);
+router.post('/', validateSchema(createTPlagasSchema), TPlagasController.createTPlaga);
 
 /**
  * @route PUT /api/t_plaga
  * @access Private
 */
-router.put('/:id', checkPermission('t_plaga', 'update'), validateSchema(updateTPlagasSchema), TPlagasController.updateTPlaga);
+router.put('/:id', validateSchema(updateTPlagasSchema), TPlagasController.updateTPlaga);
 
 /**
  * @route DELETE /api/t_plaga/:id
- * @access Private
+ * @access Public
 */
-router.delete('/:id', checkPermission('t_plaga', 'delete'), TPlagasController.deleteTPlaga);
+router.delete('/:id', TPlagasController.deleteTPlaga);
 
 /**
  * @route POST /api/t_plaga/bulk-delete
- * @access Private
+ * @access Public
 */
-router.post('/bulk-delete', checkPermission('t_plaga', 'delete'), TPlagasController.deleteManyTPlagas);
+router.post('/bulk-delete', TPlagasController.deleteManyTPlagas);
 
 export default router;

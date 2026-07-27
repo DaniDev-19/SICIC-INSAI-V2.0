@@ -41,6 +41,21 @@ export interface EmpleadoResidencia {
   sectores?: {
     id: number;
     nombre: string;
+    parroquia_id?: number;
+    parroquias?: {
+      id: number;
+      nombre: string;
+      municipio_id?: number;
+      municipios?: {
+        id: number;
+        nombre: string;
+        estado_id?: number;
+        estados?: {
+          id: number;
+          nombre: string;
+        };
+      };
+    };
   };
 }
 
