@@ -100,6 +100,24 @@ export function useEmpleados() {
     }
   };
 
+  const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null);
+
+  const handleOpenFichaPdf = async (id: number) => {
+    if (pdfLoadingId !== null) return;
+    setPdfLoadingId(id);
+    const toastId = toast.loading('Generando ficha PDF del empleado...');
+    try {
+      await empleadosService.openFichaPdf(id);
+      toast.dismiss(toastId);
+      toast.success('Ficha PDF generada y abierta en nueva pestaña');
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error('Error al generar la ficha PDF del empleado');
+    } finally {
+      setPdfLoadingId(null);
+    }
+  };
+
   // Mutaciones de Catálogos
   const createCargoMutation = useMutation({
     mutationFn: empleadosService.createCargo,
@@ -195,7 +213,9 @@ export function useEmpleados() {
     deleteEmpleado: deleteMutation.mutateAsync,
     exportEmpleados: handleExport,
     exportEmpleadosPdf: handleExportPdf,
-    
+    openFichaPdf: handleOpenFichaPdf,
+    pdfLoadingId,
+
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,

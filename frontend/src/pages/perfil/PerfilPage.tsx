@@ -29,21 +29,17 @@ export default function PerfilPage() {
   const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
   const [mfaActionType, setMfaActionType] = useState<'setup' | 'disable' | 'regenerate'>('setup');
 
-  // Form states for basic profile info
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
 
-  // Form states for password change
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Visibility toggles
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Sync user info when auth updates
   React.useEffect(() => {
     if (user) {
       setUsername(user.username || '');
@@ -85,7 +81,6 @@ export default function PerfilPage() {
     }
   };
 
-  // Password strength calculator
   const getPasswordStrength = (pwd: string) => {
     if (!pwd) return { score: 0, label: '', color: 'bg-gray-200 dark:bg-gray-700' };
     let score = 0;
@@ -110,11 +105,10 @@ export default function PerfilPage() {
 
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
-      {/* Banner / Header */}
+
       <div className="relative rounded-2xl bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-6 md:p-8 text-white shadow-xl overflow-hidden">
         <div className="absolute right-0 top-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-          {/* Avatar Circle */}
           <div className="relative group">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-200 p-1 shadow-2xl flex items-center justify-center">
               <div className="w-full h-full rounded-[14px] bg-slate-900/90 backdrop-blur-md flex items-center justify-center text-3xl font-extrabold text-emerald-300 tracking-wider">
@@ -126,7 +120,6 @@ export default function PerfilPage() {
             </div>
           </div>
 
-          {/* User Meta Summary */}
           <div className="text-center md:text-left space-y-2">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{user?.username || 'Usuario'}</h1>
@@ -142,7 +135,7 @@ export default function PerfilPage() {
             {currentInstance && (
               <div className="flex items-center justify-center md:justify-start gap-2 pt-1 text-xs text-emerald-200/90">
                 <Building2 className="w-3.5 h-3.5" />
-                <span>Instancia: <strong className="text-white">{currentInstance.nombre_mostrable || currentInstance.db_name}</strong></span>
+                <span>Instancia: <strong className="text-white">{currentInstance.nombre}</strong></span>
               </div>
             )}
           </div>
@@ -182,7 +175,7 @@ export default function PerfilPage() {
                   <Building2 className="w-4 h-4 text-slate-400" />
                   Instancia Operativa
                 </span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{currentInstance?.nombre_mostrable || 'Master'}</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{currentInstance?.nombre || 'Master'}</span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800/60">
@@ -232,7 +225,8 @@ export default function PerfilPage() {
           <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 p-2 gap-2">
             <button
               onClick={() => setActiveTab('info')}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              title="Información General"
+              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'info'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
@@ -244,7 +238,8 @@ export default function PerfilPage() {
 
             <button
               onClick={() => setActiveTab('security')}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              title="Cambiar Contraseña"
+              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'security'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
@@ -256,7 +251,8 @@ export default function PerfilPage() {
 
             <button
               onClick={() => setActiveTab('mfa')}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+              title="Seguridad MFA"
+              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'mfa'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'

@@ -1,9 +1,17 @@
-import { MoveLeft, Ghost } from 'lucide-react'
+import { MoveLeft, Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 function Error() {
     const navigate = useNavigate();
+
+    const handleGoBack = () => {
+        if (window.history.length > 2) {
+            navigate(-1);
+        } else {
+            navigate('/home');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -11,7 +19,7 @@ function Error() {
                 <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-emerald-500 via-primary to-emerald-500" />
 
                 <div className="size-24 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 ring-4 ring-rose-500/5">
-                    <Ghost size={48} className='text-rose-500 animate-pulse' />
+                    <Ghost size={48} className="text-rose-500 animate-pulse" />
                 </div>
 
                 <h1 className="text-6xl font-black text-foreground mb-2 tracking-tighter">404</h1>
@@ -22,11 +30,11 @@ function Error() {
                 </p>
 
                 <Button
-                    onClick={() => navigate('/home')}
+                    onClick={handleGoBack}
                     className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-12 font-bold cursor-pointer transition-all hover:scale-[1.02] shadow-lg shadow-primary/20"
                 >
                     <MoveLeft className="mr-2" />
-                    Volver al Panel Principal
+                    Volver a la página anterior
                 </Button>
             </div>
         </div>

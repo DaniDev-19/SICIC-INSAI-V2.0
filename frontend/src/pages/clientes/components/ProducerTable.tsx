@@ -1,7 +1,6 @@
 import type { Cliente } from '@/types/clientes';
-import { User, Edit, Trash2, Phone, Mail, Fingerprint } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useModulePermissions } from '@/hooks/use-module-permissions';
+import { User, Phone, Mail, Fingerprint } from 'lucide-react';
+import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import {
   Table,
   TableBody,
@@ -13,13 +12,12 @@ import {
 
 interface ProducerTableProps {
   clientes: Cliente[];
+  onView?: (cliente: Cliente) => void;
   onEdit: (cliente: Cliente) => void;
   onDelete: (id: number) => void;
 }
 
-export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps) {
-  const { canUpdate, canDelete } = useModulePermissions('clientes');
-
+export function ProducerTable({ clientes, onView, onEdit, onDelete }: ProducerTableProps) {
   return (
     <Table>
       <TableHeader className="bg-muted/30 border-b">
@@ -91,28 +89,12 @@ export function ProducerTable({ clientes, onEdit, onDelete }: ProducerTableProps
               </TableCell>
 
               <TableCell className="px-6 py-5 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  {canUpdate && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(cliente)}
-                    className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-                  >
-                    <Edit className="size-4" />
-                  </Button>
-                  )}
-                  {canDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(cliente.id)}
-                    className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                  )}
-                </div>
+                <CrudTableActions
+                  screen="clientes"
+                  onView={() => onView?.(cliente)}
+                  onEdit={() => onEdit(cliente)}
+                  onDelete={() => onDelete(cliente.id)}
+                />
               </TableCell>
             </TableRow>
           ))

@@ -1,7 +1,8 @@
 import type { Empleado } from '@/types/empleados';
-import { User, Mail, Phone, BadgeCheck, Building2, Briefcase } from 'lucide-react';
+import { User, Mail, Phone, BadgeCheck, Building2, Briefcase, FileText, Loader2 } from 'lucide-react';
 import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
@@ -16,6 +17,8 @@ interface EmpleadosTableProps {
   empleados: Empleado[];
   onEdit: (empleado: Empleado) => void;
   onDelete: (id: number) => void;
+  onPdf?: (id: number) => void;
+  pdfLoadingId?: number | null;
   onSelect?: (empleado: Empleado) => void;
   selectedId?: number | null;
   selectedIds?: number[];
@@ -26,6 +29,8 @@ export function EmpleadosTable({
   empleados,
   onEdit,
   onDelete,
+  onPdf,
+  pdfLoadingId = null,
   onSelect,
   selectedId,
   selectedIds = [],
@@ -157,12 +162,29 @@ export function EmpleadosTable({
               </TableCell>
 
               <TableCell className="px-6 py-5 text-right">
-                <CrudTableActions
-                  screen="empleados"
-                  onEdit={() => onEdit(empleado)}
-                  onDelete={() => onDelete(empleado.id)}
-                  stopPropagation
-                />
+                <div className="flex items-center justify-end gap-1">
+                  {onPdf && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Generar Ficha PDF"
+                      disabled={pdfLoadingId === empleado.id}
+                      onClick={(e) => { e.stopPropagation(); onPdf(empleado.id); }}
+                      className="size-9 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer disabled:opacity-60"
+                    >
+                      {pdfLoadingId === empleado.id
+                        ? <Loader2 className="size-4 animate-spin" />
+                        : <FileText className="size-4" />
+                      }
+                    </Button>
+                  )}
+                  <CrudTableActions
+                    screen="empleados"
+                    onEdit={() => onEdit(empleado)}
+                    onDelete={() => onDelete(empleado.id)}
+                    stopPropagation
+                  />
+                </div>
               </TableCell>
             </TableRow>
           ))

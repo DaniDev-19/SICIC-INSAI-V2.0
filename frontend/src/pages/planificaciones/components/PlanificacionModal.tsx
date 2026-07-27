@@ -220,7 +220,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
       <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
+        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50  top-0  backdrop-blur-md">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
               <Calendar className="size-6" />
@@ -244,7 +244,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
               <Select
                 onValueChange={(val) => setValue('solicitud_id', val, { shouldValidate: true })}
                 value={selectedSolicitud}
-                disabled={!!planificacion} // Cannot reassign to another solicitud
+                disabled={!!planificacion}
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background">
                   <SelectValue placeholder="Seleccione solicitud..." />
@@ -285,7 +285,6 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             </div>
           </div>
 
-          {/* Fila 2: Actividad Principal */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Actividad Principal a Ejecutar <span className="text-rose-500">*</span></label>
             <Input
@@ -296,7 +295,6 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             {errors.actividad && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.actividad.message}</p>}
           </div>
 
-          {/* Fila 3: Agenda Temporal */}
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10">
             <div className="flex items-center gap-3 mb-4 text-primary font-bold uppercase tracking-widest text-xs">
               <Clock className="size-4" /> Configuración de Horario
@@ -318,7 +316,6 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             </div>
           </div>
 
-          {/* Fila 4: Vehículo e Prioridad */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Prioridad de Visita</label>
@@ -359,7 +356,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             </div>
           </div>
 
-          {/* Fila 5: Objetivos / Convocatoria / Punto de encuentro */}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Punto de Encuentro</label>
@@ -384,7 +381,6 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             />
           </div>
 
-          {/* Inspectores */}
           <div className="space-y-4 pt-4 border-t border-border">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
@@ -429,11 +425,11 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             {errors.empleados && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.empleados.message}</p>}
           </div>
 
-          {/* Acciones */}
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/50 sticky bottom-0 z-50 bg-background/95 backdrop-blur-md pb-4">
             <Button
               type="button"
               variant="ghost"
+              title="Cancelar"
               onClick={onClose}
               disabled={isSubmitting}
               className="h-12 px-6 rounded-xl font-bold cursor-pointer"
@@ -442,6 +438,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             </Button>
             <Button
               type="submit"
+              title="Confirmar"
               disabled={isSubmitting}
               className="h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 bg-primary hover:bg-primary/95 text-white cursor-pointer"
             >

@@ -1,5 +1,5 @@
 import type { ActaSilo } from '@/types/acta_silos';
-import { Eye, Edit, Trash2, Calendar, User, MapPin, FileText, Loader2, Warehouse } from 'lucide-react';
+import { Eye, Edit, Trash2, Calendar, User, MapPin, FileText, Loader2, Warehouse, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -16,6 +16,7 @@ interface ActaSiloTableProps {
   onEdit: (actaSilo: ActaSilo) => void;
   onDelete: (id: number) => void;
   onView: (actaSilo: ActaSilo) => void;
+  onPhotos?: (actaSilo: ActaSilo) => void;
   onPdf: (id: number) => void;
   pdfLoadingId?: number | null;
   canEdit?: boolean;
@@ -25,6 +26,7 @@ interface ActaSiloTableProps {
 function ActaSiloActions({
   actaSilo,
   onView,
+  onPhotos,
   onPdf,
   onEdit,
   onDelete,
@@ -35,6 +37,7 @@ function ActaSiloActions({
 }: {
   actaSilo: ActaSilo;
   onView: (a: ActaSilo) => void;
+  onPhotos?: (a: ActaSilo) => void;
   onPdf: (id: number) => void;
   onEdit: (a: ActaSilo) => void;
   onDelete: (id: number) => void;
@@ -43,6 +46,8 @@ function ActaSiloActions({
   canDelete: boolean;
   className?: string;
 }) {
+  const photoCount = actaSilo.silo_fotos?.length ?? 0;
+
   return (
     <div className={cn('flex items-center gap-1.5 sm:gap-2', className)}>
       <Button
@@ -54,6 +59,22 @@ function ActaSiloActions({
       >
         <Eye className="size-4" />
       </Button>
+      {onPhotos && (
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Ver / Editar Fotografías"
+          onClick={() => onPhotos(actaSilo)}
+          className="size-9 rounded-lg hover:bg-purple-500/10 hover:text-purple-600 cursor-pointer relative"
+        >
+          <ImageIcon className="size-4 text-purple-600" />
+          {photoCount > 0 && (
+            <span className="absolute -top-1 -right-1 size-4 rounded-full bg-purple-600 text-white text-[9px] font-black flex items-center justify-center border border-background">
+              {photoCount}
+            </span>
+          )}
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -117,6 +138,7 @@ export function ActaSiloTable({
   onEdit,
   onDelete,
   onView,
+  onPhotos,
   onPdf,
   pdfLoadingId = null,
   canEdit = false,
@@ -177,6 +199,7 @@ export function ActaSiloTable({
               <ActaSiloActions
                 actaSilo={acta}
                 onView={onView}
+                onPhotos={onPhotos}
                 onPdf={onPdf}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -276,6 +299,7 @@ export function ActaSiloTable({
                     <ActaSiloActions
                       actaSilo={acta}
                       onView={onView}
+                      onPhotos={onPhotos}
                       onPdf={onPdf}
                       onEdit={onEdit}
                       onDelete={onDelete}

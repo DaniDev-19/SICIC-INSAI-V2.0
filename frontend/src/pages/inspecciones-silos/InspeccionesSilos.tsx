@@ -27,6 +27,7 @@ import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { ActaSiloTable } from './components/ActaSiloTable';
 import { ActaSiloModal } from './components/ActaSiloModal';
 import { ActaSiloDetailsModal } from './components/ActaSiloDetailsModal';
+import { FotosModal } from '@/components/modals/FotosModal';
 import type { ActaSilo } from '@/types/acta_silos';
 
 export default function InspeccionesSilos() {
@@ -42,6 +43,7 @@ export default function InspeccionesSilos() {
     setPage,
     setLimit,
     setSearchQuery,
+    updateActaSilo,
     deleteActaSilo,
     openPdfReport,
     pdfLoadingId,
@@ -53,6 +55,10 @@ export default function InspeccionesSilos() {
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [initialPlanificacionId, setInitialPlanificacionId] = useState<number | undefined>();
+
+  // Fotos modal state
+  const [isPhotosOpen, setIsPhotosOpen] = useState(false);
+  const [photosActaSilo, setPhotosActaSilo] = useState<ActaSilo | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,6 +85,36 @@ export default function InspeccionesSilos() {
   const handleOpenView = (acta: ActaSilo) => {
     setDetailsId(acta.id);
     setIsDetailsOpen(true);
+  };
+
+  const handleOpenPhotos = (acta: ActaSilo) => {
+    setPhotosActaSilo(acta);
+    setIsPhotosOpen(true);
+  };
+
+  const handleUploadPhotos = async (newFiles: File[]) => {
+    if (!photosActaSilo) return;
+    const res = await updateActaSilo({
+      id: photosActaSilo.id,
+      data: {},
+      fotos: newFiles,
+    });
+    if (res?.data) {
+      setPhotosActaSilo(res.data);
+    }
+  };
+
+  const handleDeletePhoto = async (fotoId: number) => {
+    if (!photosActaSilo) return;
+    const res = await updateActaSilo({
+      id: photosActaSilo.id,
+      data: {
+        fotos_eliminadas: [fotoId],
+      },
+    });
+    if (res?.data) {
+      setPhotosActaSilo(res.data);
+    }
   };
 
   const confirmDelete = async () => {
@@ -155,6 +191,7 @@ export default function InspeccionesSilos() {
             <ActaSiloTable
               actaSilos={actaSilos}
               onView={handleOpenView}
+              onPhotos={handleOpenPhotos}
               onEdit={handleOpenEdit}
               onDelete={setDeleteId}
               onPdf={openPdfReport}
@@ -187,9 +224,26 @@ export default function InspeccionesSilos() {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         actaSiloId={detailsId}
+        onPhotos={handleOpenPhotos}
         onPdf={openPdfReport}
         pdfLoadingId={pdfLoadingId}
       />
+
+      {photosActaSilo && (
+        <FotosModal
+          isOpen={isPhotosOpen}
+          onClose={() => {
+            setIsPhotosOpen(false);
+            setPhotosActaSilo(null);
+          }}
+          title={`Fotos: ACTA-SILO-${photosActaSilo.id.toString().padStart(4, '0')}`}
+          subtitle={`Ubicación: ${photosActaSilo.lugar_ubicacion || 'Silo'}`}
+          fotos={photosActaSilo.silo_fotos || []}
+          onUploadPhotos={handleUploadPhotos}
+          onDeletePhoto={handleDeletePhoto}
+          canEdit={canUpdate}
+        />
+      )}
 
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="glass-effect border-none shadow-2xl rounded-3xl max-w-md">

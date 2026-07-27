@@ -87,7 +87,7 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          {/* Card Resumen / Datos Generales */}
+  
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-muted/20 border border-border p-4 rounded-xl">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
@@ -119,7 +119,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           </div>
 
-          {/* Responsables Oficiales */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-card border border-border flex items-start gap-3">
               <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
@@ -164,7 +163,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           </div>
 
-          {/* Rebaño Bovino y Bufalino */}
           {bovBuf && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -225,7 +223,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           )}
 
-          {/* Otras Especies */}
           {aval.aval_hallazgos_otras && aval.aval_hallazgos_otras.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -251,7 +248,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           )}
 
-          {/* Biológicos y Vacunas */}
           {aval.aval_biologicos && aval.aval_biologicos.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -288,7 +284,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           )}
 
-          {/* Fotos de Hierros */}
           {aval.aval_hierros && aval.aval_hierros.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -319,7 +314,6 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
             </div>
           )}
 
-          {/* Observaciones */}
           {aval.observaciones && (
             <div className="bg-muted/30 border border-border p-4 rounded-xl text-xs space-y-1">
               <p className="font-bold text-muted-foreground uppercase text-[10px]">Observaciones del Aval</p>
@@ -331,6 +325,7 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
         <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button
             variant="outline"
+            title="Cerrar"
             onClick={onClose}
             className="rounded-xl h-10 px-4 text-xs cursor-pointer"
           >

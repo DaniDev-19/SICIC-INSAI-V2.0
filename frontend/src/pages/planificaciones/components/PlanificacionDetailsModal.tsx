@@ -144,7 +144,7 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
             <p className="text-sm text-muted-foreground max-w-md">
               No se pudo obtener la información por ID de la planificación. Intente de nuevo o verifique la conexión.
             </p>
-            <Button onClick={onClose} variant="ghost" className="mt-2">Cerrar</Button>
+            <Button onClick={onClose} variant="ghost" className="mt-2" title="Cerrar">Cerrar</Button>
           </div>
         ) : (
           <div className="p-8 space-y-6">

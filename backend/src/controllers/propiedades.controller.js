@@ -50,7 +50,23 @@ export const getPropiedades = async (req, res) => {
       include: {
         clientes: { select: { id: true, nombre: true, cedula_rif: true } },
         t_propiedad: { select: { id: true, nombre: true } },
-        propiedad_ubicacion: { include: { sectores: true } },
+        propiedad_ubicacion: {
+          include: {
+            sectores: {
+              include: {
+                parroquias: {
+                  include: {
+                    municipios: {
+                      include: {
+                        estados: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
       }
     }),
     tenantPrisma.propiedades.count({ where }),
@@ -78,9 +94,45 @@ export const getPropiedadById = async (req, res) => {
       clientes: true,
       t_propiedad: true,
       propiedad_hierro: true,
-      propiedad_ubicacion: { include: { sectores: true } },
-      propiedad_cultivo: { include: { cultivo: true, t_unidades_propiedad_cultivo_cantidad_unidad_idTot_unidades: true } },
-      propiedad_animales: { include: { animales: true, t_unidades: true } },
+      propiedad_ubicacion: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      propiedad_cultivo: {
+        include: {
+          cultivo: {
+            include: {
+              t_cultivo: true
+            }
+          },
+          t_unidades_propiedad_cultivo_cantidad_unidad_idTot_unidades: true
+        }
+      },
+      propiedad_animales: {
+        include: {
+          animales: true,
+          t_unidades: true
+        }
+      },
+      solicitudes: {
+        include: {
+          t_solicitud: true,
+        },
+        orderBy: { created_at: 'desc' }
+      }
     }
   });
 

@@ -96,7 +96,6 @@ export function SeguimientoTable({
               key={seg.id}
               className="group hover:bg-primary/5 transition-all duration-300 cursor-pointer"
             >
-              {/* Inspección & Propiedad */}
               <TableCell className="px-6 py-5">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
@@ -121,7 +120,6 @@ export function SeguimientoTable({
                 </div>
               </TableCell>
 
-              {/* Fecha Visita */}
               <TableCell className="px-6 py-5">
                 <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                   <Calendar className="size-3.5 text-indigo-500" />
@@ -131,7 +129,6 @@ export function SeguimientoTable({
                 </div>
               </TableCell>
 
-              {/* Hallazgos y Evidencias */}
               <TableCell className="px-6 py-5 max-w-xs">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground line-clamp-2 italic font-medium">
@@ -146,7 +143,6 @@ export function SeguimientoTable({
                 </div>
               </TableCell>
 
-              {/* Recomendaciones Cumplidas */}
               <TableCell className="px-6 py-5">
                 {seg.recomendaciones_cumplidas ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
@@ -161,14 +157,12 @@ export function SeguimientoTable({
                 )}
               </TableCell>
 
-              {/* Estatus Sanitario */}
               <TableCell className="px-6 py-5">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border">
                   {seg.status || 'EN_PROCESO'}
                 </span>
               </TableCell>
 
-              {/* Acciones */}
               <TableCell className="px-6 py-5 text-right">
                 <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                   <Can screen="seguimientos" action="see">

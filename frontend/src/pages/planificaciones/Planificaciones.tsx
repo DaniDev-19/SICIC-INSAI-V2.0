@@ -169,7 +169,6 @@ const Planificaciones: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {/* Filtro Fecha */}
           <div className="relative flex items-center shrink-0">
             <Input
               type="date"
@@ -197,7 +196,6 @@ const Planificaciones: React.FC = () => {
 
           <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-          {/* Buscador */}
           <div className="w-full sm:w-[18rem] lg:w-88">
             <SearchInput
               placeholder="Buscar por código, actividad..."
@@ -210,7 +208,6 @@ const Planificaciones: React.FC = () => {
 
           <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
-          {/* Botón Exportar */}
           <ModuleToolbarActions
             screen="planificacion"
             exportAction="see"
@@ -225,11 +222,11 @@ const Planificaciones: React.FC = () => {
 
       </div>
 
-      {/* Selector de Vista (Lista / Calendario) */}
       <div className="flex items-center justify-center border-b border-border/30 pb-3">
         <div className="flex items-center gap-1.5 bg-muted/30 p-1.5 rounded-xl border border-border backdrop-blur-sm shadow-inner w-full sm:max-w-md">
           <button
             onClick={() => setViewMode('list')}
+            title="Lista"
             className={cn(
               "flex-1 flex justify-center cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all",
               viewMode === 'list'
@@ -242,6 +239,7 @@ const Planificaciones: React.FC = () => {
           </button>
           <button
             onClick={() => setViewMode('calendar')}
+            title="calendario"
             className={cn(
               "flex-1 flex justify-center cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all",
               viewMode === 'calendar'
@@ -270,6 +268,7 @@ const Planificaciones: React.FC = () => {
               <div className="overflow-x-auto custom-scrollbar">
                 <PlanificacionTable
                   planificaciones={planificaciones}
+                  onView={(id) => setDetailsId(id)}
                   onEdit={handleOpenEdit}
                   onDelete={setDeleteId}
                 />

@@ -70,10 +70,8 @@ export function AvalFormModal({
   const { oficinas } = useOficinas();
   const { tipos: tiposAnimales } = useAnimales();
 
-  // Tab State
   const [activeTab, setActiveTab] = useState('generales');
 
-  // Datos Generales
   const [numeroAval, setNumeroAval] = useState('');
   const [codigoPredio, setCodigoPredio] = useState('');
   const [fechaEmision, setFechaEmision] = useState('');
@@ -84,7 +82,6 @@ export function AvalFormModal({
   const [jefeOsaId, setJefeOsaId] = useState<string>('none');
   const [observaciones, setObservaciones] = useState('');
 
-  // Rebaño Bovino / Bufalino
   const [bovBuf, setBovBuf] = useState<AvalHallazgosBovBuf>({
     t_toros: 0,
     t_vacas: 0,
@@ -104,10 +101,8 @@ export function AvalFormModal({
     t_bucerras: 0,
   });
 
-  // Otras Especies
   const [otrasEspecies, setOtrasEspecies] = useState<AvalHallazgosOtras[]>([]);
 
-  // Biológicos / Vacunas
   const [biologicos, setBiologicos] = useState<
     {
       insumo_id: number;
@@ -119,11 +114,9 @@ export function AvalFormModal({
     }[]
   >([]);
 
-  // Hierros (Archivos)
   const [hierros, setHierros] = useState<File[]>([]);
   const [hierroPreviews, setHierroPreviews] = useState<string[]>([]);
 
-  // Filter inspections to match logic in InspeccionTable.tsx
   const inspeccionesElegibles = inspecciones.filter((insp) => {
     const isSelected = initialInspeccionId === insp.id || aval?.inspeccion_id === insp.id;
     if (isSelected) return true;
@@ -173,7 +166,6 @@ export function AvalFormModal({
           );
         }
       } else {
-        // Autogenerar número de aval único
         const randomNum = String(Math.floor(1000 + Math.random() * 9000));
         setNumeroAval(`AVAL-${new Date().getFullYear()}-${randomNum}`);
         setCodigoPredio('');
@@ -214,7 +206,6 @@ export function AvalFormModal({
     }
   }, [isOpen, aval, initialInspeccionId]);
 
-  // Manejo de cambio en inputs numéricos del rebaño
   const handleBovBufChange = (field: keyof AvalHallazgosBovBuf, value: string) => {
     setBovBuf((prev) => ({
       ...prev,
@@ -224,7 +215,6 @@ export function AvalFormModal({
 
   const totalBovBuf = Object.values(bovBuf).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0);
 
-  // Agregar otra especie
   const handleAddOtrasEspecies = () => {
     if (tiposAnimales.length > 0) {
       setOtrasEspecies((prev) => [
@@ -238,7 +228,6 @@ export function AvalFormModal({
     setOtrasEspecies((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Agregar biológico
   const handleAddBiologico = () => {
     if (insumos.length > 0 && oficinas.length > 0) {
       setBiologicos((prev) => [
@@ -258,7 +247,6 @@ export function AvalFormModal({
     setBiologicos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Manejar imágenes de hierros
   const handleHierrosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files);

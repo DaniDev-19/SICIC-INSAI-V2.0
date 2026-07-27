@@ -3,7 +3,7 @@ import * as tPropiedadController from '../controllers/t_propiedad.controller.js'
 import { validateSchema } from '../middlewares/validate.middleware.js';
 import { createTPropiedadSchema, updateTPropiedadSchema } from '../schemas/t_propiedad.schema.js';
 import { protect } from '../middlewares/auth.middleware.js';
-import { checkPermission } from '../middlewares/permission.middleware.js';
+//import { checkPermission } from '../middlewares/permission.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
@@ -13,39 +13,39 @@ router.use(tenantMiddleware);
 
 /**
  * @route Get /api/t_propiedad
- * @access Private
+ * @access Public
 */
-router.get('/', checkPermission('t_propiedad', 'see'), tPropiedadController.getTPropiedad);
+router.get('/', tPropiedadController.getTPropiedad);
 
 
 /**
  * @route Get /api/t_propiedad/:id
  * @access Private
 */
-router.get('/:id', checkPermission('t_propiedad', 'see'), tPropiedadController.getTPropiedadById);
+router.get('/:id', tPropiedadController.getTPropiedadById);
 
 /**
  * @route POST /api/t_propiedad
  * @access Private
 */
-router.post('/', checkPermission('t_propiedad', 'create'), validateSchema(createTPropiedadSchema), tPropiedadController.createTPropiedad);
+router.post('/', validateSchema(createTPropiedadSchema), tPropiedadController.createTPropiedad);
 
 /**
  * @route PUT /api/t_propiedad
  * @access Private
 */
-router.put('/:id', checkPermission('t_propiedad', 'update'), validateSchema(updateTPropiedadSchema), tPropiedadController.updateTPropiedad);
+router.put('/:id', validateSchema(updateTPropiedadSchema), tPropiedadController.updateTPropiedad);
 
 /**
  * @route DELETE /api/t_propiedad/:id
  * @access Private
 */
-router.delete('/:id', checkPermission('t_propiedad', 'delete'), tPropiedadController.deleteTPropiedad);
+router.delete('/:id', tPropiedadController.deleteTPropiedad);
 
 /**
  * @route POST /api/t_propiedad/bulk-delete
  * @access Private
 */
-router.post('/bulk-delete', checkPermission('t_propiedad', 'delete'), tPropiedadController.deleteManyTPropiedad);
+router.post('/bulk-delete', tPropiedadController.deleteManyTPropiedad);
 
 export default router;

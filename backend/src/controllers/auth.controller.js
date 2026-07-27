@@ -197,6 +197,7 @@ export const login = async (req, res) => {
     username: usuario.username,
     currentInstance: {
       id: ui.instancias.id,
+      nombre: ui.instancias.nombre_mostrable,
       db_name: ui.instancias.db_name,
       rol: ui.roles.nombre,
       empleado_id,
@@ -298,6 +299,7 @@ export const verifyMfaLogin = async (req, res) => {
       username: usuario.username,
       currentInstance: {
         id: decoded.currentInstanceData.id,
+        nombre: decoded.currentInstanceData.nombre,
         db_name: decoded.currentInstanceData.db_name,
         rol: decoded.currentInstanceData.rol,
         empleado_id: decoded.currentInstanceData.empleado_id,

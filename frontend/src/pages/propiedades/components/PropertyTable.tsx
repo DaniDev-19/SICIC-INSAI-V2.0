@@ -15,11 +15,12 @@ import { PropiedadInventario } from './PropiedadInventario';
 
 interface PropertyTableProps {
   propiedades: Propiedad[];
+  onView?: (propiedad: Propiedad) => void;
   onEdit: (propiedad: Propiedad) => void;
   onDelete: (id: number) => void;
 }
 
-export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTableProps) {
+export function PropertyTable({ propiedades, onView, onEdit, onDelete }: PropertyTableProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const toggleExpand = (id: number) => {
@@ -89,8 +90,19 @@ export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTablePr
                 <TableCell className="px-6 py-5">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                      <MapPin className="size-3.5 text-primary" />
-                      {propiedad.propiedad_ubicacion?.[0]?.sectores?.nombre || 'Sin sector asignado'}
+                      <MapPin className="size-3.5 text-primary shrink-0" />
+                      <span className="line-clamp-2">
+                        {(() => {
+                          const sec = propiedad.propiedad_ubicacion?.[0]?.sectores;
+                          if (!sec) return 'Sin sector asignado';
+                          const est = sec.parroquias?.municipios?.estados?.nombre;
+                          const mun = sec.parroquias?.municipios?.nombre;
+                          const par = sec.parroquias?.nombre;
+                          const name = sec.nombre;
+                          const parts = [est, mun, par, name].filter(Boolean);
+                          return parts.length > 0 ? parts.join(', ') : 'Sin sector asignado';
+                        })()}
+                      </span>
                     </div>
                     <p className="text-[10px] text-muted-foreground italic line-clamp-2 pl-5">
                       Ref: {propiedad.punto_referencia || 'N/A'}
@@ -124,6 +136,7 @@ export function PropertyTable({ propiedades, onEdit, onDelete }: PropertyTablePr
                   <div className="flex items-center justify-end gap-2">
                     <CrudTableActions
                       screen="propiedades"
+                      onView={() => onView?.(propiedad)}
                       onEdit={() => onEdit(propiedad)}
                       onDelete={() => onDelete(propiedad.id)}
                       stopPropagation
