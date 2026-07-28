@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Animal, TipoAnimal } from '@/types/animales';
-import { Dog, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Dog, Loader2, Plus, Pencil, Trash2, Check, X, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAnimales } from '@/hooks/use-animales';
 
@@ -49,6 +49,7 @@ interface AnimalModalProps {
   onClose: () => void;
   animal?: Animal | null;
   tipos: TipoAnimal[];
+  isViewOnly?: boolean;
   onCreateTipo?: (nombre: string) => Promise<any>;
   onUpdateTipo?: (args: { id: number; nombre: string }) => Promise<any>;
   onDeleteTipo?: (id: number) => Promise<any>;
@@ -59,6 +60,7 @@ export function AnimalModal({
   onClose,
   animal,
   tipos,
+  isViewOnly = false,
   onCreateTipo,
   onUpdateTipo,
   onDeleteTipo,
@@ -129,6 +131,10 @@ export function AnimalModal({
   }, [animal, reset, isOpen]);
 
   const handleFormSubmit = async (values: AnimalFormValues) => {
+    if (isViewOnly) {
+      onClose();
+      return;
+    }
     const cleanNumeric = (val: string | number | null | undefined) => {
       if (!val) return null;
       const cleaned = val.toString().replace(',', '.');
@@ -187,31 +193,36 @@ export function AnimalModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Dog className="size-6" />
+              {isViewOnly ? <Eye className="size-6 text-emerald-500" /> : <Dog className="size-6" />}
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold">
-                {animal ? 'Editar Animal' : 'Nuevo Animal'}
+                {isViewOnly ? 'Detalles del Animal' : animal ? 'Editar Animal' : 'Nuevo Animal'}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {animal ? 'Modifica la información del animal' : 'Registra un nuevo animal en el sistema'}
+                {isViewOnly
+                  ? 'Consulta la información detallada del animal'
+                  : animal
+                  ? 'Modifica la información del animal'
+                  : 'Registra un nuevo animal en el sistema'}
               </p>
             </div>
           </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
-          <div className="space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <fieldset disabled={isViewOnly} className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
-                Nombre del Animal <span className="text-rose-500">*</span>
+                Nombre del Animal {!isViewOnly && <span className="text-rose-500">*</span>}
               </label>
               <Input
                 {...register('nombre')}
+                disabled={isViewOnly}
                 placeholder="Ej. Ganado Vacuno"
                 className={cn(
                   "h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
@@ -225,6 +236,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Nombre Científico</label>
               <Input
                 {...register('nombre_cientifico')}
+                disabled={isViewOnly}
                 placeholder="Ej. Bos taurus"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all italic"
               />
@@ -232,10 +244,10 @@ export function AnimalModal({
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
-                Tipo de Animal <span className="text-rose-500">*</span>
+                Tipo de Animal {!isViewOnly && <span className="text-rose-500">*</span>}
               </label>
               
-              {showNewTipo && (
+              {!isViewOnly && showNewTipo && (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                   <Input
                     value={newTipoNombre}
@@ -266,7 +278,7 @@ export function AnimalModal({
                 </div>
               )}
 
-              {editingTipoId !== null && (
+              {!isViewOnly && editingTipoId !== null && (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                   <Input
                     value={editingTipoNombre}
@@ -302,6 +314,7 @@ export function AnimalModal({
 
               <div className="flex items-center gap-2">
                 <Select
+                  disabled={isViewOnly}
                   onValueChange={(val) => setValue('tipo_animal_id', val, { shouldValidate: true })}
                   value={watch('tipo_animal_id')}
                 >
@@ -317,48 +330,52 @@ export function AnimalModal({
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
                           {tipo.nombre}
                         </SelectItem>
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
-                          <button
-                            type="button"
-                            disabled={deletingTipoId === tipo.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingTipoId(tipo.id);
-                              setEditingTipoNombre(tipo.nombre);
-                              setShowNewTipo(false);
-                            }}
-                            className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50"
-                            title="Editar tipo"
-                          >
-                            <Pencil className="size-3" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={deletingTipoId === tipo.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTipo(tipo.id);
-                            }}
-                            className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50"
-                            title="Eliminar tipo"
-                          >
-                            {deletingTipoId === tipo.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-                          </button>
-                        </div>
+                        {!isViewOnly && (
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <button
+                              type="button"
+                              disabled={deletingTipoId === tipo.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTipoId(tipo.id);
+                                setEditingTipoNombre(tipo.nombre);
+                                setShowNewTipo(false);
+                              }}
+                              className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50"
+                              title="Editar tipo"
+                            >
+                              <Pencil className="size-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deletingTipoId === tipo.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTipo(tipo.id);
+                              }}
+                              className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50"
+                              title="Eliminar tipo"
+                            >
+                              {deletingTipoId === tipo.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
-                  className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-                  title="Crear nuevo tipo"
-                >
-                  <Plus className="size-5" />
-                </Button>
+                {!isViewOnly && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
+                    className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                    title="Crear nuevo tipo"
+                  >
+                    <Plus className="size-5" />
+                  </Button>
+                )}
               </div>
               {errors.tipo_animal_id && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.tipo_animal_id.message}</p>}
             </div>
@@ -367,6 +384,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Dieta</label>
               <Input
                 {...register('dieta')}
+                disabled={isViewOnly}
                 placeholder="Ej. Herbívoro"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
               />
@@ -376,6 +394,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Esperanza de Vida</label>
               <Input
                 {...register('esperanza_vida')}
+                disabled={isViewOnly}
                 placeholder="Ej. 15-20 años"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
               />
@@ -385,6 +404,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Hábitat Principal</label>
               <Input
                 {...register('habitat_principal')}
+                disabled={isViewOnly}
                 placeholder="Ej. Llanuras, Granjas"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
               />
@@ -394,6 +414,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Peso Promedio (kg)</label>
               <Input
                 {...register('peso_promedio_kg')}
+                disabled={isViewOnly}
                 placeholder="0.00"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
               />
@@ -403,6 +424,7 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Longitud Promedio (m)</label>
               <Input
                 {...register('longitud_promedio_mt')}
+                disabled={isViewOnly}
                 placeholder="0.00"
                 className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all"
               />
@@ -412,26 +434,35 @@ export function AnimalModal({
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Descripción (Opcional)</label>
               <Textarea
                 {...register('descripcion')}
+                disabled={isViewOnly}
                 placeholder="Breve descripción..."
                 className="min-h-25 rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none"
               />
             </div>
-          </div>
+          </fieldset>
 
           <DialogFooter className="pt-4 pb-2">
-            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading} className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                animal ? 'Guardar Cambios' : 'Registrar Animal'
-              )}
-            </Button>
+            {isViewOnly ? (
+              <Button type="button" onClick={onClose} className="rounded-xl h-12 px-8 font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer w-full">
+                Cerrar
+              </Button>
+            ) : (
+              <>
+                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading} className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    animal ? 'Guardar Cambios' : 'Registrar Animal'
+                  )}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

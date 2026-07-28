@@ -11,6 +11,7 @@ const TOKEN_COOKIE_OPTIONS = {
   sameSite: 'lax',
   maxAge: 1000 * 60 * 60 * 8,
 };
+export const userActiveTokens = new Map();
 
 /**
  * @param {Object} rolPermisos
@@ -112,8 +113,15 @@ export const login = async (req, res) => {
     });
   }
 
-  const usuario = await masterPrisma.usuarios.findUnique({
-    where: { email },
+  const normalizedEmail = String(email || '').trim();
+
+  const usuario = await masterPrisma.usuarios.findFirst({
+    where: {
+      email: {
+        equals: normalizedEmail,
+        mode: 'insensitive',
+      },
+    },
     include: {
       usuario_instancia: {
         where: { instancia_id: Number(instanceId) },
@@ -147,6 +155,23 @@ export const login = async (req, res) => {
       status: 'error',
       message: 'Credenciales inválidas',
     });
+  }
+
+  // Bloquear si ya existe una sesión activa para este usuario
+  const existingToken = userActiveTokens.get(usuario.id);
+  if (existingToken) {
+    try {
+      // Verificar que el token almacenado sigue siendo válido (no expirado)
+      verifyToken(existingToken);
+      // Token válido = sesión activa, bloquear nuevo intento
+      return res.status(409).json({
+        status: 'error',
+        message: 'Ya existe una sesión activa con esta cuenta. El usuario debe cerrar sesión primero antes de que otra persona pueda ingresar.',
+      });
+    } catch {
+      // Token expirado o inválido, limpiar y permitir login
+      userActiveTokens.delete(usuario.id);
+    }
   }
 
   const permisosFinales = mergePermisos(ui.roles.permisos, ui.permisos_personalizados);
@@ -204,6 +229,8 @@ export const login = async (req, res) => {
       permisos: permisosFinales,
     },
   });
+
+  userActiveTokens.set(usuario.id, token);
 
   res.cookie('token', token, TOKEN_COOKIE_OPTIONS);
 
@@ -307,6 +334,8 @@ export const verifyMfaLogin = async (req, res) => {
       },
     });
 
+    userActiveTokens.set(usuario.id, token);
+
     res.cookie('token', token, TOKEN_COOKIE_OPTIONS);
 
     bitacoraService.registrar({
@@ -357,6 +386,26 @@ export const getMe = async (req, res) => {
     });
   }
 
+  // Refrescar empleado_id desde el tenant en caso de vinculación posterior al login
+  let empleadoIdActual = currentInstance?.empleado_id ?? null;
+  if (currentInstance?.db_name) {
+    try {
+      const tenantPrisma = getTenantPrisma(currentInstance.db_name);
+      const empleado = await tenantPrisma.empleados.findFirst({
+        where: { usuario_global_id: usuario.id },
+        select: { id: true },
+      });
+      empleadoIdActual = empleado ? empleado.id : null;
+    } catch {
+      // Si falla la consulta al tenant, mantener el valor del JWT
+    }
+  }
+
+  const instanceRefrescada = {
+    ...currentInstance,
+    empleado_id: empleadoIdActual,
+  };
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -366,12 +415,16 @@ export const getMe = async (req, res) => {
         email: usuario.email,
         mfa_enabled: Boolean(usuario.mfa_enabled),
       },
-      currentInstance,
+      currentInstance: instanceRefrescada,
     },
   });
 };
 
 export const logout = (req, res) => {
+  if (req.user?.id) {
+    userActiveTokens.delete(req.user.id);
+  }
+
   // Registrar cierre de sesión
   if (req.user) {
     bitacoraService.registrar({

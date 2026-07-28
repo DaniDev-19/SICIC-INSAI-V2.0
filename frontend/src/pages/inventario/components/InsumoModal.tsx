@@ -90,8 +90,8 @@ export function InsumoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[750px] max-w-4xl w-full bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl">
-        <DialogHeader className="space-y-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[750px] max-w-4xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
+        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
               <Package className="size-5" />
@@ -109,109 +109,111 @@ export function InsumoModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            {/* Código */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Código */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <Barcode className="size-3.5" />
+                  Código SKU / Ref
+                </label>
+                <Input
+                  placeholder="Ej. VAC-001"
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  className="h-10 bg-background/80 rounded-xl"
+                />
+              </div>
+
+              {/* Marca */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <Tag className="size-3.5" />
+                  Marca / Fabricante
+                </label>
+                <Input
+                  placeholder="Ej. Pfizer / AgroInsai"
+                  value={marca}
+                  onChange={(e) => setMarca(e.target.value)}
+                  className="h-10 bg-background/80 rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Nombre Insumo */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Barcode className="size-3.5" />
-                Código SKU / Ref
+              <label className="text-xs font-semibold text-muted-foreground">
+                Nombre del Insumo <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="Ej. VAC-001"
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                className="h-10 bg-background/80 rounded-xl"
+                required
+                placeholder="Ej. Vacuna Aftosa Trivalente 50ml"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="h-10 bg-background/80 rounded-xl font-medium"
               />
             </div>
 
-            {/* Marca */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Categoría */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Categoría</label>
+                <Select value={categoriaId} onValueChange={setCategoriaId}>
+                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium">
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect max-h-52">
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat.id} value={String(cat.id)}>
+                        {cat.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Unidad de Medida */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <Ruler className="size-3.5" />
+                  Unidad de Medida
+                </label>
+                <Select value={unidadMedidaId} onValueChange={setUnidadMedidaId}>
+                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium">
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect max-h-52">
+                    {unidades.map((u) => (
+                      <SelectItem key={u.id} value={String(u.id)}>
+                        {u.nombre} {u.abreviatura ? `(${u.abreviatura})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Descripción */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Tag className="size-3.5" />
-                Marca / Fabricante
-              </label>
-              <Input
-                placeholder="Ej. Pfizer / AgroInsai"
-                value={marca}
-                onChange={(e) => setMarca(e.target.value)}
-                className="h-10 bg-background/80 rounded-xl"
+              <label className="text-xs font-semibold text-muted-foreground">Descripción / Especificaciones</label>
+              <Textarea
+                placeholder="Detalles sobre temperatura de conservación, principios activos o dosis recomendada..."
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                rows={3}
+                className="bg-background/80 rounded-xl resize-none text-xs"
               />
             </div>
           </div>
 
-          {/* Nombre Insumo */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">
-              Nombre del Insumo <span className="text-rose-500">*</span>
-            </label>
-            <Input
-              required
-              placeholder="Ej. Vacuna Aftosa Trivalente 50ml"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="h-10 bg-background/80 rounded-xl font-medium"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {/* Categoría */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground">Categoría</label>
-              <Select value={categoriaId} onValueChange={setCategoriaId}>
-                <SelectTrigger className="h-10 bg-background/80 rounded-xl">
-                  <SelectValue placeholder="Seleccionar..." />
-                </SelectTrigger>
-                <SelectContent className="glass-effect max-h-52">
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Unidad de Medida */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Ruler className="size-3.5" />
-                Unidad de Medida
-              </label>
-              <Select value={unidadMedidaId} onValueChange={setUnidadMedidaId}>
-                <SelectTrigger className="h-10 bg-background/80 rounded-xl">
-                  <SelectValue placeholder="Seleccionar..." />
-                </SelectTrigger>
-                <SelectContent className="glass-effect max-h-52">
-                  {unidades.map((u) => (
-                    <SelectItem key={u.id} value={String(u.id)}>
-                      {u.nombre} {u.abreviatura ? `(${u.abreviatura})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Descripción */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Descripción / Especificaciones</label>
-            <Textarea
-              placeholder="Detalles sobre temperatura de conservación, principios activos o dosis recomendada..."
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={3}
-              className="bg-background/80 rounded-xl resize-none text-xs"
-            />
-          </div>
-
-          <DialogFooter className="gap-2 pt-2">
+          <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl h-10 px-4 text-xs cursor-pointer"
+              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
             >
               Cancelar
             </Button>

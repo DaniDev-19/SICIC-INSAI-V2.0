@@ -1,7 +1,9 @@
 import React from 'react';
 import type { Planificacion } from '@/types/planificaciones';
-import { Calendar, User, Users, MapPin, Car, FileText } from 'lucide-react';
+import { Calendar, User, Users, MapPin, Car, FileText, UserPlus } from 'lucide-react';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
+import { Button } from '@/components/ui/button';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   Table,
   TableBody,
@@ -17,6 +19,7 @@ interface PlanificacionTableProps {
   onView: (id: number) => void;
   onEdit: (planificacion: Planificacion) => void;
   onDelete: (id: number) => void;
+  onEditEmpleados?: (planificacion: Planificacion) => void;
 }
 
 const PRIORIDAD_CONFIG: Record<string, { label: string; class: string }> = {
@@ -41,7 +44,10 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  onEditEmpleados,
 }) => {
+  const { isAdmin } = usePermissions();
+
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
@@ -83,6 +89,8 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
             const prioridad = PRIORIDAD_CONFIG[plan.prioridad] || PRIORIDAD_CONFIG.MEDIA;
             const status = STATUS_CONFIG[plan.status] || STATUS_CONFIG.PENDIENTE;
             const inspectors = plan.planificacion_empleados || [];
+            const isFinalized = plan.status === 'FINALIZADA';
+            const canModify = !isFinalized || isAdmin;
 
             return (
               <TableRow key={plan.id} className="group hover:bg-primary/5 transition-all duration-300">
@@ -140,22 +148,36 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                 </TableCell>
 
                 <TableCell className="px-6 py-5">
-                  <div className="flex flex-wrap gap-1.5 max-w-50">
-                    {inspectors.length > 0 ? (
-                      inspectors.map((pe) => (
-                        <div
-                          key={pe.id}
-                          className="inline-flex items-center gap-1 bg-muted/60 text-foreground border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs hover:bg-muted transition-colors whitespace-nowrap"
-                        >
-                          <User className="size-3 text-muted-foreground/80 shrink-0" />
-                          {pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic flex items-center gap-1 whitespace-nowrap">
-                        <Users className="size-3.5" />
-                        Sin asignar
-                      </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap gap-1.5 max-w-45">
+                      {inspectors.length > 0 ? (
+                        inspectors.map((pe) => (
+                          <div
+                            key={pe.id}
+                            className="inline-flex items-center gap-1 bg-muted/60 text-foreground border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs hover:bg-muted transition-colors whitespace-nowrap"
+                          >
+                            <User className="size-3 text-muted-foreground/80 shrink-0" />
+                            {pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic flex items-center gap-1 whitespace-nowrap">
+                          <Users className="size-3.5" />
+                          Sin asignar
+                        </span>
+                      )}
+                    </div>
+                    {onEditEmpleados && canModify && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEditEmpleados(plan)}
+                        className="size-7 rounded-lg text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 transition-colors cursor-pointer shrink-0"
+                        title="Editar inspectores asignados"
+                      >
+                        <UserPlus className="size-3.5" />
+                      </Button>
                     )}
                   </div>
                 </TableCell>
@@ -182,8 +204,8 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                   <CrudTableActions
                     screen="planificacion"
                     onView={() => onView(plan.id)}
-                    onEdit={() => onEdit(plan)}
-                    onDelete={() => onDelete(plan.id)}
+                    onEdit={canModify ? () => onEdit(plan) : undefined}
+                    onDelete={canModify ? () => onDelete(plan.id) : undefined}
                   />
                 </TableCell>
               </TableRow>

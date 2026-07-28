@@ -82,8 +82,8 @@ export function EditStockModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-xl mx-auto bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl">
-        <DialogHeader className="space-y-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
+        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
               <Settings2 className="size-5" />
@@ -99,133 +99,136 @@ export function EditStockModal({
           </div>
         </DialogHeader>
 
-        {/* Info Card del registro actual */}
-        <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <Package className="size-4 text-emerald-500 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Insumo / Producto</p>
-              <p className="text-sm font-bold text-foreground">
-                {stockItem.insumos?.nombre || `Insumo #${stockItem.insumo_id}`}
-              </p>
-              {stockItem.insumos?.codigo && (
-                <p className="text-[11px] font-mono text-muted-foreground">{stockItem.insumos.codigo}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <Building2 className="size-4 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Oficina / Sede</p>
-              <p className="text-sm font-semibold">
-                {stockItem.oficinas?.nombre || `Sede #${stockItem.oficina_id}`}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stock Actual</p>
-              <p className={`text-lg font-black ${isCritical ? 'text-amber-500' : 'text-emerald-500'}`}>
-                {stockItem.stock_actual}{' '}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {stockItem.insumos?.t_unidades?.nombre || ''}
-                </span>
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Estado Actual</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {isCritical && (
-                  <AlertTriangle className="size-4 text-amber-500" />
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 space-y-4">
+          {/* Info Card del registro actual */}
+          <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Package className="size-4 text-emerald-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Insumo / Producto</p>
+                <p className="text-sm font-bold text-foreground">
+                  {stockItem.insumos?.nombre || `Insumo #${stockItem.insumo_id}`}
+                </p>
+                {stockItem.insumos?.codigo && (
+                  <p className="text-[11px] font-mono text-muted-foreground">{stockItem.insumos.codigo}</p>
                 )}
-                <span className={`text-sm font-bold ${isCritical ? 'text-amber-500' : 'text-emerald-500'}`}>
-                  {Number(stockItem.stock_actual) <= 0
-                    ? 'AGOTADO'
-                    : isCritical
-                    ? 'CRÍTICO'
-                    : 'NORMAL'}
-                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Building2 className="size-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Oficina / Sede</p>
+                <p className="text-sm font-semibold">
+                  {stockItem.oficinas?.nombre || `Sede #${stockItem.oficina_id}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stock Actual</p>
+                <p className={`text-lg font-black ${isCritical ? 'text-amber-500' : 'text-emerald-500'}`}>
+                  {stockItem.stock_actual}{' '}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {stockItem.insumos?.t_unidades?.nombre || ''}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Estado Actual</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {isCritical && (
+                    <AlertTriangle className="size-4 text-amber-500" />
+                  )}
+                  <span className={`text-sm font-bold ${isCritical ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    {Number(stockItem.stock_actual) <= 0
+                      ? 'AGOTADO'
+                      : isCritical
+                      ? 'CRÍTICO'
+                      : 'NORMAL'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Stock Mínimo */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                <AlertTriangle className="size-3.5 text-amber-500" />
+                Stock Mínimo (Alerta crítica)
+              </label>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Cuando el stock actual baje de este valor, el sistema mostrará una alerta de stock crítico.
+              </p>
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={stockMinimo}
+                onChange={(e) => setStockMinimo(e.target.value)}
+                placeholder="0"
+                className="h-11 bg-background/80 rounded-xl font-bold text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Lote */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">Lote / Número de Serie</label>
+                <Input
+                  placeholder="Ej. L-2026-05"
+                  value={lote}
+                  onChange={(e) => setLote(e.target.value)}
+                  className="h-11 bg-background/80 rounded-xl"
+                />
+              </div>
+
+              {/* Fecha de Vencimiento */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold flex items-center gap-1 text-foreground">
+                  <Calendar className="size-3.5 text-muted-foreground" />
+                  Fecha de Vencimiento
+                </label>
+                <Input
+                  type="date"
+                  value={fechaVencimiento}
+                  onChange={(e) => setFechaVencimiento(e.target.value)}
+                  className="h-11 bg-background/80 rounded-xl text-sm"
+                />
+              </div>
+            </div>
+          </form>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Stock Mínimo */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold flex items-center gap-1.5 text-foreground">
-              <AlertTriangle className="size-3.5 text-amber-500" />
-              Stock Mínimo (Alerta crítica)
-            </label>
-            <p className="text-[11px] text-muted-foreground -mt-1">
-              Cuando el stock actual baje de este valor, el sistema mostrará una alerta de stock crítico.
-            </p>
-            <Input
-              type="number"
-              min="0"
-              step="any"
-              value={stockMinimo}
-              onChange={(e) => setStockMinimo(e.target.value)}
-              placeholder="0"
-              className="h-11 bg-background/80 rounded-xl font-bold text-sm"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Lote */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground">Lote / Número de Serie</label>
-              <Input
-                placeholder="Ej. L-2026-05"
-                value={lote}
-                onChange={(e) => setLote(e.target.value)}
-                className="h-11 bg-background/80 rounded-xl"
-              />
-            </div>
-
-            {/* Fecha de Vencimiento */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold flex items-center gap-1 text-foreground">
-                <Calendar className="size-3.5 text-muted-foreground" />
-                Fecha de Vencimiento
-              </label>
-              <Input
-                type="date"
-                value={fechaVencimiento}
-                onChange={(e) => setFechaVencimiento(e.target.value)}
-                className="h-11 bg-background/80 rounded-xl text-sm"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSaving}
-              className="rounded-xl h-10 px-4 text-xs cursor-pointer"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-xl h-10 px-5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  Guardando...
-                </>
-              ) : (
-                'Guardar Configuración'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSaving}
+            className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+            disabled={isSaving}
+            className="rounded-xl h-10 px-5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 cursor-pointer"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Guardando...
+              </>
+            ) : (
+              'Guardar Configuración'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

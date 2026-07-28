@@ -26,39 +26,85 @@ function parseAreasBody(areas_inspeccion) {
 
 function isAdminUser(req) {
   const permisos = req.user?.currentInstance?.permisos;
+  const rol = req.user?.currentInstance?.rol?.toLowerCase();
   return (
     permisos?.all?.includes('*') ||
-    req.user?.currentInstance?.rol?.toLowerCase() === 'administrador'
+    rol === 'admin' ||
+    rol === 'administrador' ||
+    rol === 'superadmin' ||
+    rol === 'super_admin'
   );
 }
 
+function isInspectorUser(req) {
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return rol.includes('inspector') && !isAdminUser(req);
+}
+
+/**
+ * Resuelve el empleado_id del usuario autenticado.
+ * Primero busca en el JWT; si no está, consulta la BD del tenant como fallback
+ * (cubre el caso de vinculación posterior al login).
+ */
+async function resolveEmpleadoId(req, tx) {
+  const fromToken = req.user?.currentInstance?.empleado_id;
+  if (fromToken) return fromToken;
+
+  // Fallback: consultar la BD del tenant
+  const usuarioGlobalId = req.user?.id;
+  if (!usuarioGlobalId || !tx) return null;
+
+  try {
+    const empleado = await tx.empleados.findFirst({
+      where: { usuario_global_id: usuarioGlobalId },
+      select: { id: true },
+    });
+    return empleado ? empleado.id : null;
+  } catch {
+    return null;
+  }
+}
+
 function canAccessInspeccion(inspeccion, req) {
+  if (!isInspectorUser(req)) return true;
   const empleadoId = req.user?.currentInstance?.empleado_id;
-  if (isAdminUser(req) || !empleadoId) return true;
+  if (!empleadoId) return false;
   return inspeccion.planificaciones?.planificacion_empleados?.some(
     (pe) => pe.empleado_id === empleadoId
   );
 }
 
 async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
-  if (isAdminUser(req)) return;
+  const planificacion = await tx.planificaciones.findUnique({
+    where: { id: Number(planificacionId) },
+    select: { id: true, fecha_programada: true },
+  });
+  if (!planificacion) {
+    const error = new Error('La planificación indicada no existe');
+    error.statusCode = 404;
+    throw error;
+  }
 
-  const empleadoId = req.user?.currentInstance?.empleado_id;
+  if (!isAdminUser(req) && planificacion.fecha_programada) {
+    const planDateStr = new Date(planificacion.fecha_programada).toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (planDateStr > todayStr) {
+      const error = new Error(
+        `No se puede registrar el vaciado de esta inspección aún. La fecha de la visita está programada para el ${planDateStr}.`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  if (!isInspectorUser(req)) return;
+
+  const empleadoId = await resolveEmpleadoId(req, tx);
   if (!empleadoId) {
     const error = new Error(
       'Su usuario no tiene un empleado vinculado. No puede registrar inspecciones de campo.'
     );
     error.statusCode = 403;
-    throw error;
-  }
-
-  const planificacion = await tx.planificaciones.findUnique({
-    where: { id: Number(planificacionId) },
-    select: { id: true },
-  });
-  if (!planificacion) {
-    const error = new Error('La planificación indicada no existe');
-    error.statusCode = 404;
     throw error;
   }
 
@@ -78,10 +124,8 @@ async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
   }
 }
 
-function buildInspeccionesWhere(req) {
+async function buildInspeccionesWhere(req, tx) {
   const { status, planificacion_id, q } = req.query;
-  const isAdmin = isAdminUser(req);
-  const empleadoId = req.user?.currentInstance?.empleado_id;
 
   const where = {
     AND: [
@@ -123,14 +167,19 @@ function buildInspeccionesWhere(req) {
     });
   }
 
-  if (!isAdmin && empleadoId) {
-    where.AND.push({
-      planificaciones: {
-        planificacion_empleados: {
-          some: { empleado_id: empleadoId },
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tx || req.db));
+    if (empleadoId) {
+      where.AND.push({
+        planificaciones: {
+          planificacion_empleados: {
+            some: { empleado_id: Number(empleadoId) },
+          },
         },
-      },
-    });
+      });
+    } else {
+      where.AND.push({ id: -1 });
+    }
   }
 
   return where;
@@ -141,7 +190,7 @@ export const getInspecciones = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const where = buildInspeccionesWhere(req);
+  const where = await buildInspeccionesWhere(req, tenantPrisma);
 
   const [inspecciones, totalCount] = await Promise.all([
     tenantPrisma.inspecciones.findMany({
@@ -152,10 +201,15 @@ export const getInspecciones = async (req, res) => {
       include: {
         planificaciones: {
           include: {
+            planificacion_empleados: {
+              include: {
+                empleados: { select: { id: true, nombre: true, apellido: true, cedula: true } }
+              }
+            },
             solicitudes: {
               include: {
-                clientes: { select: { id: true, nombre: true } },
-                propiedades: { select: { id: true, nombre: true } }
+                clientes: { select: { id: true, nombre: true, cedula_rif: true } },
+                propiedades: { select: { id: true, nombre: true, codigo_insai: true } }
               }
             }
           }
@@ -219,12 +273,13 @@ export const getInspeccionById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Inspecci?n no encontrada' });
   }
 
-  if (!isAdmin && empleadoId) {
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
     const isAssigned = inspeccion.planificaciones?.planificacion_empleados?.some(
       pe => pe.empleado_id === empleadoId
     );
     if (!isAssigned) {
-      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No est? asignado a esta inspecci?n.' });
+      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección.' });
     }
   }
 
@@ -286,7 +341,7 @@ export const createInspeccion = async (req, res) => {
     finalidades, insumos_consumidos, areas_inspeccion
   } = req.body;
 
-  const empleado_id = req.user?.currentInstance?.empleado_id || null;
+  const empleado_id_from_token = req.user?.currentInstance?.empleado_id || null;
 
   if (!planificacion_id) {
     return res.status(400).json({
@@ -298,6 +353,9 @@ export const createInspeccion = async (req, res) => {
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
       await requireInspectorEnPlanificacion(tx, req, planificacion_id);
+
+      // Resolver empleado_id dinámicamente (fallback a BD si JWT no lo tiene)
+      const empleado_id = empleado_id_from_token || await resolveEmpleadoId(req, tx);
 
       const codigos = await codigosService.resolverCodigosInspeccion(tx, {
         planificacionId: planificacion_id,
@@ -428,12 +486,20 @@ export const updateInspeccion = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Inspecci?n no encontrada' });
   }
 
-  if (!isAdmin && empleadoId) {
+  if (existing.status === 'FINALIZADA' && !isAdminUser(req)) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'La inspección está FINALIZADA y cerrada definitivamente. No se pueden modificar sus datos.'
+    });
+  }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
     const isAssigned = existing.planificaciones?.planificacion_empleados?.some(
       pe => pe.empleado_id === empleadoId
     );
     if (!isAssigned) {
-      return res.status(403).json({ status: 'error', message: 'No tiene permisos para modificar esta inspecci?n.' });
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para modificar esta inspección.' });
     }
   }
 
@@ -519,8 +585,12 @@ export const updateInspeccion = async (req, res) => {
       }
     });
 
-    if (data.status && effectivePlanificacionId) {
-      await statusSyncService.syncFromInspeccion(tx, effectivePlanificacionId, data.status);
+    if (effectivePlanificacionId) {
+      await statusSyncService.syncFromInspeccion(
+        tx,
+        effectivePlanificacionId,
+        data.status || existing.status
+      );
     }
 
     return updated;
@@ -562,12 +632,12 @@ export const deleteInspeccion = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Inspecci?n no encontrada' });
   }
 
-  if (!isAdmin && empleado_id) {
+  if (isInspectorUser(req)) {
     const isAssigned = toDelete.planificaciones?.planificacion_empleados?.some(
       pe => pe.empleado_id === empleado_id
     );
     if (!isAssigned) {
-      return res.status(403).json({ status: 'error', message: 'No tiene permisos para eliminar esta inspecci?n.' });
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para eliminar esta inspección.' });
     }
   }
 
@@ -671,7 +741,7 @@ async function fetchInspeccionesExportData(tenantPrisma, where) {
 
 export const exportInspecciones = async (req, res) => {
   const tenantPrisma = req.db;
-  const where = buildInspeccionesWhere(req);
+  const where = await buildInspeccionesWhere(req, tenantPrisma);
   const data = await fetchInspeccionesExportData(tenantPrisma, where);
 
   const buffer = await excelService.generate({
@@ -688,7 +758,7 @@ export const exportInspecciones = async (req, res) => {
 
 export const exportInspeccionesPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const where = buildInspeccionesWhere(req);
+  const where = await buildInspeccionesWhere(req, tenantPrisma);
   const data = await fetchInspeccionesExportData(tenantPrisma, where);
 
   const buffer = await pdfService.generateTable({
@@ -747,6 +817,13 @@ export const updateInspeccionStatus = async (req, res) => {
 
   if (!existing) {
     return res.status(404).json({ status: 'error', message: 'Inspección no encontrada' });
+  }
+
+  if (existing.status === 'FINALIZADA' && !isAdminUser(req)) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'La inspección está FINALIZADA y cerrada definitivamente. No se puede cambiar su estatus.'
+    });
   }
 
   if (!canAccessInspeccion(existing, req)) {

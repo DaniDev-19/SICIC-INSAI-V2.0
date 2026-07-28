@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface OficinasTableProps {
   oficinas: Oficina[];
+  onView: (oficina: Oficina) => void;
   onEdit: (oficina: Oficina) => void;
   onDelete: (id: number) => void;
   selectedIds: number[];
@@ -22,6 +23,7 @@ interface OficinasTableProps {
 
 export function OficinasTable({
   oficinas,
+  onView,
   onEdit,
   onDelete,
   selectedIds,
@@ -117,6 +119,7 @@ export function OficinasTable({
                   <div className="flex items-center justify-end gap-2">
                     <CrudTableActions
                       screen="oficinas"
+                      onView={() => onView(oficina)}
                       onEdit={() => onEdit(oficina)}
                       onDelete={() => onDelete(oficina.id)}
                     />

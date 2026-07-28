@@ -5,10 +5,10 @@ import { oficinasService } from '@/services/oficinas.service';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 
-export function useOficinas() {
+export function useOficinas(initialLimit: number = 10) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(initialLimit);
   const [search, setSearch] = useState('');
 
   const debouncedSearch = useDebounce(search, 500);

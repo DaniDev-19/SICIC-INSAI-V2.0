@@ -96,8 +96,8 @@ export function MovimientoStockModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-2xl mx-auto bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl">
-        <DialogHeader className="space-y-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
+        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-center gap-3">
             <div
               className={`p-2.5 rounded-xl border ${
@@ -119,142 +119,144 @@ export function MovimientoStockModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 py-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Tipo de Movimiento */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <ArrowLeftRight className="size-3.5" />
-                Tipo de Operación <span className="text-rose-500">*</span>
-              </label>
-              <Select
-                value={tipoMovimiento}
-                onValueChange={(val) => setTipoMovimiento(val as TipoMovimiento)}
-              >
-                <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="glass-effect">
-                  <SelectItem value="ENTRADA" className="text-emerald-500 font-semibold cursor-pointer">
-                    + ENTRADA (Reabastecimiento)
-                  </SelectItem>
-                  <SelectItem value="AJUSTE_MAS" className="text-emerald-400 font-semibold cursor-pointer">
-                    + AJUSTE POSITIVO (Corrección +)
-                  </SelectItem>
-                  <SelectItem value="SALIDA" className="text-rose-500 font-semibold cursor-pointer">
-                    - SALIDA (Transferencia / Retiro)
-                  </SelectItem>
-                  <SelectItem value="AJUSTE_MENOS" className="text-amber-500 font-semibold cursor-pointer">
-                    - AJUSTE NEGATIVO (Merma / Pérdida)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Tipo de Movimiento */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <ArrowLeftRight className="size-3.5" />
+                  Tipo de Operación <span className="text-rose-500">*</span>
+                </label>
+                <Select
+                  value={tipoMovimiento}
+                  onValueChange={(val) => setTipoMovimiento(val as TipoMovimiento)}
+                >
+                  <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect">
+                    <SelectItem value="ENTRADA" className="text-emerald-500 font-semibold cursor-pointer">
+                      + ENTRADA (Reabastecimiento)
+                    </SelectItem>
+                    <SelectItem value="AJUSTE_MAS" className="text-emerald-400 font-semibold cursor-pointer">
+                      + AJUSTE POSITIVO (Corrección +)
+                    </SelectItem>
+                    <SelectItem value="SALIDA" className="text-rose-500 font-semibold cursor-pointer">
+                      - SALIDA (Transferencia / Retiro)
+                    </SelectItem>
+                    <SelectItem value="AJUSTE_MENOS" className="text-amber-500 font-semibold cursor-pointer">
+                      - AJUSTE NEGATIVO (Merma / Pérdida)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Oficina */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <Building2 className="size-3.5" />
+                  Oficina / Sede <span className="text-rose-500">*</span>
+                </label>
+                <Select value={oficinaId} onValueChange={setOficinaId}>
+                  <SelectTrigger className="h-11 bg-background/80 rounded-xl">
+                    <SelectValue placeholder="Seleccionar sede..." />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect max-h-52">
+                    {oficinas.map((of) => (
+                      <SelectItem key={of.id} value={String(of.id)}>
+                        {of.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Oficina */}
+            {/* Insumo */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Building2 className="size-3.5" />
-                Oficina / Sede <span className="text-rose-500">*</span>
+                <Package className="size-3.5" />
+                Insumo <span className="text-rose-500">*</span>
               </label>
-              <Select value={oficinaId} onValueChange={setOficinaId}>
-                <SelectTrigger className="h-11 bg-background/80 rounded-xl">
-                  <SelectValue placeholder="Seleccionar sede..." />
+              <Select value={insumoId} onValueChange={setInsumoId}>
+                <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
+                  <SelectValue placeholder="Seleccionar producto del catálogo..." />
                 </SelectTrigger>
-                <SelectContent className="glass-effect max-h-52">
-                  {oficinas.map((of) => (
-                    <SelectItem key={of.id} value={String(of.id)}>
-                      {of.nombre}
+                <SelectContent className="glass-effect max-h-60">
+                  {insumos.map((i) => (
+                    <SelectItem key={i.id} value={String(i.id)}>
+                      {i.codigo ? `[${i.codigo}] ` : ''}{i.nombre} {i.marca ? `(${i.marca})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          {/* Insumo */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-              <Package className="size-3.5" />
-              Insumo <span className="text-rose-500">*</span>
-            </label>
-            <Select value={insumoId} onValueChange={setInsumoId}>
-              <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
-                <SelectValue placeholder="Seleccionar producto del catálogo..." />
-              </SelectTrigger>
-              <SelectContent className="glass-effect max-h-60">
-                {insumos.map((i) => (
-                  <SelectItem key={i.id} value={String(i.id)}>
-                    {i.codigo ? `[${i.codigo}] ` : ''}{i.nombre} {i.marca ? `(${i.marca})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Cantidad */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Cantidad <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  required
+                  placeholder="10"
+                  value={cantidad}
+                  onChange={(e) => setCantidad(e.target.value)}
+                  className="h-10 bg-background/80 rounded-xl font-bold"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Cantidad */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground">
-                Cantidad <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                type="number"
-                min="0.01"
-                step="any"
-                required
-                placeholder="10"
-                value={cantidad}
-                onChange={(e) => setCantidad(e.target.value)}
-                className="h-10 bg-background/80 rounded-xl font-bold"
-              />
+              {/* Lote */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Lote</label>
+                <Input
+                  placeholder="Ej. L-2026-05"
+                  value={lote}
+                  onChange={(e) => setLote(e.target.value)}
+                  className="h-10 bg-background/80 rounded-xl"
+                />
+              </div>
+
+              {/* Vencimiento */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                  <Calendar className="size-3.5" />
+                  Vencimiento
+                </label>
+                <Input
+                  type="date"
+                  value={fechaVencimiento}
+                  onChange={(e) => setFechaVencimiento(e.target.value)}
+                  className="h-10 bg-background/80 rounded-xl text-xs"
+                />
+              </div>
             </div>
 
-            {/* Lote */}
+            {/* Observaciones */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground">Lote</label>
-              <Input
-                placeholder="Ej. L-2026-05"
-                value={lote}
-                onChange={(e) => setLote(e.target.value)}
-                className="h-10 bg-background/80 rounded-xl"
-              />
-            </div>
-
-            {/* Vencimiento */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                <Calendar className="size-3.5" />
-                Vencimiento
-              </label>
-              <Input
-                type="date"
-                value={fechaVencimiento}
-                onChange={(e) => setFechaVencimiento(e.target.value)}
-                className="h-10 bg-background/80 rounded-xl text-xs"
+              <label className="text-xs font-semibold text-muted-foreground">Observaciones / Motivo</label>
+              <Textarea
+                placeholder="Describa el motivo del movimiento (Ej. Recepción de lote central, ajuste de inventario físico...)"
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                rows={3}
+                className="bg-background/80 rounded-xl resize-none text-sm"
               />
             </div>
           </div>
 
-          {/* Observaciones */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Observaciones / Motivo</label>
-            <Textarea
-              placeholder="Describa el motivo del movimiento (Ej. Recepción de lote central, ajuste de inventario físico...)"
-              value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
-              rows={3}
-              className="bg-background/80 rounded-xl resize-none text-sm"
-            />
-          </div>
-
-          <DialogFooter className="gap-2 pt-2">
+          <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl h-10 px-4 text-xs cursor-pointer"
+              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
             >
               Cancelar
             </Button>

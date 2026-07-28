@@ -34,6 +34,7 @@ import {
 import { useOficinas } from '@/hooks/use-oficinas';
 import { OficinasTable } from './components/OficinasTable';
 import { OficinaModal } from './components/OficinaModal';
+import { OficinaDetailsModal } from './components/OficinaDetailsModal';
 import type { Oficina } from '@/types/oficinas';
 
 const Oficinas: React.FC = () => {
@@ -57,6 +58,7 @@ const Oficinas: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
     const [centroFilter, setCentroFilter] = useState<'all' | 'si' | 'no'>('all');
+    const [viewOficina, setViewOficina] = useState<Oficina | null>(null);
 
     const filteredOficinas = oficinas.filter(o => {
         if (centroFilter === 'si') return o.es_centro_validacion === true;
@@ -72,6 +74,10 @@ const Oficinas: React.FC = () => {
     const handleOpenEdit = (oficina: Oficina) => {
         setSelectedOficina(oficina);
         setIsModalOpen(true);
+    };
+
+    const handleOpenView = (oficina: Oficina) => {
+        setViewOficina(oficina);
     };
 
     const confirmDelete = async () => {
@@ -213,6 +219,7 @@ const Oficinas: React.FC = () => {
                         <div className="overflow-x-auto custom-scrollbar">
                             <OficinasTable
                                 oficinas={filteredOficinas}
+                                onView={handleOpenView}
                                 onEdit={handleOpenEdit}
                                 onDelete={setDeleteId}
                                 selectedIds={selectedIds}
@@ -236,6 +243,12 @@ const Oficinas: React.FC = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 oficina={selectedOficina}
+            />
+
+            <OficinaDetailsModal
+                isOpen={!!viewOficina}
+                onClose={() => setViewOficina(null)}
+                oficina={viewOficina}
             />
 
             {/* Alert para eliminación individual */}

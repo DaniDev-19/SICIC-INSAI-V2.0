@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { propiedadesService } from '@/services/propiedades.service';
-import type { Propiedad } from '@/types/propiedades';
 import {
   Dialog,
   DialogContent,
@@ -74,20 +73,31 @@ export function PropertyDetallesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl glass-effect border-primary/20 p-0 overflow-hidden rounded-3xl shadow-2xl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl glass-effect border-primary/20 p-0 overflow-hidden rounded-3xl shadow-2xl flex flex-col max-h-[min(92vh,56rem)]">
         <DialogHeader className="bg-muted/30 p-6 border-b border-border/50 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-inner">
-              <Home className="size-6" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-inner">
+                <Home className="size-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">
+                  Ficha Técnica Integral del Predio
+                </DialogTitle>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                  Ubicación geográfica, titularidad, rubros productivos y trámites asociados
+                </p>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">
-                Ficha Técnica Integral del Predio
-              </DialogTitle>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                Ubicación geográfica, titularidad, rubros productivos y trámites asociados
-              </p>
-            </div>
+            {propiedad && (
+              <button
+                type="button"
+                onClick={() => propiedadesService.openFichaPdf(propiedad.id)}
+                className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-md cursor-pointer mr-6"
+              >
+                <FileText className="size-4" /> Ficha PDF
+              </button>
+            )}
           </div>
         </DialogHeader>
 
@@ -103,7 +113,7 @@ export function PropertyDetallesModal({
             No se pudo obtener la información de la propiedad.
           </div>
         ) : (
-          <div className="flex flex-col max-h-[80vh]">
+          <div className="flex flex-col flex-1 min-h-0">
             {/* Header info fija */}
             <div className="p-6 border-b border-border/40 bg-muted/10 space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

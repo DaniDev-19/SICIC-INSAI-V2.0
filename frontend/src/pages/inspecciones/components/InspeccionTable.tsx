@@ -197,9 +197,10 @@ function InspeccionActions({
           <Button
             variant="ghost"
             size="icon"
-            title="Editar"
+            title={inspeccion.status === 'FINALIZADA' ? 'Inspección finalizada (Cerrada definitivamente - Solo lectura)' : 'Editar'}
+            disabled={inspeccion.status === 'FINALIZADA'}
             onClick={() => onEdit(inspeccion)}
-            className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
+            className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Edit className="size-4" />
           </Button>
@@ -210,9 +211,10 @@ function InspeccionActions({
           <Button
             variant="ghost"
             size="icon"
-            title="Eliminar"
+            title={inspeccion.status === 'FINALIZADA' ? 'No se puede eliminar una inspección finalizada y cerrada' : 'Eliminar'}
+            disabled={inspeccion.status === 'FINALIZADA'}
             onClick={() => onDelete(inspeccion.id)}
-            className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
+            className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Trash2 className="size-4" />
           </Button>
@@ -286,7 +288,7 @@ export function InspeccionTable({
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  {canEdit && onStatusChange ? (
+                  {canEdit && onStatusChange && inspeccion.status !== 'FINALIZADA' ? (
                     <Select
                       value={inspeccion.status}
                       onValueChange={(val) => onStatusChange(inspeccion.id, val)}
@@ -464,7 +466,7 @@ export function InspeccionTable({
 
                   <TableCell className="px-6 py-4">
                     <div className="flex flex-col items-start gap-1.5">
-                      {canEdit && onStatusChange ? (
+                      {canEdit && onStatusChange && inspeccion.status !== 'FINALIZADA' ? (
                         <Select
                           value={inspeccion.status}
                           onValueChange={(val) => onStatusChange(inspeccion.id, val)}

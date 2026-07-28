@@ -5,9 +5,22 @@ export const getEnfermedades = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { tipo_enfermedad_id } = req.query;
+    const { tipo_enfermedad_id, tipo_id, search } = req.query;
 
-    const where = tipo_enfermedad_id ? { tipo_enfermedad_id: Number(tipo_enfermedad_id) } : {};
+    const effectiveTipoId = tipo_enfermedad_id || tipo_id;
+    const where = {};
+
+    if (effectiveTipoId && effectiveTipoId !== 'all') {
+        where.tipo_enfermedad_id = Number(effectiveTipoId);
+    }
+
+    if (search && search.trim()) {
+        where.OR = [
+            { nombre: { contains: search.trim(), mode: 'insensitive' } },
+            { nombre_cientifico: { contains: search.trim(), mode: 'insensitive' } },
+            { descripcion: { contains: search.trim(), mode: 'insensitive' } },
+        ];
+    }
 
     const [enfermedades, totalCount] = await Promise.all([
         tenantPrisma.enfermedades.findMany({

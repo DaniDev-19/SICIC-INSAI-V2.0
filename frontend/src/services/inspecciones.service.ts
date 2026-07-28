@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type {
   Inspeccion,
   CreateInspeccionDto,
@@ -121,14 +122,20 @@ export const inspectionsService = {
     planificacion_id?: number;
     q?: string;
   }) => {
-    const response = await apiClient.get('/inspecciones/export/pdf', {
-      params,
-      responseType: 'blob',
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando reporte PDF de Inspecciones...');
+    try {
+      const response = await apiClient.get('/inspecciones/export/pdf', {
+        params,
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Reporte PDF generado correctamente', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el reporte PDF', { id: toastId });
+    }
   },
 
   getReporte: async (id: number) => {
@@ -139,14 +146,20 @@ export const inspectionsService = {
   },
 
   openPdfReport: async (id: number) => {
-    const [{ generateActaPdfBlob }, reporte] = await Promise.all([
-      import('@/reports/acta-inspeccion/generateActaPdf'),
-      inspectionsService.getReporte(id),
-    ]);
-    const blob = await generateActaPdfBlob(reporte);
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    window.setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando Acta de Inspección en PDF...');
+    try {
+      const [{ generateActaPdfBlob }, reporte] = await Promise.all([
+        import('@/reports/acta-inspeccion/generateActaPdf'),
+        inspectionsService.getReporte(id),
+      ]);
+      const blob = await generateActaPdfBlob(reporte);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Acta de Inspección lista', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el Acta de Inspección PDF', { id: toastId });
+    }
   },
 
   previewCodigos: async (params: {

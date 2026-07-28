@@ -65,9 +65,9 @@ export function AvalFormModal({
   isSaving = false,
 }: AvalFormModalProps) {
   const { inspecciones } = useInspecciones();
-  const { empleados } = useEmpleados();
-  const { insumos } = useInventario();
-  const { oficinas } = useOficinas();
+  const { empleados } = useEmpleados({ initialLimit: 500 });
+  const { insumos, stock } = useInventario(500);
+  const { oficinas } = useOficinas(500);
   const { tipos: tiposAnimales } = useAnimales();
 
   const [activeTab, setActiveTab] = useState('generales');
@@ -157,22 +157,18 @@ export function AvalFormModal({
           setBiologicos(
             aval.aval_biologicos.map((b) => ({
               insumo_id: b.insumo_id,
-              oficina_id: b.oficina_id || oficinas[0]?.id || 1,
-              cantidad: b.cantidad || 1,
-              lote: b.lote || '',
-              fecha_vacunacion: b.fecha_vacunacion ? b.fecha_vacunacion.substring(0, 10) : '',
-              pruebas_diagnosticas: b.pruebas_diagnosticas || '',
+              oficina_id: oficinas[0]?.id || 1,
+              cantidad: 1,
+              fecha_vacunacion: b.fecha_vacunacion ? b.fecha_vacunacion.substring(0, 10) : undefined,
+              pruebas_diagnosticas: b.pruebas_diagnosticas || undefined,
             }))
           );
         }
       } else {
-        const randomNum = String(Math.floor(1000 + Math.random() * 9000));
-        setNumeroAval(`AVAL-${new Date().getFullYear()}-${randomNum}`);
+        setNumeroAval(`AVAL-${Date.now().toString().slice(-6)}`);
         setCodigoPredio('');
         setFechaEmision(new Date().toISOString().substring(0, 10));
-        const defaultExp = new Date();
-        defaultExp.setDate(defaultExp.getDate() + 180); // 6 meses por defecto
-        setFechaVencimiento(defaultExp.toISOString().substring(0, 10));
+        setFechaVencimiento('');
         setCertificadoVacunacionN('');
         setInspeccionId(initialInspeccionId ? String(initialInspeccionId) : 'none');
         setMedicoResponsableId('none');
@@ -206,6 +202,30 @@ export function AvalFormModal({
     }
   }, [isOpen, aval, initialInspeccionId]);
 
+  // Auto-completar el nombre del predio y personal asignado cuando se vincula o selecciona una inspección
+  useEffect(() => {
+    if (isOpen && inspeccionId && inspeccionId !== 'none') {
+      const selectedInsp = inspecciones.find((insp) => String(insp.id) === inspeccionId);
+      if (selectedInsp) {
+        const predioNombre = selectedInsp.planificaciones?.solicitudes?.propiedades?.nombre;
+        if (predioNombre) {
+          setCodigoPredio(predioNombre);
+        }
+        const asignados = selectedInsp.planificaciones?.planificacion_empleados;
+        if (asignados && asignados.length > 0) {
+          if (medicoResponsableId === 'none' && asignados[0]?.empleados?.id) {
+            setMedicoResponsableId(String(asignados[0].empleados.id));
+          }
+          if (jefeOsaId === 'none' && asignados[1]?.empleados?.id) {
+            setJefeOsaId(String(asignados[1].empleados.id));
+          } else if (jefeOsaId === 'none' && asignados[0]?.empleados?.id) {
+            setJefeOsaId(String(asignados[0].empleados.id));
+          }
+        }
+      }
+    }
+  }, [isOpen, inspeccionId, inspecciones]);
+
   const handleBovBufChange = (field: keyof AvalHallazgosBovBuf, value: string) => {
     setBovBuf((prev) => ({
       ...prev,
@@ -216,12 +236,11 @@ export function AvalFormModal({
   const totalBovBuf = Object.values(bovBuf).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0);
 
   const handleAddOtrasEspecies = () => {
-    if (tiposAnimales.length > 0) {
-      setOtrasEspecies((prev) => [
-        ...prev,
-        { tipo_animal_id: tiposAnimales[0].id, machos: 0, hembras: 0, crias: 0 },
-      ]);
-    }
+    const firstTipoId = tiposAnimales.length > 0 ? tiposAnimales[0].id : 1;
+    setOtrasEspecies((prev) => [
+      ...prev,
+      { tipo_animal_id: firstTipoId, machos: 0, hembras: 0, crias: 0 },
+    ]);
   };
 
   const handleRemoveOtrasEspecies = (index: number) => {
@@ -229,18 +248,19 @@ export function AvalFormModal({
   };
 
   const handleAddBiologico = () => {
-    if (insumos.length > 0 && oficinas.length > 0) {
-      setBiologicos((prev) => [
-        ...prev,
-        {
-          insumo_id: insumos[0].id,
-          oficina_id: oficinas[0].id,
-          cantidad: 1,
-          fecha_vacunacion: new Date().toISOString().substring(0, 10),
-          pruebas_diagnosticas: '',
-        },
-      ]);
-    }
+    const defaultInsumoId = insumos.length > 0 ? insumos[0].id : 0;
+    const defaultOficinaId = oficinas.length > 0 ? oficinas[0].id : 0;
+
+    setBiologicos((prev) => [
+      ...prev,
+      {
+        insumo_id: defaultInsumoId,
+        oficina_id: defaultOficinaId,
+        cantidad: 1,
+        fecha_vacunacion: new Date().toISOString().substring(0, 10),
+        pruebas_diagnosticas: '',
+      },
+    ]);
   };
 
   const handleRemoveBiologico = (index: number) => {
@@ -418,7 +438,7 @@ export function AvalFormModal({
                       <SelectItem value="none">No asignado</SelectItem>
                       {empleados.map((emp) => (
                         <SelectItem key={emp.id} value={String(emp.id)}>
-                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula})
+                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -437,7 +457,7 @@ export function AvalFormModal({
                       <SelectItem value="none">No asignado</SelectItem>
                       {empleados.map((emp) => (
                         <SelectItem key={emp.id} value={String(emp.id)}>
-                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula})
+                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -826,11 +846,17 @@ export function AvalFormModal({
                               <SelectValue placeholder="Seleccione Oficina" />
                             </SelectTrigger>
                             <SelectContent>
-                              {oficinas.map((of) => (
-                                <SelectItem key={of.id} value={String(of.id)}>
-                                  {of.nombre}
-                                </SelectItem>
-                              ))}
+                              {oficinas.map((of) => {
+                                const stockMatch = stock.find(
+                                  (s) => s.insumo_id === bio.insumo_id && s.oficina_id === of.id
+                                );
+                                const stockQty = stockMatch ? Number(stockMatch.stock_actual) : 0;
+                                return (
+                                  <SelectItem key={of.id} value={String(of.id)}>
+                                    {of.nombre} {stockQty > 0 ? `— [Stock: ${stockQty}]` : '— (Sin stock disponible)'}
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                         </div>

@@ -27,10 +27,16 @@ export function usePermissions() {
     return hasPermission(screen, 'see');
   }, [hasPermission]);
 
+  const userRole = (currentInstance?.rol || '').toLowerCase();
+  const isAdmin = Boolean(
+    permisos['all']?.includes('*') ||
+    ['admin', 'administrador', 'superadmin', 'super_admin'].includes(userRole)
+  );
+
   return {
     permisos,
     hasPermission,
     canSee,
-    isAdmin: currentInstance?.rol === 'SuperAdmin' || currentInstance?.rol === 'SUPER_ADMIN',
+    isAdmin,
   };
 }

@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type { 
   CreateEmpleadoDto, 
   UpdateEmpleadoDto, 
@@ -68,21 +69,35 @@ export const empleadosService = {
   },
 
   exportPdf: async (params?: { search?: string; departamento_id?: string; status_laboral?: string }) => {
-    const response = await apiClient.get('/empleados/export/pdf', { 
-      params: { ...params, q: params?.search }, 
-      responseType: 'blob' 
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando reporte PDF de Empleados...');
+    try {
+      const response = await apiClient.get('/empleados/export/pdf', { 
+        params: { ...params, q: params?.search }, 
+        responseType: 'blob' 
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Reporte PDF generado correctamente', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el reporte PDF', { id: toastId });
+    }
   },
 
   openFichaPdf: async (id: number): Promise<void> => {
-    const { openEmpleadoFichaPdf } = await import('@/reports/empleado-ficha/generateEmpleadoFichaPdf');
-    const response = await apiClient.get<SingleEmpleadoResponse>(`/empleados/${id}`);
-    if (response.data?.data) {
-      await openEmpleadoFichaPdf(response.data.data as any);
+    const toastId = toast.loading('Preparando Expediente del Empleado...');
+    try {
+      const { openEmpleadoFichaPdf } = await import('@/reports/empleado-ficha/generateEmpleadoFichaPdf');
+      const response = await apiClient.get<SingleEmpleadoResponse>(`/empleados/${id}/reporte`);
+      if (response.data?.data) {
+        await openEmpleadoFichaPdf(response.data.data as any);
+        toast.success('Expediente PDF listo', { id: toastId });
+      } else {
+        toast.error('No se pudo obtener la información del empleado', { id: toastId });
+      }
+    } catch (error) {
+      toast.error('Error al generar el Expediente PDF', { id: toastId });
     }
   },
 

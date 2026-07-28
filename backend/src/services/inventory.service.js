@@ -30,7 +30,7 @@ class InventoryService {
 
     if (esSalida) {
       if (!currentStock || Number(currentStock.stock_actual) < Number(cantidad)) {
-        throw new Error(`Stock insuficiente para el insumo ID ${insumo_id} en la oficina ${oficina_id}${lote ? ` (Lote: ${lote})` : ''}. Disponible: ${currentStock?.stock_actual || 0}`);
+        console.warn(`[INVENTARIO] Consumo registrado con stock bajo/inexistente. Insumo ID: ${insumo_id}, Oficina ID: ${oficina_id}, Disponible: ${currentStock?.stock_actual || 0}`);
       }
     }
 

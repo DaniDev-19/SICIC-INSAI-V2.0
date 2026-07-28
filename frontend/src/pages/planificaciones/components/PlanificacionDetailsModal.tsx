@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   Dialog,
@@ -21,7 +22,8 @@ import {
   Loader2,
   AlertCircle,
   Building,
-  ClipboardList
+  ClipboardList,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +32,7 @@ interface PlanificacionDetailsModalProps {
   onClose: () => void;
   planId: number | null;
   onEdit?: () => void;
+  onEditEmpleados?: () => void;
 }
 
 export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps> = ({
@@ -37,12 +40,21 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
   onClose,
   planId,
   onEdit,
+  onEditEmpleados,
 }) => {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, isAdmin } = usePermissions();
   const canCreateInspeccion = hasPermission('inspecciones', 'create');
   const canUpdatePlan = hasPermission('planificacion', 'update');
   const { planificacion, isLoading, error } = usePlanificacion(planId);
+  const isFinalized = planificacion?.status === 'FINALIZADA';
+  const canModifyPlan = canUpdatePlan && (!isFinalized || isAdmin);
+
+  const planDateStr = planificacion?.fecha_programada
+    ? new Date(planificacion.fecha_programada).toISOString().split('T')[0]
+    : '';
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isFuturePlan = planDateStr > todayStr;
 
   const formatTime = (isoTimeStr: string | null) => {
     if (!isoTimeStr) return 'No especificada';
@@ -271,9 +283,27 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
             </div>
 
             <div className="bg-muted/20 p-5 rounded-2xl border border-border/40 space-y-4">
-              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                <User className="size-4 text-indigo-400" /> Inspectores y Técnicos Asignados
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <User className="size-4 text-indigo-400" /> Inspectores y Técnicos Asignados
+                </h3>
+                {canModifyPlan && onEditEmpleados && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      onEditEmpleados();
+                    }}
+                    className="h-7 px-2.5 rounded-lg text-xs font-bold text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 cursor-pointer flex items-center gap-1.5"
+                    title="Editar inspectores asignados"
+                  >
+                    <UserPlus className="size-3.5" />
+                    <span>Editar Equipo</span>
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {planificacion.planificacion_empleados && planificacion.planificacion_empleados.length > 0 ? (
                   planificacion.planificacion_empleados.map((pe, idx) => (
@@ -299,19 +329,27 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
               <Button onClick={onClose} variant="ghost" className="font-bold cursor-pointer">
                 Cerrar Ficha
               </Button>
-              {canCreateInspeccion && planificacion && (
+              {canCreateInspeccion && planificacion && !isFinalized && (
                 <Button
                   variant="outline"
-                  className="font-bold cursor-pointer"
+                  className={cn(
+                    "font-bold cursor-pointer",
+                    isFuturePlan && !isAdmin && "opacity-70 bg-muted/50 text-muted-foreground border-dashed"
+                  )}
                   onClick={() => {
+                    if (isFuturePlan && !isAdmin) {
+                      toast.error(`No se puede registrar la inspección aún. La fecha de la visita está programada para el ${planDateStr}.`);
+                      return;
+                    }
                     onClose();
                     navigate(`/home/inspecciones?planificacion_id=${planificacion.id}&openModal=true`);
                   }}
+                  title={isFuturePlan && !isAdmin ? `Fecha futura (${planDateStr})` : 'Registrar vaciado de inspección'}
                 >
                   Registrar Inspección
                 </Button>
               )}
-              {canUpdatePlan && onEdit && (
+              {canModifyPlan && onEdit && (
                 <Button
                   onClick={() => {
                     onClose();

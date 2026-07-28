@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import imageService from '../services/image.service.js';
 import excelService from '../services/excel.service.js';
 import pdfService from '../services/pdf.service.js';
 
@@ -141,6 +142,78 @@ export const getPropiedadById = async (req, res) => {
   }
 
   res.status(200).json({ status: 'success', data: propiedad });
+};
+
+export const getPropiedadReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  const propiedad = await tenantPrisma.propiedades.findUnique({
+    where: { id: Number(id) },
+    include: {
+      clientes: true,
+      t_propiedad: true,
+      propiedad_hierro: true,
+      propiedad_ubicacion: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      propiedad_cultivo: {
+        include: {
+          cultivo: {
+            include: {
+              t_cultivo: true
+            }
+          },
+          t_unidades_propiedad_cultivo_cantidad_unidad_idTot_unidades: true,
+          t_unidades_propiedad_cultivo_superficie_unidad_idTot_unidades: true,
+        }
+      },
+      propiedad_animales: {
+        include: {
+          animales: true,
+          t_unidades: true
+        }
+      },
+      solicitudes: {
+        include: {
+          t_solicitud: true,
+        },
+        orderBy: { created_at: 'desc' }
+      }
+    }
+  });
+
+  if (!propiedad) {
+    return res.status(404).json({ status: 'error', message: 'Propiedad no encontrada' });
+  }
+
+  let hierro_data_url = null;
+  const rawHierroUrl = propiedad.propiedad_hierro?.[0]?.hierro_img_url;
+  if (rawHierroUrl) {
+    hierro_data_url = await imageService.toPdfDataUrl(rawHierroUrl);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      ...propiedad,
+      hierro_data_url
+    }
+  });
 };
 
 export const createPropiedad = async (req, res) => {

@@ -12,6 +12,7 @@ import {
 
 interface ProgramasTableProps {
   programas: Programa[];
+  onView?: (programa: Programa) => void;
   onEdit: (programa: Programa) => void;
   onDelete: (id: number) => void;
   onSelect?: (programa: Programa) => void;
@@ -20,6 +21,7 @@ interface ProgramasTableProps {
 
 export function ProgramasTable({
   programas,
+  onView,
   onEdit,
   onDelete,
   onSelect,
@@ -81,6 +83,7 @@ export function ProgramasTable({
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="programas"
+                    onView={() => (onView ? onView(programa) : onSelect ? onSelect(programa) : onEdit(programa))}
                     onEdit={() => onEdit(programa)}
                     onDelete={() => onDelete(programa.id)}
                     stopPropagation

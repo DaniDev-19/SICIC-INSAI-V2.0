@@ -24,6 +24,8 @@ import InspeccionesSilos from './pages/inspecciones-silos/InspeccionesSilos';
 import Seguimientos from './pages/seguimientos/Seguimientos';
 import Inventario from './pages/inventario/Inventario';
 import Avales from './pages/avales/Avales';
+import ReportesPage from './pages/reportes/ReportesPage';
+import MailPage from './pages/mail/MailPage';
 
 import PerfilPage from './pages/perfil/PerfilPage';
 
@@ -122,6 +124,10 @@ function App() {
               <Route element={<PermissionRoute screen="insumos" />}>
                 <Route path='inventario' element={<Inventario />} />
               </Route>
+              <Route element={<PermissionRoute screen="reportes" />}>
+                <Route path='reportes' element={<ReportesPage />} />
+              </Route>
+              <Route path='comunicados' element={<MailPage />} />
               <Route path='perfil' element={<PerfilPage />} />
               <Route path='help' element={<HelpMe />} />
             </Route>

@@ -45,3 +45,10 @@ export const updatePlanificacionSchema = z.object({
     empleados: z.array(z.number()).optional()
   })
 });
+
+export const patchPlanificacionEmpleadosSchema = z.object({
+  body: z.object({
+    empleados: z.array(z.number()).min(1, 'Debe seleccionar al menos un empleado para la planificación')
+  })
+});
+

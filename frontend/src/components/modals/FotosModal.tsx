@@ -18,7 +18,6 @@ import {
   Plus,
   X,
   AlertTriangle,
-  ZoomIn,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media-url';
@@ -57,7 +56,6 @@ export function FotosModal({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

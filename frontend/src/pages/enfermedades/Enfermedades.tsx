@@ -31,6 +31,7 @@ import {
 import { useEnfermedades } from '@/hooks/use-enfermedades';
 import { EnfermedadTable } from './components/EnfermedadTable';
 import { EnfermedadModal } from './components/EnfermedadModal';
+import { EnfermedadDetailsModal } from './components/EnfermedadDetailsModal';
 
 const Enfermedades: React.FC = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Enfermedades: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEnfermedad, setSelectedEnfermedad] = useState<any | null>(null);
+  const [selectedViewEnfermedad, setSelectedViewEnfermedad] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const handleOpenCreate = () => {
@@ -63,6 +65,10 @@ const Enfermedades: React.FC = () => {
   const handleOpenEdit = (enfermedad: any) => {
     setSelectedEnfermedad(enfermedad);
     setIsModalOpen(true);
+  };
+
+  const handleOpenView = (enfermedad: any) => {
+    setSelectedViewEnfermedad(enfermedad);
   };
 
   const confirmDelete = async () => {
@@ -151,6 +157,7 @@ const Enfermedades: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <EnfermedadTable
                 enfermedades={enfermedades}
+                onView={handleOpenView}
                 onEdit={handleOpenEdit}
                 onDelete={setDeleteId}
               />
@@ -175,6 +182,12 @@ const Enfermedades: React.FC = () => {
         onCreateTipo={createTipo}
         onUpdateTipo={updateTipo}
         onDeleteTipo={deleteTipo}
+      />
+
+      <EnfermedadDetailsModal
+        isOpen={!!selectedViewEnfermedad}
+        onClose={() => setSelectedViewEnfermedad(null)}
+        enfermedad={selectedViewEnfermedad}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

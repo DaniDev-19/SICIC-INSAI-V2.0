@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSetupMfa, useEnableMfa, useDisableMfa, useRegenerateBackupCodes } from '../../../hooks/use-mfa';
-import { ShieldCheck, ShieldAlert, Copy, Check, Download, Loader2, X, ArrowRight, ArrowLeft, RefreshCw, KeyRound } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Copy, Check, Download, Loader2, X, ArrowRight, ArrowLeft, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MfaSetupModalProps {

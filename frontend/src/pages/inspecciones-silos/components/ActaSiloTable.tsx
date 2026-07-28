@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import Can from '@/components/auth/Can';
 
 interface ActaSiloTableProps {
   actaSilos: ActaSilo[];
@@ -50,66 +51,80 @@ function ActaSiloActions({
 
   return (
     <div className={cn('flex items-center gap-1.5 sm:gap-2', className)}>
-      <Button
-        variant="ghost"
-        size="icon"
-        title="Ver detalles"
-        onClick={() => onView(actaSilo)}
-        className="size-9 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer"
-      >
-        <Eye className="size-4" />
-      </Button>
-      {onPhotos && (
+      <Can screen="acta_silos" action="see">
         <Button
           variant="ghost"
           size="icon"
-          title="Ver / Editar Fotografías"
-          onClick={() => onPhotos(actaSilo)}
-          className="size-9 rounded-lg hover:bg-purple-500/10 hover:text-purple-600 cursor-pointer relative"
+          title="Ver detalles"
+          onClick={() => onView(actaSilo)}
+          className="size-9 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer"
         >
-          <ImageIcon className="size-4 text-purple-600" />
-          {photoCount > 0 && (
-            <span className="absolute -top-1 -right-1 size-4 rounded-full bg-purple-600 text-white text-[9px] font-black flex items-center justify-center border border-background">
-              {photoCount}
-            </span>
+          <Eye className="size-4" />
+        </Button>
+      </Can>
+
+      {onPhotos && (
+        <Can screen="acta_silos" action="see">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Ver / Editar Fotografías"
+            onClick={() => onPhotos(actaSilo)}
+            className="size-9 rounded-lg hover:bg-purple-500/10 hover:text-purple-600 cursor-pointer relative"
+          >
+            <ImageIcon className="size-4 text-purple-600" />
+            {photoCount > 0 && (
+              <span className="absolute -top-1 -right-1 size-4 rounded-full bg-purple-600 text-white text-[9px] font-black flex items-center justify-center border border-background">
+                {photoCount}
+              </span>
+            )}
+          </Button>
+        </Can>
+      )}
+
+      <Can screen="acta_silos" action="see">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Acta PDF"
+          disabled={pdfLoadingId !== null}
+          onClick={() => onPdf(actaSilo.id)}
+          className="size-9 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 cursor-pointer disabled:opacity-50"
+        >
+          {pdfLoadingId === actaSilo.id ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <FileText className="size-4" />
           )}
         </Button>
-      )}
-      <Button
-        variant="ghost"
-        size="icon"
-        title="Acta PDF"
-        disabled={pdfLoadingId !== null}
-        onClick={() => onPdf(actaSilo.id)}
-        className="size-9 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 cursor-pointer disabled:opacity-50"
-      >
-        {pdfLoadingId === actaSilo.id ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <FileText className="size-4" />
-        )}
-      </Button>
+      </Can>
+
       {canEdit && (
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Editar"
-          onClick={() => onEdit(actaSilo)}
-          className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
-        >
-          <Edit className="size-4" />
-        </Button>
+        <Can screen="acta_silos" action="update">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Editar"
+            onClick={() => onEdit(actaSilo)}
+            className="size-9 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 cursor-pointer"
+          >
+            <Edit className="size-4" />
+          </Button>
+        </Can>
       )}
+
       {canDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Eliminar"
-          onClick={() => onDelete(actaSilo.id)}
-          className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        <Can screen="acta_silos" action="delete">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Eliminar"
+            onClick={() => onDelete(actaSilo.id)}
+            className="size-9 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </Can>
       )}
     </div>
   );

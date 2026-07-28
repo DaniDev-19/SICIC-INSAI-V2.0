@@ -15,6 +15,7 @@ router.get('/', checkPermission('clientes', 'see'), clientesController.getClient
 router.get('/export', checkPermission('clientes', 'export'), clientesController.exportClientes);
 router.get('/export/pdf', checkPermission('clientes', 'export'), clientesController.exportClientesPdf);
 router.get('/:id', checkPermission('clientes', 'see'), clientesController.getClienteById);
+router.get('/:id/reporte', checkPermission('clientes', 'see'), clientesController.getClienteReporte);
 router.post('/', checkPermission('clientes', 'create'), validateSchema(createClientesSchema), clientesController.createCliente);
 router.put('/:id', checkPermission('clientes', 'update'), validateSchema(updateClientesSchema), clientesController.updateCliente);
 router.post('/bulk-delete', checkPermission('clientes', 'delete'), clientesController.deleteManyClientes);

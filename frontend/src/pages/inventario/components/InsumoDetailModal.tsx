@@ -35,8 +35,8 @@ export function InsumoDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-4xl mx-auto bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-4xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,46rem)]">
+        <DialogHeader className="p-6 pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
@@ -56,7 +56,7 @@ export function InsumoDetailModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
+        <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
           {/* Badges de categoría y estado */}
           <div className="flex flex-wrap gap-2">
             {insumo.c_insumos && (
@@ -145,11 +145,11 @@ export function InsumoDetailModal({
           )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-1">
+        <div className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 flex justify-end gap-2">
           <Button
             variant="outline"
             onClick={onClose}
-            className="rounded-xl h-10 px-4 text-xs cursor-pointer"
+            className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
           >
             <X className="size-4 mr-1.5" /> Cerrar
           </Button>

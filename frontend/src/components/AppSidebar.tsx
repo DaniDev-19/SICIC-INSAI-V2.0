@@ -24,7 +24,8 @@ import {
   User,
   LogOut,
   Leaf,
-  Car
+  Car,
+  Mail
 } from "lucide-react"
 
 import {
@@ -56,6 +57,7 @@ const navigationGroups = [
       { title: "Productores", url: "/home/clientes", icon: Users, screen: "clientes" },
       { title: "Propiedades", url: "/home/propiedades", icon: Building2, screen: "propiedades" },
       { title: "Empleados", url: "/home/empleados", icon: Briefcase, screen: "empleados" },
+      { title: "Comunicados / Correos", url: "/home/comunicados", icon: Mail, screen: "empleados" },
     ]
   },
   {
@@ -141,6 +143,7 @@ export function AppSidebar() {
         {navigationGroups.map((group) => {
           const filteredItems = group.items.filter(item => {
             if (!item.screen) return true;
+            if (item.screen === 'perfil') return true;
             return canSee(item.screen);
           });
 
