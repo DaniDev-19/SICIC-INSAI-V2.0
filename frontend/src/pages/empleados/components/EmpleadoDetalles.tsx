@@ -4,6 +4,7 @@ import { empleadosService } from '@/services/empleados.service';
 import { Loader2, User, FileText, Activity, MapPin, Briefcase, Mail, Phone, Calendar, BadgeCheck, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 interface EmpleadoDetallesProps {
   empleadoId: number;
@@ -49,7 +50,8 @@ export function EmpleadoDetalles({ empleadoId, empleadoNombre }: EmpleadoDetalle
     );
   }
 
-  const fotoUrl = empleado.empleado_foto?.[0]?.foto_url;
+  const rawFotoUrl = empleado.empleado_foto?.[0]?.foto_url;
+  const fotoUrl = resolveMediaUrl(rawFotoUrl);
   const residencia = empleado.empleado_residencia?.[0];
   const programas = empleado.empleados_programas?.map((ep: any) => ep.programas) || [];
 

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import Can from '@/components/auth/Can';
 import { useAvales } from '@/hooks/use-avales';
+import { avalesService } from '@/services/avales.service';
 import { AvalDetailsModal } from './components/AvalDetailsModal';
 import { AvalFormModal } from './components/AvalFormModal';
 import type { AvalSanitario } from '@/types/avales';
@@ -76,14 +77,30 @@ const Avales: React.FC = () => {
     setIsFormModalOpen(true);
   };
 
-  const handleOpenEdit = (aval: AvalSanitario) => {
+  const handleOpenEdit = async (aval: AvalSanitario) => {
     setEditingAval(aval);
     setIsFormModalOpen(true);
+    try {
+      const res = await avalesService.getById(aval.id);
+      if (res.data) {
+        setEditingAval(res.data);
+      }
+    } catch {
+      // keep current fallback
+    }
   };
 
-  const handleOpenDetails = (aval: AvalSanitario) => {
+  const handleOpenDetails = async (aval: AvalSanitario) => {
     setSelectedAval(aval);
     setIsDetailsModalOpen(true);
+    try {
+      const res = await avalesService.getById(aval.id);
+      if (res.data) {
+        setSelectedAval(res.data);
+      }
+    } catch {
+      // keep current fallback
+    }
   };
 
   const confirmDelete = async () => {
@@ -329,15 +346,17 @@ const Avales: React.FC = () => {
                         {/* Acciones */}
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleOpenDetails(aval)}
-                              title="Ver Ficha Técnica"
-                              className="size-9 p-0 rounded-xl hover:bg-blue-500/10 hover:text-blue-500 cursor-pointer transition-all"
-                            >
-                              <Eye className="size-4" />
-                            </Button>
+                            <Can screen="avales" action="see">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleOpenDetails(aval)}
+                                title="Ver Ficha Técnica"
+                                className="size-9 p-0 rounded-xl hover:bg-blue-500/10 hover:text-blue-500 cursor-pointer transition-all"
+                              >
+                                <Eye className="size-4" />
+                              </Button>
+                            </Can>
                             <Can screen="avales" action="update">
                               <Button
                                 size="sm"

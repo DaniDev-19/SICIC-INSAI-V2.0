@@ -31,6 +31,7 @@ import {
 import { useAnimales } from '@/hooks/use-animales';
 import { AnimalesTable } from './components/AnimalesTable';
 import { AnimalModal } from './components/AnimalModal';
+import { AnimalDetailsModal } from './components/AnimalDetailsModal';
 
 const Animales: React.FC = () => {
     const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Animales: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedAnimal, setSelectedAnimal] = useState<typeof animales[0] | null>(null);
+    const [selectedViewAnimal, setSelectedViewAnimal] = useState<typeof animales[0] | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
@@ -63,6 +65,10 @@ const Animales: React.FC = () => {
     const handleOpenEdit = (animal: typeof animales[0]) => {
         setSelectedAnimal(animal);
         setIsModalOpen(true);
+    };
+
+    const handleOpenView = (animal: typeof animales[0]) => {
+        setSelectedViewAnimal(animal);
     };
 
     const confirmDelete = async () => {
@@ -153,6 +159,7 @@ const Animales: React.FC = () => {
                         <div className="overflow-x-auto custom-scrollbar">
                                 <AnimalesTable
                                     animales={animales}
+                                    onView={handleOpenView}
                                     onEdit={handleOpenEdit}
                                     onDelete={setDeleteId}
                                 />
@@ -177,6 +184,12 @@ const Animales: React.FC = () => {
                 onCreateTipo={createTipo}
                 onUpdateTipo={updateTipo}
                 onDeleteTipo={deleteTipo}
+            />
+
+            <AnimalDetailsModal
+                isOpen={!!selectedViewAnimal}
+                onClose={() => setSelectedViewAnimal(null)}
+                animal={selectedViewAnimal}
             />
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type { 
   Propiedad, 
   CreatePropiedadDto, 
@@ -121,11 +122,33 @@ export const propiedadesService = {
   },
 
   exportPdf: async (params?: { q?: string; tipo_propiedad_id?: number; due_o_id?: number }) => {
-    const response = await apiClient.get('/propiedades/export/pdf', { params, responseType: 'blob' });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando reporte PDF de Propiedades...');
+    try {
+      const response = await apiClient.get('/propiedades/export/pdf', { params, responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Reporte PDF generado correctamente', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el reporte PDF', { id: toastId });
+    }
+  },
+
+  openFichaPdf: async (id: number): Promise<void> => {
+    const toastId = toast.loading('Preparando Ficha de la Propiedad...');
+    try {
+      const { openPropiedadFichaPdf } = await import('@/reports/propiedad-ficha/generatePropiedadFichaPdf');
+      const response = await apiClient.get<ApiResponse<Propiedad>>(`/propiedades/${id}/reporte`);
+      if (response.data?.data) {
+        await openPropiedadFichaPdf(response.data.data as any);
+        toast.success('Ficha PDF lista', { id: toastId });
+      } else {
+        toast.error('No se pudo obtener los datos de la propiedad', { id: toastId });
+      }
+    } catch (error) {
+      toast.error('Error al generar la Ficha PDF', { id: toastId });
+    }
   },
 
   // Inventario

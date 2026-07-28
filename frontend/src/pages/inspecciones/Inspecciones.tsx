@@ -33,7 +33,7 @@ import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { InspeccionTable } from './components/InspeccionTable';
 import { InspeccionModal } from './components/InspeccionModal';
 import { InspeccionDetailsModal } from './components/InspeccionDetailsModal';
-import { FotosModal, type FotoItem } from '@/components/modals/FotosModal';
+import { FotosModal } from '@/components/modals/FotosModal';
 import type { Inspeccion } from '@/types/inspecciones';
 
 import { toast } from 'sonner';

@@ -152,7 +152,7 @@ export function CultivoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[500px] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
@@ -163,7 +163,9 @@ export function CultivoModal({
                 {cultivo ? 'Editar Cultivo' : 'Nuevo Cultivo'}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {cultivo ? 'Modifica la información del cultivo' : 'Registra un nuevo cultivo en el sistema'}
+                {cultivo
+                  ? 'Modifica la información del cultivo'
+                  : 'Registra un nuevo cultivo en el sistema'}
               </p>
             </div>
           </div>

@@ -20,6 +20,8 @@ export const PANTALLAS = [
   { key: 'reportes', label: 'Reportes y Estadísticas', ACCIONES: ['see', 'export'] },
   { key: 'bitacora', label: 'Bitácora / Auditoría', ACCIONES: ['see', 'export'] },
   { key: 'configuracion', label: 'Configuración Global', ACCIONES: ['see', 'edit'] },
+  { key: 'mail', label: 'Comunicados y Correos', ACCIONES: ['see', 'create', 'update', 'delete', 'export'] },
+  { key: 'perfil', label: 'Perfil de Usuario', ACCIONES: ['see', 'update'] },
   { key: 'roles', label: 'Gestión de Roles', ACCIONES: ['see', 'create', 'edit', 'delete'] },
   { key: 'usuarios', label: 'Usuarios del Sistema', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },
   { key: 'instancias', label: 'Instancias / Sedes', ACCIONES: ['see', 'create', 'edit', 'delete', 'disable'] },

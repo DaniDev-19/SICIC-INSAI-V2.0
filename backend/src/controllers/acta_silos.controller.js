@@ -4,17 +4,86 @@ import inventoryService from '../services/inventory.service.js';
 import actaSiloReporteService, { ACTA_SILO_REPORT_INCLUDE } from '../services/acta-silo-reporte.service.js';
 import * as statusSyncService from '../services/status-sync.service.js';
 
-export const getActaSilos = async (req, res) => {
-  const tenantPrisma = req.db;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+function isAdminUser(req) {
+  const permisos = req.user?.currentInstance?.permisos;
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return (
+    permisos?.all?.includes('*') ||
+    rol === 'admin' ||
+    rol === 'administrador' ||
+    rol === 'superadmin' ||
+    rol === 'super_admin'
+  );
+}
+
+function isInspectorUser(req) {
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return rol.includes('inspector') && !isAdminUser(req);
+}
+
+async function resolveEmpleadoId(req, tx) {
+  const fromToken = req.user?.currentInstance?.empleado_id;
+  if (fromToken) return fromToken;
+
+  const usuarioGlobalId = req.user?.id;
+  if (!usuarioGlobalId || !tx) return null;
+
+  try {
+    const empleado = await tx.empleados.findFirst({
+      where: { usuario_global_id: usuarioGlobalId },
+      select: { id: true },
+    });
+    return empleado ? empleado.id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
+  if (!isInspectorUser(req)) return;
+
+  const empleadoId = await resolveEmpleadoId(req, tx);
+  if (!empleadoId) {
+    const error = new Error(
+      'Su usuario no tiene un empleado vinculado. No puede registrar actas de silos de campo.'
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const planificacion = await tx.planificaciones.findUnique({
+    where: { id: Number(planificacionId) },
+    select: { id: true },
+  });
+  if (!planificacion) {
+    const error = new Error('La planificación indicada no existe');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const asignacion = await tx.planificacion_empleados.findFirst({
+    where: {
+      planificacion_id: Number(planificacionId),
+      empleado_id: empleadoId,
+    },
+  });
+
+  if (!asignacion) {
+    const error = new Error(
+      'No está asignado a esta planificación. Solo puede registrar actas de silos de visitas donde figura como inspector.'
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+async function buildActaSilosWhere(req, tx) {
   const { planificacion_id, q } = req.query;
 
   const where = {
     AND: [
       planificacion_id ? { planificacion_id: Number(planificacion_id) } : {},
-    ]
+    ],
   };
 
   if (q && q.trim()) {
@@ -30,31 +99,56 @@ export const getActaSilos = async (req, res) => {
             planificaciones: {
               solicitudes: {
                 clientes: {
-                  nombre: { contains: token, mode: 'insensitive' }
-                }
-              }
-            }
+                  nombre: { contains: token, mode: 'insensitive' },
+                },
+              },
+            },
           },
           {
             planificaciones: {
               solicitudes: {
                 propiedades: {
-                  nombre: { contains: token, mode: 'insensitive' }
-                }
-              }
-            }
+                  nombre: { contains: token, mode: 'insensitive' },
+                },
+              },
+            },
           },
           {
             planificaciones: {
               solicitudes: {
-                codigo: { contains: token, mode: 'insensitive' }
-              }
-            }
-          }
-        ]
+                codigo: { contains: token, mode: 'insensitive' },
+              },
+            },
+          },
+        ],
       });
     });
   }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tx || req.db));
+    if (empleadoId) {
+      where.AND.push({
+        planificaciones: {
+          planificacion_empleados: {
+            some: { empleado_id: Number(empleadoId) },
+          },
+        },
+      });
+    } else {
+      where.AND.push({ id: -1 });
+    }
+  }
+
+  return where;
+}
+
+export const getActaSilos = async (req, res) => {
+  const tenantPrisma = req.db;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const where = await buildActaSilosWhere(req, tenantPrisma);
 
   const [actas, totalCount] = await Promise.all([
     tenantPrisma.acta_silos.findMany({
@@ -123,6 +217,16 @@ export const getActaSiloById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
   }
 
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isAssigned = acta.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isAssigned) {
+      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección de silo.' });
+    }
+  }
+
   res.status(200).json({ status: 'success', data: acta });
 };
 
@@ -136,10 +240,12 @@ export const createActaSilo = async (req, res) => {
     planificacion_id, insumos_consumidos
   } = req.body;
 
-  const empleado_id = req.user?.currentInstance?.empleado_id || null;
-
   try {
     const response = await tenantPrisma.$transaction(async (tx) => {
+      await requireInspectorEnPlanificacion(tx, req, planificacion_id);
+
+      const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tx));
+
       // Evitar duplicados de acta para la misma planificación
       const existing = await tx.acta_silos.findFirst({
         where: { planificacion_id: Number(planificacion_id) }
@@ -236,11 +342,28 @@ export const updateActaSilo = async (req, res) => {
 
   const existing = await tenantPrisma.acta_silos.findUnique({
     where: { id: Number(id) },
-    include: { silo_fotos: true }
+    include: {
+      silo_fotos: true,
+      planificaciones: {
+        include: {
+          planificacion_empleados: true
+        }
+      }
+    }
   });
 
   if (!existing) {
     return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
+  }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isAssigned = existing.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isAssigned) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para modificar esta acta de silo.' });
+    }
   }
 
   let newPhotoUrls = [];
@@ -298,15 +421,32 @@ export const updateActaSilo = async (req, res) => {
 export const deleteActaSilo = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const empleado_id = req.user?.currentInstance?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   const toDelete = await tenantPrisma.acta_silos.findUnique({
     where: { id: Number(id) },
-    include: { silo_fotos: true, seguimiento_inspecciones: true }
+    include: {
+      silo_fotos: true,
+      seguimiento_inspecciones: true,
+      planificaciones: {
+        include: {
+          planificacion_empleados: true
+        }
+      }
+    }
   });
 
   if (!toDelete) {
     return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
+  }
+
+  if (isInspectorUser(req)) {
+    const isAssigned = toDelete.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleado_id
+    );
+    if (!isAssigned) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para eliminar esta acta de silo.' });
+    }
   }
 
   if (toDelete.seguimiento_inspecciones.length > 0) {
@@ -358,6 +498,16 @@ export const getActaSiloReporte = async (req, res) => {
 
   if (!acta) {
     return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
+  }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isAssigned = acta.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isAssigned) {
+      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección de silo.' });
+    }
   }
 
   try {

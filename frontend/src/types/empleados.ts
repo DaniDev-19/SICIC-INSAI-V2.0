@@ -74,6 +74,7 @@ export interface Empleado {
   profesion_id?: number;
   oficina_id?: number;
   usuario_global_id?: number;
+  foto_data_url?: string;
   created_at: string;
   
   // Relaciones

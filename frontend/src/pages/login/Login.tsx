@@ -102,6 +102,14 @@ export default function Login() {
         return;
       }
 
+      if (error.response?.status === 409) {
+        toast.warning('Sesión Activa Detectada', {
+          description: error.response.data.message || 'Ya existe una sesión activa con esta cuenta.',
+          duration: 8000,
+        });
+        return;
+      }
+
       if (error.response?.status === 429) {
         toast.warning('Acceso Restringido', {
           description: error.response.data.message || 'Demasiados intentos. Intente más tarde.',

@@ -12,10 +12,11 @@ const router = Router();
 router.use(protect);
 router.use(tenantMiddleware);
 
-router.get('/', checkPermission('empleados', 'see'), empleadosController.getEmpleados);
+router.get('/', empleadosController.getEmpleados);
 router.get('/export', checkPermission('empleados', 'export'), empleadosController.exportEmpleados);
 router.get('/export/pdf', checkPermission('empleados', 'export'), empleadosController.exportEmpleadosPdf);
 router.get('/:id', checkPermission('empleados', 'see'), empleadosController.getEmpleadoById);
+router.get('/:id/reporte', checkPermission('empleados', 'see'), empleadosController.getEmpleadoReporte);
 router.post('/', checkPermission('empleados', 'create'), upload.single('foto'), validateSchema(createEmpleadosSchema), empleadosController.createEmpleado);
 router.put('/:id', checkPermission('empleados', 'update'), upload.single('foto'), validateSchema(updateEmpleadosSchema), empleadosController.updateEmpleado);
 router.delete('/:id', checkPermission('empleados', 'delete'), empleadosController.deleteEmpleado);

@@ -2,6 +2,7 @@ import bitacoraService from '../services/bitacora.service.js';
 import excelService from '../services/excel.service.js';
 import * as statusSyncService from '../services/status-sync.service.js';
 import pdfService from '../services/pdf.service.js';
+import mailService from '../services/mail.service.js';
 
 const parseTimeInput = (timeStr) => {
   if (!timeStr) return null;
@@ -240,6 +241,44 @@ export const createSolicitud = async (req, res) => {
       payload_nuevo: response
     });
 
+    if (response.planificacion?.id) {
+      const planId = response.planificacion.id;
+      setImmediate(async () => {
+        try {
+          const fullPlan = await tenantPrisma.planificaciones.findUnique({
+            where: { id: planId },
+            include: {
+              solicitudes: {
+                include: {
+                  clientes: true,
+                  propiedades: {
+                    include: {
+                      propiedad_ubicacion: {
+                        include: {
+                          sectores: {
+                            include: {
+                              parroquias: { include: { municipios: { include: { estados: true } } } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              planificacion_empleados: {
+                include: { empleados: { include: { cargos: true } } }
+              }
+            }
+          });
+          const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
+          await mailService.sendPlanificacionNotification({ tipoEvento: 'CREACION', planificacion: fullPlan, inspectores });
+        } catch (err) {
+          console.error('⚠️  Error al enviar correo de notificación (crear solicitud con planificación):', err.message);
+        }
+      });
+    }
+
     res.status(201).json({ status: 'success', data: response });
   } catch (error) {
     if (error.statusCode === 400) {
@@ -262,6 +301,15 @@ export const updateSolicitud = async (req, res) => {
         const error = new Error('Solicitud no encontrada');
         error.statusCode = 404;
         throw error;
+      }
+
+      if (['FINALIZADA', 'COMPLETADA', 'SOLUCIONADA'].includes(existing.estatus)) {
+        const isUserAdmin = req.user?.rol === 'ADMIN' || req.user?.rol === 'SuperAdmin' || req.user?.rol === 'SUPER_ADMIN';
+        if (!isUserAdmin) {
+          const error = new Error('No se puede modificar una solicitud que ya se encuentra finalizada.');
+          error.statusCode = 400;
+          throw error;
+        }
       }
 
       if (data.fecha_resolucion) data.fecha_resolucion = new Date(data.fecha_resolucion);
@@ -311,6 +359,15 @@ export const deleteSolicitud = async (req, res) => {
         const error = new Error('Solicitud no encontrada');
         error.statusCode = 404;
         throw error;
+      }
+
+      if (['FINALIZADA', 'COMPLETADA', 'SOLUCIONADA'].includes(existing.estatus)) {
+        const isUserAdmin = req.user?.rol === 'ADMIN' || req.user?.rol === 'SuperAdmin' || req.user?.rol === 'SUPER_ADMIN';
+        if (!isUserAdmin) {
+          const error = new Error('No se puede eliminar una solicitud que ya se encuentra finalizada.');
+          error.statusCode = 400;
+          throw error;
+        }
       }
 
       if (existing.planificaciones) {

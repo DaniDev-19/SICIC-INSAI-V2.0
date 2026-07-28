@@ -1,5 +1,6 @@
 import { verifyToken } from '../utils/token.js';
 import { masterPrisma } from '../config/prisma.js';
+import { userActiveTokens } from '../controllers/auth.controller.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -30,6 +31,18 @@ export const protect = async (req, res, next) => {
         status: 'error',
         message: 'El usuario ya no tiene acceso o no existe',
       });
+    }
+
+    const activeToken = userActiveTokens.get(decoded.id);
+    if (activeToken && activeToken !== token) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Su sesión ha finalizado porque se ha iniciado sesión con esta cuenta desde otro dispositivo o pestaña.',
+      });
+    }
+
+    if (!activeToken) {
+      userActiveTokens.set(decoded.id, token);
     }
 
     req.user = decoded;

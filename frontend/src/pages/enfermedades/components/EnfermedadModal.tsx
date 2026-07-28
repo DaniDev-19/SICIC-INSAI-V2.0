@@ -155,7 +155,7 @@ export function EnfermedadModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
@@ -173,7 +173,7 @@ export function EnfermedadModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
-          <div className="space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
                 Nombre de la Enfermedad <span className="text-rose-500">*</span>

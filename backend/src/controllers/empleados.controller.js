@@ -1,5 +1,6 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import imageService from '../services/image.service.js';
 import excelService from '../services/excel.service.js';
 import pdfService from '../services/pdf.service.js';
 
@@ -48,6 +49,7 @@ export const getEmpleados = async (req, res) => {
         oficinas: { select: { nombre: true } },
         contrato: { select: { nombre: true } },
         empleado_foto: { select: { foto_url: true }, take: 1, orderBy: { created_at: 'desc' } },
+        empleados_programas: { include: { programas: { select: { id: true, nombre: true } } } },
         empleado_residencia: {
           include: {
             sectores: {
@@ -113,6 +115,11 @@ export const getEmpleadoById = async (req, res) => {
         }
       },
       empleados_programas: { include: { programas: true } },
+      planificacion_empleados: {
+        include: {
+          planificaciones: true
+        }
+      }
     }
   });
 
@@ -120,7 +127,71 @@ export const getEmpleadoById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Empleado no encontrado' });
   }
 
-  res.status(200).json({ status: 'success', data: empleado });
+  let foto_data_url = null;
+  const rawFotoUrl = empleado.empleado_foto?.[0]?.foto_url;
+  if (rawFotoUrl) {
+    foto_data_url = await imageService.toPdfDataUrl(rawFotoUrl);
+  }
+
+  res.status(200).json({ status: 'success', data: { ...empleado, foto_data_url } });
+};
+
+export const getEmpleadoReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  const empleado = await tenantPrisma.empleados.findUnique({
+    where: { id: Number(id) },
+    include: {
+      cargos: true,
+      departamentos: true,
+      profesiones: true,
+      oficinas: true,
+      contrato: true,
+      empleado_foto: { orderBy: { created_at: 'desc' } },
+      empleado_residencia: {
+        include: {
+          sectores: {
+            include: {
+              parroquias: {
+                include: {
+                  municipios: {
+                    include: {
+                      estados: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      empleados_programas: { include: { programas: true } },
+      planificacion_empleados: {
+        include: {
+          planificaciones: true
+        }
+      }
+    }
+  });
+
+  if (!empleado) {
+    return res.status(404).json({ status: 'error', message: 'Empleado no encontrado' });
+  }
+
+  let foto_data_url = null;
+  const rawFotoUrl = empleado.empleado_foto?.[0]?.foto_url;
+  if (rawFotoUrl) {
+    foto_data_url = await imageService.toPdfDataUrl(rawFotoUrl);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      ...empleado,
+      foto_data_url
+    }
+  });
 };
 
 export const createEmpleado = async (req, res) => {

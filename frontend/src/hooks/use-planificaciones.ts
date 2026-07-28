@@ -58,6 +58,19 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
     },
   });
 
+  const patchEmpleadosMutation = useMutation({
+    mutationFn: (args: { id: number; empleados: number[] }) =>
+      planificacionesService.patchEmpleados({ id: args.id, empleados: args.empleados }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['planificaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['planificacion', variables.id] });
+      toast.success('Equipo de inspectores actualizado con éxito');
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Error al modificar los inspectores asignados');
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: planificacionesService.delete,
     onSuccess: () => {
@@ -137,11 +150,13 @@ export function usePlanificaciones(initialSearch = '', initialLimit = 10) {
     setPeriodo: handleSetPeriodo,
     createPlanificacion: createMutation.mutateAsync,
     updatePlanificacion: updateMutation.mutateAsync,
+    patchPlanificacionEmpleados: patchEmpleadosMutation.mutateAsync,
     deletePlanificacion: deleteMutation.mutateAsync,
     exportPlanificaciones: handleExport,
     exportPlanificacionesPdf: handleExportPdf,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isPatchingEmpleados: patchEmpleadosMutation.isPending,
   };
 }
 

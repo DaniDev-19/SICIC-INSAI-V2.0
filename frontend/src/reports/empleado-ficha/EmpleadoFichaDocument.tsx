@@ -6,6 +6,7 @@ import {
   Image,
   StyleSheet,
 } from '@react-pdf/renderer';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 const styles = StyleSheet.create({
   page: {
@@ -259,6 +260,7 @@ export interface EmpleadoFichaData {
   profesiones?: { nombre: string } | null;
   oficinas?: { nombre: string } | null;
   contrato?: { nombre: string } | null;
+  foto_data_url?: string | null;
   empleado_foto?: { foto_url: string }[] | null;
   empleado_residencia?: {
     direccion_detallada?: string | null;
@@ -298,7 +300,11 @@ export function EmpleadoFichaDocument({
   logoUrl: string;
   generadoEl: string;
 }) {
-  const fotoUrl = empleado.empleado_foto?.[0]?.foto_url;
+  const fotoUrl =
+    empleado.foto_data_url ||
+    (empleado.empleado_foto?.[0]?.foto_url
+      ? resolveMediaUrl(empleado.empleado_foto[0].foto_url)
+      : null);
   const residencia = empleado.empleado_residencia?.[0];
   const sector = residencia?.sectores;
   const parroquia = sector?.parroquias;

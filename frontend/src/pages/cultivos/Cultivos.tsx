@@ -32,6 +32,7 @@ import Can from '@/components/auth/Can';
 
 import { CultivosTable } from './components/CultivosTable';
 import { CultivoModal } from './components/CultivoModal';
+import { CultivoDetailsModal } from './components/CultivoDetailsModal';
 
 const Cultivos: React.FC = () => {
     const navigate = useNavigate();
@@ -54,6 +55,7 @@ const Cultivos: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCultivo, setSelectedCultivo] = useState<typeof cultivos[0] | null>(null);
+    const [selectedViewCultivo, setSelectedViewCultivo] = useState<typeof cultivos[0] | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
@@ -64,6 +66,10 @@ const Cultivos: React.FC = () => {
     const handleOpenEdit = (cultivo: typeof cultivos[0]) => {
         setSelectedCultivo(cultivo);
         setIsModalOpen(true);
+    };
+
+    const handleOpenView = (cultivo: typeof cultivos[0]) => {
+        setSelectedViewCultivo(cultivo);
     };
 
     const confirmDelete = async () => {
@@ -154,6 +160,7 @@ const Cultivos: React.FC = () => {
                         <div className="overflow-x-auto custom-scrollbar">
                                 <CultivosTable
                                     cultivos={cultivos}
+                                    onView={handleOpenView}
                                     onEdit={handleOpenEdit}
                                     onDelete={setDeleteId}
                                 />
@@ -180,6 +187,11 @@ const Cultivos: React.FC = () => {
                 onDeleteTipo={deleteTipo}
             />
 
+            <CultivoDetailsModal
+                isOpen={!!selectedViewCultivo}
+                onClose={() => setSelectedViewCultivo(null)}
+                cultivo={selectedViewCultivo}
+            />
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
                     <AlertDialogHeader>

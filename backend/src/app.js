@@ -51,6 +51,9 @@ import avalesRouter from './routes/avales.routes.js';
 import insumosStockRoutes from './routes/insumos_stock.routes.js';
 import userRoutes from './routes/user.routes.js';
 import instanceRoutes from './routes/instance.routes.js';
+import mailRoutes from './routes/mail.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
+import searchRoutes from './routes/search.routes.js';
 import { errorHandler } from './middlewares/error.handler.js';
 
 const app = express();
@@ -134,6 +137,9 @@ app.use('/api/avales', avalesRouter);
 app.use('/api/insumos_stock', insumosStockRoutes);
 app.use('/api/master/users', userRoutes);
 app.use('/api/master/instances', instanceRoutes);
+app.use('/api/mail', mailRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/search', searchRoutes);
 app.use(errorHandler);
 
 export default app;

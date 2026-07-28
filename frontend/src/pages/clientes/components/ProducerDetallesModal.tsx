@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, User, Fingerprint, Phone, Mail, MapPin, Building2, ShieldCheck, Home } from 'lucide-react';
+import { Loader2, User, Fingerprint, Phone, Mail, MapPin, Building2, ShieldCheck, Home, FileText } from 'lucide-react';
 
 interface ProducerDetallesModalProps {
   isOpen: boolean;
@@ -30,20 +30,31 @@ export function ProducerDetallesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl glass-effect border-primary/20 p-0 overflow-hidden rounded-3xl shadow-2xl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl glass-effect border-primary/20 p-0 overflow-hidden rounded-3xl shadow-2xl flex flex-col max-h-[min(92vh,52rem)]">
         <DialogHeader className="bg-muted/30 p-6 border-b border-border/50 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-inner">
-              <User className="size-6" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-inner">
+                <User className="size-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">
+                  Ficha Técnica del Productor
+                </DialogTitle>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                  Detalles de registro e historial del cliente institucional
+                </p>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">
-                Ficha Técnica del Productor
-              </DialogTitle>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                Detalles de registro e historial del cliente institucional
-              </p>
-            </div>
+            {producer && (
+              <button
+                type="button"
+                onClick={() => clientesService.openFichaPdf(producer.id)}
+                className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-md cursor-pointer mr-6"
+              >
+                <FileText className="size-4" /> Ficha PDF
+              </button>
+            )}
           </div>
         </DialogHeader>
 
@@ -59,7 +70,7 @@ export function ProducerDetallesModal({
             No se pudo obtener la información del productor.
           </div>
         ) : (
-          <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
             {/* Header del Productor */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/50 gap-4">
               <div>
@@ -109,24 +120,6 @@ export function ProducerDetallesModal({
               </div>
             </div>
 
-            {/* Representante Legal (si aplica) */}
-            {(producer.representante_legal || producer.cedula_representante) && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <User className="size-4 text-primary" /> Representante Legal
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3.5 rounded-xl bg-muted/10 border border-border/40">
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Nombre Representante</p>
-                    <p className="text-sm font-semibold text-foreground">{producer.representante_legal || 'N/A'}</p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-muted/10 border border-border/40">
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Cédula Representante</p>
-                    <p className="text-sm font-semibold text-foreground">{producer.cedula_representante || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Predios / Propiedades Asociadas */}
             <div className="space-y-3">

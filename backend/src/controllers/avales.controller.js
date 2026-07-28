@@ -2,14 +2,46 @@ import inventoryService from '../services/inventory.service.js';
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 
-export const getAvales = async (req, res) => {
-  const tenantPrisma = req.db;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+function isAdminUser(req) {
+  const permisos = req.user?.currentInstance?.permisos;
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return (
+    permisos?.all?.includes('*') ||
+    rol === 'admin' ||
+    rol === 'administrador' ||
+    rol === 'superadmin' ||
+    rol === 'super_admin'
+  );
+}
+
+function isInspectorUser(req) {
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return rol.includes('inspector') && !isAdminUser(req);
+}
+
+async function resolveEmpleadoId(req, tx) {
+  const fromToken = req.user?.currentInstance?.empleado_id;
+  if (fromToken) return fromToken;
+
+  const usuarioGlobalId = req.user?.id;
+  if (!usuarioGlobalId || !tx) return null;
+
+  try {
+    const empleado = await tx.empleados.findFirst({
+      where: { usuario_global_id: usuarioGlobalId },
+      select: { id: true },
+    });
+    return empleado ? empleado.id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildAvalesWhere(req, tenantPrisma) {
   const { q } = req.query;
 
   const where = { AND: [] };
+
   if (q && q.trim()) {
     const tokens = q.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
@@ -33,6 +65,39 @@ export const getAvales = async (req, res) => {
     });
   }
 
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    if (empleadoId) {
+      where.AND.push({
+        OR: [
+          { medico_responsable_id: Number(empleadoId) },
+          { jefe_osa_id: Number(empleadoId) },
+          {
+            inspecciones: {
+              planificaciones: {
+                planificacion_empleados: {
+                  some: { empleado_id: Number(empleadoId) }
+                }
+              }
+            }
+          }
+        ]
+      });
+    } else {
+      where.AND.push({ id: -1 });
+    }
+  }
+
+  return where;
+}
+
+export const getAvales = async (req, res) => {
+  const tenantPrisma = req.db;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const where = await buildAvalesWhere(req, tenantPrisma);
+
   const [avales, totalCount] = await Promise.all([
     tenantPrisma.avales_sanitarios.findMany({
       where,
@@ -41,7 +106,12 @@ export const getAvales = async (req, res) => {
       orderBy: { created_at: 'desc' },
       include: {
         inspecciones: { select: { n_control: true } },
-        empleados_avales_sanitarios_medico_responsable_idToempleados: { select: { nombre: true, apellido: true } }
+        empleados_avales_sanitarios_medico_responsable_idToempleados: { select: { id: true, nombre: true, apellido: true, cedula: true } },
+        empleados_avales_sanitarios_jefe_osa_idToempleados: { select: { id: true, nombre: true, apellido: true, cedula: true } },
+        aval_hallazgos_bov_buf: true,
+        aval_hallazgos_otras: { include: { t_animales: true } },
+        aval_biologicos: { include: { insumos: true } },
+        aval_hierros: true,
       }
     }),
     tenantPrisma.avales_sanitarios.count({ where }),
@@ -68,11 +138,15 @@ export const createAval = async (req, res) => {
     hallazgos_bov_buf, hallazgos_otras, biologicos
   } = req.body;
 
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   const parsedInspeccionId = (inspeccion_id && inspeccion_id !== 'none' && inspeccion_id !== 'null' && !isNaN(Number(inspeccion_id))) ? Number(inspeccion_id) : null;
-  const parsedMedicoId = (medico_responsable_id && medico_responsable_id !== 'none' && medico_responsable_id !== 'null' && !isNaN(Number(medico_responsable_id))) ? Number(medico_responsable_id) : null;
+  let parsedMedicoId = (medico_responsable_id && medico_responsable_id !== 'none' && medico_responsable_id !== 'null' && !isNaN(Number(medico_responsable_id))) ? Number(medico_responsable_id) : null;
   const parsedJefeOsaId = (jefe_osa_id && jefe_osa_id !== 'none' && jefe_osa_id !== 'null' && !isNaN(Number(jefe_osa_id))) ? Number(jefe_osa_id) : null;
+
+  if (isInspectorUser(req) && !parsedMedicoId && empleado_id) {
+    parsedMedicoId = Number(empleado_id);
+  }
 
   let hierroUrls = [];
   if (req.files && req.files.length > 0) {
@@ -86,11 +160,13 @@ export const createAval = async (req, res) => {
   if (hallazgos_bov_buf) {
     try {
       const parsed = typeof hallazgos_bov_buf === 'string' ? JSON.parse(hallazgos_bov_buf) : hallazgos_bov_buf;
-      const { id, aval_id, created_at, updated_at, ...rest } = parsed;
+      // Exclude id, aval_id, timestamps and the old total from rest to avoid double-counting
+      const { id: _id, aval_id: _aval_id, created_at: _ca, updated_at: _ua, total_bov_buf: _ignored, ...rest } = parsed;
       cleanBov = {};
       for (const [k, v] of Object.entries(rest)) {
         cleanBov[k] = Number(v) || 0;
       }
+      // Calculate total from individual fields only
       cleanBov.total_bov_buf = Object.values(cleanBov).reduce((a, b) => a + (Number(b) || 0), 0);
     } catch (e) {
       console.error('Error parsing hallazgos_bov_buf:', e);
@@ -189,7 +265,13 @@ export const getAvalById = async (req, res) => {
       aval_hallazgos_bov_buf: true,
       aval_hallazgos_otras: { include: { t_animales: true } },
       aval_hierros: true,
-      inspecciones: true,
+      inspecciones: {
+        include: {
+          planificaciones: {
+            include: { planificacion_empleados: true }
+          }
+        }
+      },
       empleados_avales_sanitarios_medico_responsable_idToempleados: true,
       empleados_avales_sanitarios_jefe_osa_idToempleados: true
     }
@@ -197,6 +279,17 @@ export const getAvalById = async (req, res) => {
 
   if (!aval) {
     return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+  }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isMedicoOrJefe = aval.medico_responsable_id === empleadoId || aval.jefe_osa_id === empleadoId;
+    const isAssignedToInspeccion = aval.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isMedicoOrJefe && !isAssignedToInspeccion) {
+      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a este aval sanitario.' });
+    }
   }
 
   res.status(200).json({ status: 'success', data: aval });
@@ -212,15 +305,35 @@ export const updateAval = async (req, res) => {
     hallazgos_bov_buf, hallazgos_otras, biologicos
   } = req.body;
 
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   const existing = await tenantPrisma.avales_sanitarios.findUnique({
     where: { id: Number(id) },
-    include: { aval_hierros: true, aval_biologicos: true }
+    include: {
+      aval_hierros: true,
+      aval_biologicos: true,
+      inspecciones: {
+        include: {
+          planificaciones: {
+            include: { planificacion_empleados: true }
+          }
+        }
+      }
+    }
   });
 
   if (!existing) {
     return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+  }
+
+  if (isInspectorUser(req)) {
+    const isMedicoOrJefe = existing.medico_responsable_id === empleado_id || existing.jefe_osa_id === empleado_id;
+    const isAssignedToInspeccion = existing.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleado_id
+    );
+    if (!isMedicoOrJefe && !isAssignedToInspeccion) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para modificar este aval sanitario.' });
+    }
   }
 
   const parsedMedicoId = (medico_responsable_id && medico_responsable_id !== 'none' && medico_responsable_id !== 'null' && !isNaN(Number(medico_responsable_id))) ? Number(medico_responsable_id) : null;
@@ -230,7 +343,7 @@ export const updateAval = async (req, res) => {
   if (hallazgos_bov_buf) {
     try {
       const parsed = typeof hallazgos_bov_buf === 'string' ? JSON.parse(hallazgos_bov_buf) : hallazgos_bov_buf;
-      const { id, aval_id, created_at, updated_at, ...rest } = parsed;
+      const { id: _id, aval_id: _aval_id, created_at: _ca, updated_at: _ua, total_bov_buf: _ignored, ...rest } = parsed;
       cleanBov = {};
       for (const [k, v] of Object.entries(rest)) {
         cleanBov[k] = Number(v) || 0;
@@ -338,15 +451,34 @@ export const updateAval = async (req, res) => {
 export const deleteAval = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   const toDelete = await tenantPrisma.avales_sanitarios.findUnique({
     where: { id: Number(id) },
-    include: { aval_hierros: true }
+    include: {
+      aval_hierros: true,
+      inspecciones: {
+        include: {
+          planificaciones: {
+            include: { planificacion_empleados: true }
+          }
+        }
+      }
+    }
   });
 
   if (!toDelete) {
     return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+  }
+
+  if (isInspectorUser(req)) {
+    const isMedicoOrJefe = toDelete.medico_responsable_id === empleado_id || toDelete.jefe_osa_id === empleado_id;
+    const isAssignedToInspeccion = toDelete.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleado_id
+    );
+    if (!isMedicoOrJefe && !isAssignedToInspeccion) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para eliminar este aval sanitario.' });
+    }
   }
 
   try {

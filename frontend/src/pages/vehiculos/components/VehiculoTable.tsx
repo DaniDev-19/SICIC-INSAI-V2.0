@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface VehiculoTableProps {
   vehiculos: Vehiculo[];
+  onView?: (vehiculo: Vehiculo) => void;
   onEdit: (vehiculo: Vehiculo) => void;
   onDelete: (id: number) => void;
   selectedIds: number[];
@@ -36,6 +37,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 
 export function VehiculoTable({
   vehiculos,
+  onView,
   onEdit,
   onDelete,
   selectedIds,
@@ -155,6 +157,7 @@ export function VehiculoTable({
                   <TableCell className="px-6 py-5 text-right">
                     <CrudTableActions
                       screen="vehiculos"
+                      onView={() => (onView ? onView(vehiculo) : onEdit(vehiculo))}
                       onEdit={() => onEdit(vehiculo)}
                       onDelete={() => onDelete(vehiculo.id)}
                     />

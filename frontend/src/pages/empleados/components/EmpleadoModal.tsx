@@ -26,7 +26,9 @@ import { useProgramas } from '@/hooks/use-programas';
 import type { Empleado } from '@/types/empleados';
 import { empleadosService } from '@/services/empleados.service';
 import { ubicacionService, type UbicacionBase } from '@/services/ubicacion.service';
+import { usersService } from '@/services/users.service';
 import { cn } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 const empleadoSchema = z.object({
   cedula: z.string().min(5, 'Cédula muy corta').max(20),
@@ -41,6 +43,7 @@ const empleadoSchema = z.object({
   departamento_id: z.string().optional().or(z.literal('')),
   profesion_id: z.string().optional().or(z.literal('')),
   oficina_id: z.string().optional().or(z.literal('')),
+  usuario_global_id: z.string().optional().or(z.literal('')),
   residencia: z.object({
     sector_id: z.string().optional().or(z.literal('')),
     direccion_detallada: z.string().optional().or(z.literal('')),
@@ -141,6 +144,7 @@ export function EmpleadoModal({
       departamento_id: '',
       profesion_id: '',
       oficina_id: '',
+      usuario_global_id: '',
       residencia: {
         sector_id: '',
         direccion_detallada: '',
@@ -149,6 +153,13 @@ export function EmpleadoModal({
       },
     },
   });
+
+  const { data: usersResp } = useQuery({
+    queryKey: ['master-users-list'],
+    queryFn: () => usersService.getAll({ limit: 100 }),
+    enabled: isOpen,
+  });
+  const systemUsers = usersResp?.data || [];
 
   const isLoading = isCreating || isUpdating;
 
@@ -228,6 +239,7 @@ export function EmpleadoModal({
           departamento_id: fullEmpleado.departamento_id?.toString() || '',
           profesion_id: fullEmpleado.profesion_id?.toString() || '',
           oficina_id: fullEmpleado.oficina_id?.toString() || '',
+          usuario_global_id: fullEmpleado.usuario_global_id?.toString() || '',
           residencia: {
             sector_id: secId,
             direccion_detallada: resObj?.direccion_detallada || '',
@@ -235,7 +247,7 @@ export function EmpleadoModal({
             google_maps_url: resObj?.google_maps_url || '',
           },
         });
-        setFotoPreview(fullEmpleado.empleado_foto?.[0]?.foto_url || null);
+        setFotoPreview(fullEmpleado.empleado_foto?.[0]?.foto_url ? resolveMediaUrl(fullEmpleado.empleado_foto[0].foto_url) : null);
         setSelectedProgramas(fullEmpleado.empleados_programas?.map((ep) => ep.programas.id) || []);
 
         if (estId) {
@@ -270,6 +282,7 @@ export function EmpleadoModal({
           departamento_id: '',
           profesion_id: '',
           oficina_id: '',
+          usuario_global_id: '',
           residencia: {
             sector_id: '',
             direccion_detallada: '',
@@ -400,7 +413,7 @@ export function EmpleadoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[960px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[92vh] max-h-[92vh] flex flex-col">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[960px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[92vh] max-h-[92vh] flex flex-col">
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="bg-primary/5 p-6 border-b border-border/50 shrink-0">
             <DialogHeader>
@@ -770,9 +783,27 @@ export function EmpleadoModal({
                     </Button>
                   </div>
                 </div>
-                <div className="min-w-0 space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Fecha Ingreso</Label>
-                  <Input type="date" {...register('fechas_ingreso')} className="h-10 rounded-xl bg-background/50" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="min-w-0 space-y-2">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Fecha Ingreso</Label>
+                    <Input type="date" {...register('fechas_ingreso')} className="h-10 rounded-xl bg-background/50" />
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground ml-1">Usuario del Sistema (Login)</Label>
+                    <Select value={watch('usuario_global_id') || 'none'} onValueChange={(v) => setValue('usuario_global_id', v === 'none' ? '' : v)}>
+                      <SelectTrigger className="h-10 min-w-0 w-full rounded-xl bg-background/50">
+                        <SelectValue placeholder="Sin usuario vinculado..." />
+                      </SelectTrigger>
+                      <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                        <SelectItem value="none" className="cursor-pointer text-muted-foreground">-- Ninguno / Sin usuario --</SelectItem>
+                        {systemUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id.toString()} className="cursor-pointer">
+                            {u.username} ({u.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>

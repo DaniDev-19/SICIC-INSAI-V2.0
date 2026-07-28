@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type {
   ActaSilo,
   CreateActaSiloDto,
@@ -83,13 +84,19 @@ export const actaSilosService = {
   },
 
   openPdfReport: async (id: number) => {
-    const [{ generateActaSiloPdfBlob }, reporteRes] = await Promise.all([
-      import('@/reports/acta-silo/generateActaSiloPdf'),
-      apiClient.get<{ status: string; data: ActaSiloReporteDto }>(`/acta_silos/${id}/reporte`),
-    ]);
-    const blob = await generateActaSiloPdfBlob(reporteRes.data.data);
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    window.setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando Acta de Silo en PDF...');
+    try {
+      const [{ generateActaSiloPdfBlob }, reporteRes] = await Promise.all([
+        import('@/reports/acta-silo/generateActaSiloPdf'),
+        apiClient.get<{ status: string; data: ActaSiloReporteDto }>(`/acta_silos/${id}/reporte`),
+      ]);
+      const blob = await generateActaSiloPdfBlob(reporteRes.data.data);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Acta de Silo PDF lista', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el Acta de Silo PDF', { id: toastId });
+    }
   },
 };

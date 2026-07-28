@@ -5,10 +5,10 @@ import { empleadosService } from '@/services/empleados.service';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 
-export function useEmpleados() {
+export function useEmpleados(options?: { initialLimit?: number }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(options?.initialLimit || 100);
   const [search, setSearch] = useState('');
   const [departamentoId, setDepartamentoId] = useState('all');
   const [statusLaboral, setStatusLaboral] = useState('all');

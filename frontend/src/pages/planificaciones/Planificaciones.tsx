@@ -40,6 +40,7 @@ import { PlanificacionTable } from './components/PlanificacionTable';
 import { PlanificacionModal } from './components/PlanificacionModal';
 import { PlanificacionCalendar } from './components/PlanificacionCalendar';
 import { PlanificacionDetailsModal } from './components/PlanificacionDetailsModal';
+import { PlanificacionEmpleadosModal } from './components/PlanificacionEmpleadosModal';
 
 const Planificaciones: React.FC = () => {
   const navigate = useNavigate();
@@ -64,10 +65,17 @@ const Planificaciones: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
+  const [isEmpleadosModalOpen, setIsEmpleadosModalOpen] = useState(false);
+  const [selectedEmpleadosPlan, setSelectedEmpleadosPlan] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [calendarInitialDate, setCalendarInitialDate] = useState<string>('');
   const [detailsId, setDetailsId] = useState<number | null>(null);
+
+  const handleOpenEditEmpleados = (plan: any) => {
+    setSelectedEmpleadosPlan(plan);
+    setIsEmpleadosModalOpen(true);
+  };
 
   const handleOpenCreateWithDate = (dateStr: string) => {
     navigate(`/home/solicitudes?openWizard=true&fecha=${dateStr}`);
@@ -271,6 +279,7 @@ const Planificaciones: React.FC = () => {
                   onView={(id) => setDetailsId(id)}
                   onEdit={handleOpenEdit}
                   onDelete={setDeleteId}
+                  onEditEmpleados={handleOpenEditEmpleados}
                 />
               </div>
 
@@ -315,6 +324,21 @@ const Planificaciones: React.FC = () => {
             handleOpenEdit(plan);
           }
         }}
+        onEditEmpleados={() => {
+          const plan = planificaciones.find(p => p.id === detailsId);
+          if (plan) {
+            handleOpenEditEmpleados(plan);
+          }
+        }}
+      />
+
+      <PlanificacionEmpleadosModal
+        isOpen={isEmpleadosModalOpen}
+        onClose={() => {
+          setIsEmpleadosModalOpen(false);
+          setSelectedEmpleadosPlan(null);
+        }}
+        planificacion={selectedEmpleadosPlan}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

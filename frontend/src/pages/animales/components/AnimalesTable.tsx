@@ -12,12 +12,14 @@ import {
 
 interface AnimalesTableProps {
   animales: Animal[];
+  onView?: (animal: Animal) => void;
   onEdit: (animal: Animal) => void;
   onDelete: (id: number) => void;
 }
 
 export function AnimalesTable({
   animales,
+  onView,
   onEdit,
   onDelete,
 }: AnimalesTableProps) {
@@ -75,6 +77,7 @@ export function AnimalesTable({
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="animales"
+                    onView={() => (onView ? onView(animal) : onEdit(animal))}
                     onEdit={() => onEdit(animal)}
                     onDelete={() => onDelete(animal.id)}
                   />

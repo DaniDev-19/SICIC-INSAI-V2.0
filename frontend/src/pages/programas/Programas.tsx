@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Can from '@/components/auth/Can';
 import {
     ChevronLeft,
     Plus,
@@ -31,6 +32,7 @@ import { useProgramas } from '@/hooks/use-programas';
 import { ProgramasTable } from './components/ProgramasTable';
 import { ProgramaModal } from './components/ProgramaModal';
 import { ProgramaAsociaciones } from './components/ProgramaAsociaciones';
+import { ProgramaDetailsModal } from './components/ProgramaDetailsModal';
 
 const Programas: React.FC = () => {
     const navigate = useNavigate();
@@ -51,6 +53,7 @@ const Programas: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPrograma, setSelectedPrograma] = useState<typeof programas[0] | null>(null);
     const [selectedProgramaForDetails, setSelectedProgramaForDetails] = useState<typeof programas[0] | null>(null);
+    const [selectedViewPrograma, setSelectedViewPrograma] = useState<typeof programas[0] | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
@@ -61,6 +64,10 @@ const Programas: React.FC = () => {
     const handleOpenEdit = (programa: typeof programas[0]) => {
         setSelectedPrograma(programa);
         setIsModalOpen(true);
+    };
+
+    const handleOpenView = (programa: typeof programas[0]) => {
+        setSelectedViewPrograma(programa);
     };
 
     const confirmDelete = async () => {
@@ -127,12 +134,13 @@ const Programas: React.FC = () => {
                                 onClear={() => setSearch('')}
                                 className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
                             />
-                        </div>
+                        </div>|
                     </div>
-
-                    <Button onClick={handleOpenCreate} title='crea un nuevo programa' variant={"primary"}>
-                        <Plus className="size-5 text-white" /> <span className="text-white">Nuevo Programa</span>
-                    </Button>
+                    <Can screen="programas" action="create">
+                        <Button onClick={handleOpenCreate} title='crea un nuevo programa' variant={"primary"}>
+                            <Plus className="size-5 text-white" /> <span className="text-white">Nuevo Programa</span>
+                        </Button>
+                    </Can>
                 </div>
             </div>
 
@@ -150,6 +158,7 @@ const Programas: React.FC = () => {
                         <div className="overflow-x-auto custom-scrollbar">
                             <ProgramasTable
                                 programas={programas}
+                                onView={handleOpenView}
                                 onEdit={handleOpenEdit}
                                 onDelete={(id) => setDeleteId(id)}
                                 onSelect={(prog) => setSelectedProgramaForDetails(prog.id === selectedProgramaForDetails?.id ? null : prog)}
@@ -179,6 +188,12 @@ const Programas: React.FC = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 programa={selectedPrograma}
+            />
+
+            <ProgramaDetailsModal
+                isOpen={!!selectedViewPrograma}
+                onClose={() => setSelectedViewPrograma(null)}
+                programa={selectedViewPrograma}
             />
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

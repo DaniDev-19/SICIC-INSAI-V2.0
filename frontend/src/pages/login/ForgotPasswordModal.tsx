@@ -176,8 +176,8 @@ export default function ForgotPasswordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="glass-effect border-emerald-500/20 max-w-md rounded-3xl p-6 sm:p-8 text-foreground shadow-2xl overflow-hidden">
-        <DialogHeader className="flex flex-col items-center text-center space-y-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] glass-effect border-emerald-500/20 max-w-md rounded-3xl p-0 text-foreground shadow-2xl overflow-hidden flex flex-col max-h-[min(92vh,42rem)]">
+        <DialogHeader className="flex flex-col items-center text-center space-y-2 p-6 pb-4 border-b border-border/30 shrink-0">
           <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner mb-1">
             {step === 3 ? (
               <CheckCircle2 className="size-8 text-emerald-500 animate-in zoom-in duration-500" />
@@ -203,7 +203,7 @@ export default function ForgotPasswordModal({
         </DialogHeader>
 
         {/* Indicators Steps */}
-        <div className="flex items-center justify-center gap-2 my-2">
+        <div className="flex items-center justify-center gap-2 py-3 border-b border-border/20 bg-muted/5 shrink-0">
           <div
             className={`h-1.5 rounded-full transition-all duration-500 ${
               step >= 1 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
@@ -221,217 +221,219 @@ export default function ForgotPasswordModal({
           />
         </div>
 
-        {/* STEP 1: REQUEST CODE */}
-        {step === 1 && (
-          <form onSubmit={handleSubmitReq(onRequestCode)} className="space-y-4 mt-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground/80 ml-1">
-                Correo Electrónico
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
-                <Input
-                  {...registerReq('email')}
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  className="pl-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
-                  disabled={isSubmitting}
-                />
-              </div>
-              {errorsReq.email && (
-                <p className="text-xs text-rose-500 ml-2">{errorsReq.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground/80 ml-1">
-                Sede / Estado
-              </label>
-              <Controller
-                name="instanceId"
-                control={controlReq}
-                render={({ field }) => (
-                  <div className="relative">
-                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 z-10" />
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={isSubmitting || !emailIsValid || isLoadingInstances}
-                    >
-                      <SelectTrigger className="w-full pl-10 h-12 rounded-xl bg-muted/40 border-border text-sm">
-                        <SelectValue
-                          placeholder={
-                            !emailIsValid
-                              ? 'Ingrese correo válido primero'
-                              : isLoadingInstances
-                              ? 'Cargando sedes...'
-                              : instances.length === 0
-                              ? 'Sin sedes asociadas'
-                              : 'Seleccione sede'
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="glass-effect rounded-2xl border-border">
-                        {instances.map((inst) => (
-                          <SelectItem key={inst.id} value={inst.id.toString()}>
-                            {inst.nombre_mostrable}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-5">
+          {/* STEP 1: REQUEST CODE */}
+          {step === 1 && (
+            <form onSubmit={handleSubmitReq(onRequestCode)} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/80 ml-1">
+                  Correo Electrónico
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
+                  <Input
+                    {...registerReq('email')}
+                    type="email"
+                    placeholder="usuario@ejemplo.com"
+                    className="pl-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                {errorsReq.email && (
+                  <p className="text-xs text-rose-500 ml-2">{errorsReq.email.message}</p>
                 )}
-              />
-              {errorsReq.instanceId && (
-                <p className="text-xs text-rose-500 ml-2">{errorsReq.instanceId.message}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isSubmitting || !emailIsValid}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer mt-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" /> Generando Código...
-                </>
-              ) : (
-                <>
-                  Continuar <ArrowRight className="ml-2 size-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        )}
-
-        {/* STEP 2: ENTER TOKEN & NEW PASSWORD */}
-        {step === 2 && (
-          <form onSubmit={handleSubmitReset(onResetPassword)} className="space-y-4 mt-2">
-            {devToken && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl text-center">
-                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  🔑 Código de prueba generado: <span className="font-mono text-base font-black">{devToken}</span>
-                </p>
               </div>
-            )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground/80 ml-1">
-                Código de Recuperación
-              </label>
-              <div className="relative">
-                <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
-                <Input
-                  {...registerReset('token')}
-                  type="text"
-                  placeholder="123456"
-                  className="pl-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm font-mono tracking-widest font-bold text-center uppercase"
-                  disabled={isSubmitting}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/80 ml-1">
+                  Sede / Estado
+                </label>
+                <Controller
+                  name="instanceId"
+                  control={controlReq}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60 z-10" />
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isSubmitting || !emailIsValid || isLoadingInstances}
+                      >
+                        <SelectTrigger className="w-full pl-10 h-12 rounded-xl bg-muted/40 border-border text-sm">
+                          <SelectValue
+                            placeholder={
+                              !emailIsValid
+                                ? 'Ingrese correo válido primero'
+                                : isLoadingInstances
+                                ? 'Cargando sedes...'
+                                : instances.length === 0
+                                ? 'Sin sedes asociadas'
+                                : 'Seleccione sede'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="glass-effect rounded-2xl border-border">
+                          {instances.map((inst) => (
+                            <SelectItem key={inst.id} value={inst.id.toString()}>
+                              {inst.nombre_mostrable}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 />
+                {errorsReq.instanceId && (
+                  <p className="text-xs text-rose-500 ml-2">{errorsReq.instanceId.message}</p>
+                )}
               </div>
-              {errorsReset.token && (
-                <p className="text-xs text-rose-500 ml-2">{errorsReset.token.message}</p>
-              )}
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground/80 ml-1">
-                Nueva Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
-                <Input
-                  {...registerReset('newPassword')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-              {errorsReset.newPassword && (
-                <p className="text-xs text-rose-500 ml-2">{errorsReset.newPassword.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground/80 ml-1">
-                Confirmar Nueva Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
-                <Input
-                  {...registerReset('confirmPassword')}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground cursor-pointer"
-                >
-                  {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-              {errorsReset.confirmPassword && (
-                <p className="text-xs text-rose-500 ml-2">{errorsReset.confirmPassword.message}</p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setStep(1)}
-                disabled={isSubmitting}
-                className="w-1/3 h-12 rounded-2xl cursor-pointer"
-              >
-                Volver
-              </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-2/3 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                disabled={isSubmitting || !emailIsValid}
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer mt-2"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" /> Guardando...
+                    <Loader2 className="mr-2 size-4 animate-spin" /> Generando Código...
                   </>
                 ) : (
-                  'Restablecer'
+                  <>
+                    Continuar <ArrowRight className="ml-2 size-4" />
+                  </>
                 )}
               </Button>
-            </div>
-          </form>
-        )}
+            </form>
+          )}
 
-        {/* STEP 3: SUCCESS */}
-        {step === 3 && (
-          <div className="space-y-4 mt-2 text-center">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed">
-                Su contraseña para <span className="font-bold">{emailVal}</span> se actualizó correctamente. Ya puede ingresar al sistema.
-              </p>
-            </div>
+          {/* STEP 2: ENTER TOKEN & NEW PASSWORD */}
+          {step === 2 && (
+            <form onSubmit={handleSubmitReset(onResetPassword)} className="space-y-4">
+              {devToken && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl text-center">
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    🔑 Código de prueba generado: <span className="font-mono text-base font-black">{devToken}</span>
+                  </p>
+                </div>
+              )}
 
-            <Button
-              type="button"
-              onClick={onClose}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
-            >
-              Iniciar Sesión
-            </Button>
-          </div>
-        )}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/80 ml-1">
+                  Código de Recuperación
+                </label>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
+                  <Input
+                    {...registerReset('token')}
+                    type="text"
+                    placeholder="123456"
+                    className="pl-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm font-mono tracking-widest font-bold text-center uppercase"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                {errorsReset.token && (
+                  <p className="text-xs text-rose-500 ml-2">{errorsReset.token.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/80 ml-1">
+                  Nueva Contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
+                  <Input
+                    {...registerReset('newPassword')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {errorsReset.newPassword && (
+                  <p className="text-xs text-rose-500 ml-2">{errorsReset.newPassword.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/80 ml-1">
+                  Confirmar Nueva Contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
+                  <Input
+                    {...registerReset('confirmPassword')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 rounded-xl bg-muted/40 border-border focus-visible:ring-emerald-500/30 text-sm"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground cursor-pointer"
+                  >
+                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {errorsReset.confirmPassword && (
+                  <p className="text-xs text-rose-500 ml-2">{errorsReset.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(1)}
+                  disabled={isSubmitting}
+                  className="w-1/3 h-12 rounded-2xl cursor-pointer font-bold"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-2/3 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" /> Guardando...
+                    </>
+                  ) : (
+                    'Restablecer'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: SUCCESS */}
+          {step === 3 && (
+            <div className="space-y-4 text-center">
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed">
+                  Su contraseña para <span className="font-bold">{emailVal}</span> se actualizó correctamente. Ya puede ingresar al sistema.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                onClick={onClose}
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+              >
+                Iniciar Sesión
+              </Button>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

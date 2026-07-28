@@ -1,7 +1,6 @@
 import type { Solicitud } from '@/types/solicitudes';
-import { FileText, Eye, Calendar, User, MapPin } from 'lucide-react';
+import { FileText, Calendar, User, MapPin } from 'lucide-react';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -132,24 +131,12 @@ export function SolicitudTable({ solicitudes, onEdit, onDelete, onView }: Solici
               </TableCell>
 
               <TableCell className="px-6 py-5 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  {onView && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Ver Detalles"
-                      onClick={() => onView(solicitud)}
-                      className="size-9 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer"
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-                  )}
-                  <CrudTableActions
-                    screen="solicitudes"
-                    onEdit={() => onEdit(solicitud)}
-                    onDelete={() => onDelete(solicitud.id)}
-                  />
-                </div>
+                <CrudTableActions
+                  screen="solicitudes"
+                  onView={onView ? () => onView(solicitud) : undefined}
+                  onEdit={() => onEdit(solicitud)}
+                  onDelete={() => onDelete(solicitud.id)}
+                />
               </TableCell>
             </TableRow>
           ))

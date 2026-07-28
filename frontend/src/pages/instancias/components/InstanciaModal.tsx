@@ -82,7 +82,7 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-120 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-120 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="bg-primary/5 p-6 border-b border-border/50">
             <DialogHeader>

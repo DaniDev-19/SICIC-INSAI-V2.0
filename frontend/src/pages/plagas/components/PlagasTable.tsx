@@ -12,12 +12,14 @@ import {
 
 interface PlagasTableProps {
   plagas: Plaga[];
+  onView?: (plaga: Plaga) => void;
   onEdit: (plaga: Plaga) => void;
   onDelete: (id: number) => void;
 }
 
 export function PlagasTable({
   plagas,
+  onView,
   onEdit,
   onDelete,
 }: PlagasTableProps) {
@@ -75,6 +77,7 @@ export function PlagasTable({
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="plagas"
+                    onView={() => (onView ? onView(plaga) : onEdit(plaga))}
                     onEdit={() => onEdit(plaga)}
                     onDelete={() => onDelete(plaga.id)}
                   />

@@ -17,6 +17,7 @@ router.get('/', checkPermission('propiedades', 'see'), propiedadesController.get
 router.get('/export', checkPermission('propiedades', 'export'), propiedadesController.exportPropiedades);
 router.get('/export/pdf', checkPermission('propiedades', 'export'), propiedadesController.exportPropiedadesPdf);
 router.get('/:id', checkPermission('propiedades', 'see'), propiedadesController.getPropiedadById);
+router.get('/:id/reporte', checkPermission('propiedades', 'see'), propiedadesController.getPropiedadReporte);
 router.post('/', checkPermission('propiedades', 'create'), upload.single('hierro_img'), validateSchema(createPropiedadesSchema), propiedadesController.createPropiedad);
 router.put('/:id', checkPermission('propiedades', 'update'), upload.single('hierro_img'), validateSchema(updatePropiedadesSchema), propiedadesController.updatePropiedad);
 router.post('/bulk-delete', checkPermission('propiedades', 'delete'), propiedadesController.deleteManyPropiedades);

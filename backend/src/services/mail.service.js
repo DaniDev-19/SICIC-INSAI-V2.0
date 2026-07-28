@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { getPlanificacionEmailHtml } from './templates/planificacion-email.template.js';
+import { masterPrisma } from '../config/prisma.js';
 
 class MailService {
   constructor() {
@@ -13,8 +14,8 @@ class MailService {
   initTransporter() {
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 587;
-    const user = process.env.SMTP_USER || 'baddevprograming@gmail.com';
-    const pass = process.env.SMTP_PASS || '';
+    const user = (process.env.SMTP_USER || 'baddevprograming@gmail.com').trim();
+    const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
 
     this.transporter = nodemailer.createTransport({
       host,
@@ -22,7 +23,7 @@ class MailService {
       secure: process.env.SMTP_SECURE === 'true' || port === 465,
       auth: user && pass ? { user, pass } : undefined,
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: false
       },
     });
   }
@@ -37,16 +38,33 @@ class MailService {
    */
   async sendPlanificacionNotification({ tipoEvento = 'CREACION', planificacion, inspectores = [] }) {
     try {
-      // Extraer correos válidos de los inspectores
+      // Re-inicializar para capturar cualquier cambio en .env sin reiniciar el servidor
+      this.initTransporter();
+
+      const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
+
+      // Extraer correos válidos de los inspectores (o consultar usuarios_globales como fallback)
       const emailsSet = new Set();
-      inspectores.forEach((insp) => {
+      for (const insp of inspectores) {
         if (insp.email && typeof insp.email === 'string' && insp.email.includes('@')) {
           emailsSet.add(insp.email.trim());
+        } else if (insp.usuario_global_id) {
+          try {
+            const globalUser = await masterPrisma.usuarios.findUnique({
+              where: { id: insp.usuario_global_id },
+              select: { email: true }
+            });
+            if (globalUser?.email && globalUser.email.includes('@')) {
+              emailsSet.add(globalUser.email.trim());
+            }
+          } catch (e) {
+            console.error(`Error obteniendo email para usuario_global_id ${insp.usuario_global_id}:`, e.message);
+          }
         }
-      });
+      }
 
       if (emailsSet.size === 0) {
-        console.log('ℹ️  MailService: Ningún inspector tiene correo registrado. Notificación omitida.');
+        console.log('ℹ️  MailService: Ningún inspector asignado tiene correo registrado. Notificación omitida.');
         return { success: false, reason: 'NO_RECIPIENTS' };
       }
 
@@ -59,8 +77,8 @@ class MailService {
 
       const fromAddress = process.env.SMTP_FROM || '"SICIC-INSAI Notificaciones" <baddevprograming@gmail.com>';
 
-      // Modo de simulación si no hay contraseña SMTP configurada (entorno de desarrollo)
-      if (!process.env.SMTP_PASS) {
+      // Modo de simulación si no hay contraseña SMTP configurada
+      if (!pass) {
         console.log('');
         console.log('📧 [SIMULACIÓN - SMTP_PASS no definido en .env]');
         console.log(`   📌 Asunto: ${subjectText}`);
@@ -81,7 +99,7 @@ class MailService {
       console.log(`✉️  Correo enviado exitosamente. ID: ${info.messageId} | Destinatarios: ${recipients.join(', ')}`);
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('❌ MailService error:', error.message);
+      console.error('❌ MailService error:', error);
       return { success: false, error: error.message };
     }
   }

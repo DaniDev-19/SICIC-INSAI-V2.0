@@ -211,7 +211,7 @@ export function SolicitudModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[56rem] border-none shadow-2xl glass-effect p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[56rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,56rem)]">
         <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
@@ -228,8 +228,8 @@ export function SolicitudModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
 
             {/* Seccion 1: Identificación */}
             <div className="space-y-5">
@@ -517,7 +517,7 @@ export function SolicitudModal({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-border/50">
+          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
               Cancelar
             </Button>

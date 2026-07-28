@@ -8,13 +8,13 @@ import type {
   ManualMovimientoDTO,
 } from '@/types/inventario';
 
-export function useInventario() {
+export function useInventario(initialLimit: number = 10) {
   const queryClient = useQueryClient();
 
   // Insumo Pagination & Search
   const [insumoSearch, setInsumoSearch] = useState('');
   const [insumoPage, setInsumoPage] = useState(1);
-  const [insumoLimit, setInsumoLimit] = useState(10);
+  const [insumoLimit, setInsumoLimit] = useState(initialLimit);
 
   // Stock Pagination & Search
   const [stockSearch, setStockSearch] = useState('');

@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type { 
   Cliente, 
   CreateClienteDto, 
@@ -54,10 +55,32 @@ export const clientesService = {
   },
 
   exportPdf: async (params?: { q?: string }) => {
-    const response = await apiClient.get('/clientes/export/pdf', { params, responseType: 'blob' });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+    const toastId = toast.loading('Generando reporte PDF de Productores...');
+    try {
+      const response = await apiClient.get('/clientes/export/pdf', { params, responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Reporte PDF generado correctamente', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el reporte PDF', { id: toastId });
+    }
+  },
+
+  openFichaPdf: async (id: number): Promise<void> => {
+    const toastId = toast.loading('Preparando Ficha del Productor...');
+    try {
+      const { openProductorFichaPdf } = await import('@/reports/productor-ficha/generateProductorFichaPdf');
+      const response = await apiClient.get<ApiResponse<Cliente>>(`/clientes/${id}/reporte`);
+      if (response.data?.data) {
+        await openProductorFichaPdf(response.data.data as any);
+        toast.success('Ficha PDF lista', { id: toastId });
+      } else {
+        toast.error('No se pudo obtener los datos del productor', { id: toastId });
+      }
+    } catch (error) {
+      toast.error('Error al generar la Ficha PDF', { id: toastId });
+    }
   },
 };

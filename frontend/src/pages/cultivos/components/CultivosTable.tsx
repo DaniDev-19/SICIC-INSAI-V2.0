@@ -12,12 +12,14 @@ import {
 
 interface CultivosTableProps {
   cultivos: Cultivo[];
+  onView?: (cultivo: Cultivo) => void;
   onEdit: (cultivo: Cultivo) => void;
   onDelete: (id: number) => void;
 }
 
 export function CultivosTable({
   cultivos,
+  onView,
   onEdit,
   onDelete,
 }: CultivosTableProps) {
@@ -75,6 +77,7 @@ export function CultivosTable({
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="cultivos"
+                    onView={() => (onView ? onView(cultivo) : onEdit(cultivo))}
                     onEdit={() => onEdit(cultivo)}
                     onDelete={() => onDelete(cultivo.id)}
                   />

@@ -16,14 +16,43 @@ const parseTimeInput = (timeStr) => {
   return new Date(`1970-01-01T${hh}:${mm}:00.000Z`);
 };
 
-export const getPlanificaciones = async (req, res) => {
-  const tenantPrisma = req.db;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+function isAdminUser(req) {
+  const permisos = req.user?.currentInstance?.permisos;
+  const rol = req.user?.currentInstance?.rol?.toLowerCase();
+  return (
+    permisos?.all?.includes('*') ||
+    rol === 'admin' ||
+    rol === 'administrador' ||
+    rol === 'superadmin' ||
+    rol === 'super_admin'
+  );
+}
+
+async function resolveEmpleadoId(req, tx) {
+  const fromToken = req.user?.currentInstance?.empleado_id;
+  if (fromToken) return fromToken;
+
+  const usuarioGlobalId = req.user?.id;
+  if (!usuarioGlobalId || !tx) return null;
+
+  try {
+    const empleado = await tx.empleados.findFirst({
+      where: { usuario_global_id: usuarioGlobalId },
+      select: { id: true },
+    });
+    return empleado ? empleado.id : null;
+  } catch {
+    return null;
+  }
+}
+
+function isInspectorUser(req) {
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return rol.includes('inspector') && !isAdminUser(req);
+}
+
+async function buildPlanificacionesWhere(req, tenantPrisma) {
   const { status, fecha_programada, q, periodo } = req.query;
-  const { currentInstance } = req.user || {};
-  const { rol, empleado_id } = currentInstance || {};
 
   const where = {
     AND: [
@@ -59,14 +88,19 @@ export const getPlanificaciones = async (req, res) => {
     });
   }
 
-  if (rol === 'INSPECTOR' && empleado_id) {
-    where.AND.push({
-      planificacion_empleados: {
-        some: {
-          empleado_id: Number(empleado_id)
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    if (empleadoId) {
+      where.AND.push({
+        planificacion_empleados: {
+          some: {
+            empleado_id: Number(empleadoId)
+          }
         }
-      }
-    });
+      });
+    } else {
+      where.AND.push({ id: -1 });
+    }
   }
 
   if (periodo === 'semana') {
@@ -99,6 +133,16 @@ export const getPlanificaciones = async (req, res) => {
       }
     });
   }
+
+  return where;
+}
+
+export const getPlanificaciones = async (req, res) => {
+  const tenantPrisma = req.db;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const where = await buildPlanificacionesWhere(req, tenantPrisma);
 
   const [planificaciones, totalCount] = await Promise.all([
     tenantPrisma.planificaciones.findMany({
@@ -265,9 +309,13 @@ export const createPlanificacion = async (req, res) => {
                 clientes: true,
                 propiedades: {
                   include: {
-                    sectores: {
+                    propiedad_ubicacion: {
                       include: {
-                        parroquias: { include: { municipios: { include: { estados: true } } } }
+                        sectores: {
+                          include: {
+                            parroquias: { include: { municipios: { include: { estados: true } } } }
+                          }
+                        }
                       }
                     }
                   }
@@ -307,6 +355,16 @@ export const updatePlanificacion = async (req, res) => {
 
   if (!existing) {
     return res.status(404).json({ status: 'error', message: 'Planificación no encontrada' });
+  }
+
+  if (existing.status === 'FINALIZADA') {
+    const isUserAdmin = req.user?.rol === 'ADMIN' || req.user?.rol === 'SuperAdmin' || req.user?.rol === 'SUPER_ADMIN';
+    if (!isUserAdmin) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No se puede modificar una planificación que ya se encuentra finalizada.'
+      });
+    }
   }
 
   if (data.fecha_programada) data.fecha_programada = new Date(data.fecha_programada);
@@ -352,9 +410,13 @@ export const updatePlanificacion = async (req, res) => {
               clientes: true,
               propiedades: {
                 include: {
-                  sectores: {
+                  propiedad_ubicacion: {
                     include: {
-                      parroquias: { include: { municipios: { include: { estados: true } } } }
+                      sectores: {
+                        include: {
+                          parroquias: { include: { municipios: { include: { estados: true } } } }
+                        }
+                      }
                     }
                   }
                 }
@@ -389,6 +451,16 @@ export const deletePlanificacion = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Planificación no encontrada' });
   }
 
+  if (toDelete.status === 'FINALIZADA') {
+    const isUserAdmin = req.user?.rol === 'ADMIN' || req.user?.rol === 'SuperAdmin' || req.user?.rol === 'SUPER_ADMIN';
+    if (!isUserAdmin) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No se puede eliminar una planificación que ya se encuentra finalizada.'
+      });
+    }
+  }
+
   if (toDelete.inspecciones.length > 0 || toDelete.acta_silos.length > 0) {
     return res.status(400).json({
       status: 'error',
@@ -417,66 +489,104 @@ export const deletePlanificacion = async (req, res) => {
   res.status(200).json({ status: 'success', message: 'Planificación eliminada y solicitud reseteada.' });
 };
 
-export const exportPlanificaciones = async (req, res) => {
+export const patchPlanificacionEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
-  const { currentInstance } = req.user || {};
-  const { rol, empleado_id } = currentInstance || {};
-  const { status, fecha_programada, q, periodo } = req.query;
+  const { id } = req.params;
+  const { empleados } = req.body;
 
-  const where = {
-    AND: [
-      status ? { status } : {},
-      fecha_programada ? { fecha_programada: new Date(fecha_programada) } : {},
-      q ? {
-        OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { actividad: { contains: q, mode: 'insensitive' } },
-          { objetivo: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
-    ]
-  };
+  if (!empleados || !Array.isArray(empleados) || empleados.length === 0) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Debe proporcionar al menos un empleado para asignar.'
+    });
+  }
 
-  if (rol === 'INSPECTOR' && empleado_id) {
-    where.AND.push({
+  const existing = await tenantPrisma.planificaciones.findUnique({
+    where: { id: Number(id) },
+    include: {
       planificacion_empleados: {
-        some: {
-          empleado_id: Number(empleado_id)
+        include: { empleados: { select: { id: true, nombre: true, apellido: true } } }
+      }
+    }
+  });
+
+  if (!existing) {
+    return res.status(404).json({ status: 'error', message: 'Planificación no encontrada' });
+  }
+
+  const response = await tenantPrisma.$transaction(async (tx) => {
+    await tx.planificacion_empleados.deleteMany({
+      where: { planificacion_id: Number(id) }
+    });
+
+    await tx.planificacion_empleados.createMany({
+      data: empleados.map((empId) => ({
+        planificacion_id: Number(id),
+        empleado_id: Number(empId)
+      }))
+    });
+
+    return await tx.planificaciones.findUnique({
+      where: { id: Number(id) },
+      include: {
+        planificacion_empleados: {
+          include: { empleados: { select: { id: true, nombre: true, apellido: true } } }
         }
       }
     });
-  }
+  });
 
-  if (periodo === 'semana') {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    startOfWeek.setHours(0, 0, 0, 0);
+  bitacoraService.registrar({
+    req,
+    accion: 'ACTUALIZAR',
+    modulo: 'Planificaciones (Equipo Técnico)',
+    payload_previo: existing.planificacion_empleados,
+    payload_nuevo: response.planificacion_empleados
+  });
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
+  // Envío de notificación por correo en segundo plano
+  setImmediate(async () => {
+    try {
+      const fullPlan = await tenantPrisma.planificaciones.findUnique({
+        where: { id: Number(id) },
+        include: {
+          solicitudes: {
+            include: {
+              clientes: true,
+              propiedades: {
+                include: {
+                  propiedad_ubicacion: {
+                    include: {
+                      sectores: {
+                        include: {
+                          parroquias: { include: { municipios: { include: { estados: true } } } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          planificacion_empleados: {
+            include: { empleados: { include: { cargos: true } } }
+          }
+        }
+      });
+      const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
+      await mailService.sendPlanificacionNotification({ tipoEvento: 'ACTUALIZACION', planificacion: fullPlan, inspectores });
+    } catch (err) {
+      console.error('⚠️  Error al enviar correo de notificación (PATCH empleados):', err.message);
+    }
+  });
 
-    where.AND.push({
-      fecha_programada: {
-        gte: startOfWeek,
-        lte: endOfWeek
-      }
-    });
-  } else if (periodo === 'mes') {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  res.status(200).json({ status: 'success', data: response });
+};
 
-    where.AND.push({
-      fecha_programada: {
-        gte: startOfMonth,
-        lte: endOfMonth
-      }
-    });
-  }
+export const exportPlanificaciones = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { status, fecha_programada, q, periodo } = req.query;
+  const where = await buildPlanificacionesWhere(req, tenantPrisma);
 
   const planificaciones = await tenantPrisma.planificaciones.findMany({
     where,
@@ -547,64 +657,8 @@ export const exportPlanificaciones = async (req, res) => {
 
 export const exportPlanificacionesPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const { currentInstance } = req.user || {};
-  const { rol, empleado_id } = currentInstance || {};
   const { status, fecha_programada, q, periodo } = req.query;
-
-  const where = {
-    AND: [
-      status ? { status } : {},
-      fecha_programada ? { fecha_programada: new Date(fecha_programada) } : {},
-      q ? {
-        OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { actividad: { contains: q, mode: 'insensitive' } },
-          { objetivo: { contains: q, mode: 'insensitive' } },
-        ]
-      } : {}
-    ]
-  };
-
-  if (rol === 'INSPECTOR' && empleado_id) {
-    where.AND.push({
-      planificacion_empleados: {
-        some: {
-          empleado_id: Number(empleado_id)
-        }
-      }
-    });
-  }
-
-  if (periodo === 'semana') {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    where.AND.push({
-      fecha_programada: {
-        gte: startOfWeek,
-        lte: endOfWeek
-      }
-    });
-  } else if (periodo === 'mes') {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-
-    where.AND.push({
-      fecha_programada: {
-        gte: startOfMonth,
-        lte: endOfMonth
-      }
-    });
-  }
+  const where = await buildPlanificacionesWhere(req, tenantPrisma);
 
   const planificaciones = await tenantPrisma.planificaciones.findMany({
     where,

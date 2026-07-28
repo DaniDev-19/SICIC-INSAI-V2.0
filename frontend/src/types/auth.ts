@@ -18,6 +18,7 @@ export interface Instance {
   nombre: string;
   db_name: string;
   rol: string;
+  empleado_id: number | null;
   permisos: PermissionObject;
 }
 

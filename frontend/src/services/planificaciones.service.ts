@@ -35,6 +35,11 @@ export const planificacionesService = {
     return data;
   },
 
+  patchEmpleados: async ({ id, empleados }: { id: number; empleados: number[] }): Promise<ApiResponse<Planificacion>> => {
+    const { data } = await apiClient.patch<ApiResponse<Planificacion>>(`/planificaciones/${id}/empleados`, { empleados });
+    return data;
+  },
+
   delete: async (id: number): Promise<SimpleResponse> => {
     const { data } = await apiClient.delete<SimpleResponse>(`/planificaciones/${id}`);
     return data;

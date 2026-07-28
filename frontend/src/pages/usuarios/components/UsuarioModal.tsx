@@ -153,7 +153,7 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[520px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
         <form
           key={user?.id ?? 'new'}
           onSubmit={isEditing ? handleSubmit((values) => onFormSubmit(values)) : (e) => e.preventDefault()}

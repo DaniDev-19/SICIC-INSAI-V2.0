@@ -31,6 +31,7 @@ import {
 import { usePlagas } from '@/hooks/use-plagas';
 import { PlagasTable } from './components/PlagasTable';
 import { PlagasModal } from './components/PlagasModal';
+import { PlagaDetailsModal } from './components/PlagaDetailsModal';
 
 const Plagas: React.FC = () => {
     const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Plagas: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPlaga, setSelectedPlaga] = useState<any | null>(null);
+    const [selectedViewPlaga, setSelectedViewPlaga] = useState<any | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleOpenCreate = () => {
@@ -63,6 +65,10 @@ const Plagas: React.FC = () => {
     const handleOpenEdit = (plaga: any) => {
         setSelectedPlaga(plaga);
         setIsModalOpen(true);
+    };
+
+    const handleOpenView = (plaga: any) => {
+        setSelectedViewPlaga(plaga);
     };
 
     const confirmDelete = async () => {
@@ -151,6 +157,7 @@ const Plagas: React.FC = () => {
                         <div className="overflow-x-auto custom-scrollbar">
                                 <PlagasTable
                                     plagas={plagas}
+                                    onView={handleOpenView}
                                     onEdit={handleOpenEdit}
                                     onDelete={setDeleteId}
                                 />
@@ -175,6 +182,12 @@ const Plagas: React.FC = () => {
                 onCreateTipo={createTipo}
                 onUpdateTipo={updateTipo}
                 onDeleteTipo={deleteTipo}
+            />
+
+            <PlagaDetailsModal
+                isOpen={!!selectedViewPlaga}
+                onClose={() => setSelectedViewPlaga(null)}
+                plaga={selectedViewPlaga}
             />
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

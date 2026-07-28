@@ -12,20 +12,60 @@ const SEGUIMIENTO_INCLUDE = {
               clientes: { select: { id: true, nombre: true } },
               propiedades: { select: { id: true, nombre: true } }
             }
-          }
+          },
+          planificacion_empleados: true
         }
       }
     }
   },
-  acta_silos: { select: { semana_epid: true, lugar_ubicacion: true } },
+  acta_silos: {
+    include: {
+      planificaciones: {
+        include: {
+          planificacion_empleados: true
+        }
+      }
+    }
+  },
   seguimiento_fotos: true
 };
 
-export const getSeguimientos = async (req, res) => {
-  const tenantPrisma = req.db;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+function isAdminUser(req) {
+  const permisos = req.user?.currentInstance?.permisos;
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return (
+    permisos?.all?.includes('*') ||
+    rol === 'admin' ||
+    rol === 'administrador' ||
+    rol === 'superadmin' ||
+    rol === 'super_admin'
+  );
+}
+
+function isInspectorUser(req) {
+  const rol = req.user?.currentInstance?.rol?.toLowerCase() || '';
+  return rol.includes('inspector') && !isAdminUser(req);
+}
+
+async function resolveEmpleadoId(req, tx) {
+  const fromToken = req.user?.currentInstance?.empleado_id;
+  if (fromToken) return fromToken;
+
+  const usuarioGlobalId = req.user?.id;
+  if (!usuarioGlobalId || !tx) return null;
+
+  try {
+    const empleado = await tx.empleados.findFirst({
+      where: { usuario_global_id: usuarioGlobalId },
+      select: { id: true },
+    });
+    return empleado ? empleado.id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildSeguimientosWhere(req, tenantPrisma) {
   const { inspeccion_id, acta_silo_id, q } = req.query;
 
   const where = {
@@ -84,12 +124,52 @@ export const getSeguimientos = async (req, res) => {
     });
   }
 
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    if (empleadoId) {
+      where.AND.push({
+        OR: [
+          {
+            inspecciones: {
+              planificaciones: {
+                planificacion_empleados: {
+                  some: { empleado_id: Number(empleadoId) }
+                }
+              }
+            }
+          },
+          {
+            acta_silos: {
+              planificaciones: {
+                planificacion_empleados: {
+                  some: { empleado_id: Number(empleadoId) }
+                }
+              }
+            }
+          }
+        ]
+      });
+    } else {
+      where.AND.push({ id: -1 });
+    }
+  }
+
+  return where;
+}
+
+export const getSeguimientos = async (req, res) => {
+  const tenantPrisma = req.db;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const where = await buildSeguimientosWhere(req, tenantPrisma);
+
   const [seguimientos, totalCount] = await Promise.all([
     tenantPrisma.seguimiento_inspecciones.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { fecha_seguimiento: 'desc' },
+      orderBy: { id: 'desc' },
       include: SEGUIMIENTO_INCLUDE
     }),
     tenantPrisma.seguimiento_inspecciones.count({ where }),
@@ -120,6 +200,19 @@ export const getSeguimientoById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
   }
 
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isAssignedInspeccion = seguimiento.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    const isAssignedSilo = seguimiento.acta_silos?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isAssignedInspeccion && !isAssignedSilo) {
+      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección o seguimiento.' });
+    }
+  }
+
   res.status(200).json({ status: 'success', data: seguimiento });
 };
 
@@ -130,7 +223,7 @@ export const createSeguimiento = async (req, res) => {
     status, inspeccion_id, acta_silo_id, insumos_consumidos
   } = req.body;
 
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   let photoUrls = [];
   if (req.files && req.files.length > 0) {
@@ -197,11 +290,24 @@ export const updateSeguimiento = async (req, res) => {
 
   const existing = await tenantPrisma.seguimiento_inspecciones.findUnique({
     where: { id: Number(id) },
-    include: { seguimiento_fotos: true }
+    include: SEGUIMIENTO_INCLUDE
   });
 
   if (!existing) {
     return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
+  }
+
+  if (isInspectorUser(req)) {
+    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+    const isAssignedInspeccion = existing.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    const isAssignedSilo = existing.acta_silos?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleadoId
+    );
+    if (!isAssignedInspeccion && !isAssignedSilo) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para modificar este seguimiento.' });
+    }
   }
 
   let newPhotoUrls = [];
@@ -244,15 +350,27 @@ export const updateSeguimiento = async (req, res) => {
 export const deleteSeguimiento = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const empleado_id = req.user?.empleado_id || null;
+  const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
 
   const toDelete = await tenantPrisma.seguimiento_inspecciones.findUnique({
     where: { id: Number(id) },
-    include: { seguimiento_fotos: true }
+    include: SEGUIMIENTO_INCLUDE
   });
 
   if (!toDelete) {
     return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
+  }
+
+  if (isInspectorUser(req)) {
+    const isAssignedInspeccion = toDelete.inspecciones?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleado_id
+    );
+    const isAssignedSilo = toDelete.acta_silos?.planificaciones?.planificacion_empleados?.some(
+      pe => pe.empleado_id === empleado_id
+    );
+    if (!isAssignedInspeccion && !isAssignedSilo) {
+      return res.status(403).json({ status: 'error', message: 'No tiene permisos para eliminar este seguimiento.' });
+    }
   }
 
   try {

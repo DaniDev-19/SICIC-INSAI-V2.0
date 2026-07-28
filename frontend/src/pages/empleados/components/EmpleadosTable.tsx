@@ -4,6 +4,7 @@ import { useModulePermissions } from '@/hooks/use-module-permissions';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { resolveMediaUrl } from '@/lib/media-url';
 import {
   Table,
   TableBody,
@@ -103,7 +104,7 @@ export function EmpleadosTable({
                   <div className="relative">
                     {empleado.empleado_foto && empleado.empleado_foto.length > 0 ? (
                       <img
-                        src={empleado.empleado_foto[0].foto_url}
+                        src={resolveMediaUrl(empleado.empleado_foto[0].foto_url)}
                         alt={empleado.nombre}
                         className="size-12 rounded-xl object-cover border-2 border-primary/20 shadow-sm"
                       />

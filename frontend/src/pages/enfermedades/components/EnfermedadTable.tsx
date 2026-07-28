@@ -12,11 +12,12 @@ import {
 
 interface EnfermedadTableProps {
   enfermedades: Enfermedad[];
+  onView?: (enfermedad: Enfermedad) => void;
   onEdit: (enfermedad: Enfermedad) => void;
   onDelete: (id: number) => void;
 }
 
-export function EnfermedadTable({ enfermedades, onEdit, onDelete }: EnfermedadTableProps) {
+export function EnfermedadTable({ enfermedades, onView, onEdit, onDelete }: EnfermedadTableProps) {
   return (
     <>
       <Table>
@@ -78,6 +79,7 @@ export function EnfermedadTable({ enfermedades, onEdit, onDelete }: EnfermedadTa
                 <TableCell className="px-6 py-5 text-right">
                   <CrudTableActions
                     screen="enfermedades"
+                    onView={() => (onView ? onView(enfermedad) : onEdit(enfermedad))}
                     onEdit={() => onEdit(enfermedad)}
                     onDelete={() => onDelete(enfermedad.id)}
                   />

@@ -5,9 +5,24 @@ export const getAnimales = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { tipo_animal_id } = req.query;
+    const { tipo_animal_id, tipo_id, search } = req.query;
 
-    const where = tipo_animal_id ? { tipo_animal_id: Number(tipo_animal_id) } : {};
+    const effectiveTipoId = tipo_animal_id || tipo_id;
+    const where = {};
+
+    if (effectiveTipoId && effectiveTipoId !== 'all') {
+        where.tipo_animal_id = Number(effectiveTipoId);
+    }
+
+    if (search && search.trim()) {
+        where.OR = [
+            { nombre: { contains: search.trim(), mode: 'insensitive' } },
+            { nombre_cientifico: { contains: search.trim(), mode: 'insensitive' } },
+            { descripcion: { contains: search.trim(), mode: 'insensitive' } },
+            { dieta: { contains: search.trim(), mode: 'insensitive' } },
+            { habitat_principal: { contains: search.trim(), mode: 'insensitive' } },
+        ];
+    }
 
     const [animales, totalCount] = await Promise.all([
         tenantPrisma.animales.findMany({
