@@ -9,7 +9,8 @@ export const getPropiedades = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { q, tipo_propiedad_id, due_o_id } = req.query;
+  const { q, search, tipo_propiedad_id, due_o_id } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -18,8 +19,8 @@ export const getPropiedades = async (req, res) => {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [
@@ -567,17 +568,18 @@ export const deleteManyPropiedades = async (req, res) => {
 
 export const exportPropiedades = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q, tipo_propiedad_id, due_o_id } = req.query;
+  const { q, search, tipo_propiedad_id, due_o_id } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
       tipo_propiedad_id ? { tipo_propiedad_id: Number(tipo_propiedad_id) } : {},
       due_o_id ? { due_o_id: Number(due_o_id) } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { codigo_insai: { contains: q, mode: 'insensitive' } },
-          { rif: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: searchTerm, mode: 'insensitive' } },
+          { codigo_insai: { contains: searchTerm, mode: 'insensitive' } },
+          { rif: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]
@@ -618,7 +620,7 @@ export const exportPropiedades = async (req, res) => {
   });
 
   let filename = 'reporte_propiedades.xlsx';
-  if (q || tipo_propiedad_id || due_o_id) {
+  if (searchTerm || tipo_propiedad_id || due_o_id) {
     filename = 'reporte_propiedades_filtrado.xlsx';
   }
 
@@ -629,17 +631,18 @@ export const exportPropiedades = async (req, res) => {
 
 export const exportPropiedadesPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q, tipo_propiedad_id, due_o_id } = req.query;
+  const { q, search, tipo_propiedad_id, due_o_id } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
       tipo_propiedad_id ? { tipo_propiedad_id: Number(tipo_propiedad_id) } : {},
       due_o_id ? { due_o_id: Number(due_o_id) } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { codigo_insai: { contains: q, mode: 'insensitive' } },
-          { rif: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: searchTerm, mode: 'insensitive' } },
+          { codigo_insai: { contains: searchTerm, mode: 'insensitive' } },
+          { rif: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]

@@ -19,7 +19,7 @@ export function usePlagas() {
     queryFn: () => plagasService.getAll({
       page,
       limit,
-      search: debouncedSearch,
+      q: debouncedSearch,
       tipo_id: tipoId === 'all' ? undefined : tipoId
     }),
   });

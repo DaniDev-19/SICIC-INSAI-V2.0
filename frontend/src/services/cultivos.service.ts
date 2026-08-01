@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from "@/types/pagination";
 
 export const cultivosService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<CultivoResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; tipo_id?: string }): Promise<CultivoResponse> => {
     const { data } = await apiClient.get<CultivoResponse>('/cultivos', { params });
     return data;
   },

@@ -20,7 +20,7 @@ export function useUsers() {
       usersService.getAll({
         page,
         limit,
-        search: debouncedSearch,
+        q: debouncedSearch,
         status: status === 'all' ? undefined : status,
       }),
   });

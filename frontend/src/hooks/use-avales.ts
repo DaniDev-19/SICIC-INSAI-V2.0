@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { avalesService } from '@/services/avales.service';
 import type { CreateAvalDTO, UpdateAvalDTO } from '@/types/avales';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function useAvales() {
   const queryClient = useQueryClient();
@@ -10,13 +11,15 @@ export function useAvales() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
 
+  const debouncedSearch = useDebounce(search, 500);
+
   const avalesQuery = useQuery({
-    queryKey: ['avales', page, limit, search],
+    queryKey: ['avales', page, limit, debouncedSearch],
     queryFn: () =>
       avalesService.getAll({
         page,
         limit,
-        q: search.trim() || undefined,
+        q: debouncedSearch.trim() || undefined,
       }),
   });
 

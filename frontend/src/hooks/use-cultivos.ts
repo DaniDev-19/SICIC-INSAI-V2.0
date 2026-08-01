@@ -19,7 +19,7 @@ export function useCultivos() {
     queryFn: () => cultivosService.getAll({ 
       page, 
       limit, 
-      search: debouncedSearch, 
+      q: debouncedSearch, 
       tipo_id: tipoId === 'all' ? undefined : tipoId 
     }),
   });

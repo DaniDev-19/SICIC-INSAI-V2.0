@@ -3,7 +3,7 @@ import type { Role, CreateRoleDto, UpdateRoleDto, RoleResponse } from '../types/
 import type { ApiResponse } from '../types/pagination';
 
 export const roleService = {
-  getRoles: async (params: { page?: number; limit?: number; search?: string; status?: string }): Promise<RoleResponse> => {
+  getRoles: async (params: { page?: number; limit?: number; q?: string; search?: string; status?: string }): Promise<RoleResponse> => {
     const response = await apiClient.get<RoleResponse>('/roles', { params });
     return response.data;
   },

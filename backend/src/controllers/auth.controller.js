@@ -147,13 +147,79 @@ export const login = async (req, res) => {
     });
   }
 
+  // Verificar si el usuario está actualmente bloqueado por intentos fallidos
+  if (usuario.bloqueado_hasta) {
+    const ahora = new Date();
+    if (usuario.bloqueado_hasta > ahora) {
+      const msRestantes = usuario.bloqueado_hasta.getTime() - ahora.getTime();
+      const minutosRestantes = Math.ceil(msRestantes / (1000 * 60));
+      const horasRestantes = Math.ceil(msRestantes / (1000 * 60 * 60));
+
+      const esBloqueoLargo = msRestantes > 30 * 60 * 1000;
+      const tiempoTexto = esBloqueoLargo ? `${horasRestantes} hora(s)` : `${minutosRestantes} minuto(s)`;
+
+      return res.status(423).json({
+        status: 'error',
+        message: `Cuenta bloqueada temporalmente por seguridad debido a múltiples intentos fallidos. Espere ${tiempoTexto} para reintentar o use 'Restablecer Contraseña'.`,
+        data: {
+          retryAfterMs: msRestantes,
+          lockedUntil: usuario.bloqueado_hasta,
+          isLongLockout: esBloqueoLargo,
+        },
+      });
+    }
+  }
+
   const ui = usuario.usuario_instancia[0];
 
   const validPassword = await bcrypt.compare(password, usuario.password_hash);
   if (!validPassword) {
-    return res.status(401).json({
+    const intentosActuales = (usuario.intentos_fallidos || 0) + 1;
+    let nuevoBloqueadoHasta = null;
+    let mensajeError = 'Credenciales inválidas.';
+
+    if (intentosActuales >= 5) {
+      // Nivel 2: Bloqueo Severo de 24 horas por acumulación excesiva
+      nuevoBloqueadoHasta = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      mensajeError = 'Ha superado el número máximo de intentos. Su cuenta ha sido bloqueada por 24 horas por motivos de seguridad. Puede utilizar la opción de Restablecer Contraseña para desbloquearla.';
+    } else if (intentosActuales >= 3) {
+      // Nivel 1: Cooldown corto de 5 Minutos (Con 2 intentos adicionales tras expirar)
+      nuevoBloqueadoHasta = new Date(Date.now() + 5 * 60 * 1000);
+      const restantesExtra = 5 - intentosActuales;
+      mensajeError = `Ha superado 3 intentos fallidos. Por seguridad, debe esperar 5 minutos antes de volver a intentar. (Le quedará(n) ${restantesExtra} intento(s) adicional(es)).`;
+    } else {
+      const restantes = 3 - intentosActuales;
+      mensajeError = `Credenciales inválidas. Le queda(n) ${restantes} intento(s) antes del bloqueo temporal.`;
+    }
+
+    await masterPrisma.usuarios.update({
+      where: { id: usuario.id },
+      data: {
+        intentos_fallidos: intentosActuales,
+        bloqueado_hasta: nuevoBloqueadoHasta,
+      },
+    });
+
+    const statusCode = nuevoBloqueadoHasta ? 423 : 401;
+    return res.status(statusCode).json({
       status: 'error',
-      message: 'Credenciales inválidas',
+      message: mensajeError,
+      data: {
+        attempts: intentosActuales,
+        lockedUntil: nuevoBloqueadoHasta,
+        retryAfterMs: nuevoBloqueadoHasta ? (nuevoBloqueadoHasta.getTime() - Date.now()) : null,
+      },
+    });
+  }
+
+  // Si la contraseña es correcta, resetear contadores de intento y bloqueo
+  if (usuario.intentos_fallidos > 0 || usuario.bloqueado_hasta) {
+    await masterPrisma.usuarios.update({
+      where: { id: usuario.id },
+      data: {
+        intentos_fallidos: 0,
+        bloqueado_hasta: null,
+      },
     });
   }
 
@@ -575,11 +641,13 @@ export const resetPassword = async (req, res) => {
 
     const password_hash = await bcrypt.hash(newPassword, 10);
 
-    // Actualizar contraseña global en máster
+    // Actualizar contraseña global en máster y desbloquear cuenta
     await masterPrisma.usuarios.update({
       where: { id: usuario.id },
       data: {
         password_hash,
+        intentos_fallidos: 0,
+        bloqueado_hasta: null,
         updated_at: new Date(),
       },
     });

@@ -9,7 +9,8 @@ export const getEmpleados = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { q, departamento_id, status_laboral } = req.query;
+  const { q, search, departamento_id, status_laboral } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -18,8 +19,8 @@ export const getEmpleados = async (req, res) => {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [
@@ -429,17 +430,18 @@ export const deleteEmpleado = async (req, res) => {
 };
 export const exportEmpleados = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q, departamento_id, status_laboral } = req.query;
+  const { q, search, departamento_id, status_laboral } = req.query;
+  const searchTerm = (q || search || '').trim();
 
   const where = {
     AND: [
       departamento_id ? { departamento_id: Number(departamento_id) } : {},
       status_laboral ? { status_laboral } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { apellido: { contains: q, mode: 'insensitive' } },
-          { cedula: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: searchTerm, mode: 'insensitive' } },
+          { apellido: { contains: searchTerm, mode: 'insensitive' } },
+          { cedula: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]
@@ -502,17 +504,18 @@ export const exportEmpleados = async (req, res) => {
 
 export const exportEmpleadosPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q, departamento_id, status_laboral } = req.query;
+  const { q, search, departamento_id, status_laboral } = req.query;
+  const searchTerm = (q || search || '').trim();
 
   const where = {
     AND: [
       departamento_id ? { departamento_id: Number(departamento_id) } : {},
       status_laboral ? { status_laboral } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { apellido: { contains: q, mode: 'insensitive' } },
-          { cedula: { contains: q, mode: 'insensitive' } },
+          { nombre: { contains: searchTerm, mode: 'insensitive' } },
+          { apellido: { contains: searchTerm, mode: 'insensitive' } },
+          { cedula: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]

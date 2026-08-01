@@ -9,17 +9,20 @@ export function useVehiculos(initialLimit = 10) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(initialLimit);
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [tipoFilter, setTipoFilter] = useState('');
 
+  const debouncedSearch = useDebounce(search, 500);
   const debouncedStatus = useDebounce(statusFilter, 300);
   const debouncedTipo = useDebounce(tipoFilter, 300);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['vehiculos', page, limit, debouncedStatus, debouncedTipo],
+    queryKey: ['vehiculos', page, limit, debouncedSearch, debouncedStatus, debouncedTipo],
     queryFn: () => vehiculosService.getAll({
       page,
       limit,
+      q: debouncedSearch || undefined,
       status: debouncedStatus || undefined,
       tipo: debouncedTipo || undefined,
     }),
@@ -80,10 +83,12 @@ export function useVehiculos(initialLimit = 10) {
     error,
     page,
     limit,
+    search,
     statusFilter,
     tipoFilter,
     setPage,
     setLimit,
+    setSearch,
     setStatusFilter,
     setTipoFilter,
     createVehiculo: createMutation.mutateAsync,

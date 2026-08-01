@@ -19,7 +19,7 @@ export function useEnfermedades(initialSearch = '', initialLimit = 10) {
     queryFn: () => enfermedadesService.getAll({
       page,
       limit,
-      search: debouncedSearch,
+      q: debouncedSearch,
       tipo_id: tipoId === 'all' ? undefined : tipoId,
     }),
   });

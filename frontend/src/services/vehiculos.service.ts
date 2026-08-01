@@ -8,7 +8,7 @@ import type {
 import type { ApiResponse, SimpleResponse } from '@/types/pagination';
 
 export const vehiculosService = {
-  getAll: async (params: { page?: number; limit?: number; status?: string; tipo?: string }): Promise<VehiculoResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; status?: string; tipo?: string }): Promise<VehiculoResponse> => {
     const { data } = await apiClient.get<VehiculoResponse>('/vehiculos', { params });
     return data;
   },

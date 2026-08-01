@@ -5,14 +5,25 @@ export const getCargos = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 40;
     const skip = (page - 1) * limit;
+    const { q, search } = req.query;
+    const searchTerm = (q || search || '').trim();
+
+    const where = {};
+    if (searchTerm) {
+        const tokens = searchTerm.split(/\s+/).filter(Boolean);
+        where.AND = tokens.map((token) => ({
+            nombre: { contains: token, mode: 'insensitive' }
+        }));
+    }
 
     const [cargos, totalCount] = await Promise.all([
         tenantPrisma.cargos.findMany({
+            where,
             skip,
             take: limit,
             orderBy: { nombre: 'asc' },
         }),
-        tenantPrisma.cargos.count()
+        tenantPrisma.cargos.count({ where })
     ]);
 
     res.status(200).json({

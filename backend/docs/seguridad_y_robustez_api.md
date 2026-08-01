@@ -41,13 +41,34 @@ En los módulos críticos (**Solicitudes, Planificaciones, Inspecciones, Acta de
 
 ---
 
+---
+
+## 4. Protección contra Fuerza Bruta y Bloqueo Progresivo (HTTP 423)
+
+Para prevenir ataques de adivinación de contraseñas y fuerza bruta en `/api/auth/login`, el backend cuenta con un mecanismo de bloqueo progresivo a nivel de base de datos master.
+
+### Campos en DB Master (`model usuarios`)
+- `intentos_fallidos Int`: Conteo de intentos consecutivos erróneos.
+- `bloqueado_hasta DateTime`: Timestamp del fin del periodo de cooldown/bloqueo.
+
+### Niveles de Sanción
+- **Intento Exitoso:** Limpia inmediatamente `intentos_fallidos = 0` y `bloqueado_hasta = null`.
+- **Intento 1 y 2 Erróneo:** Devuelve `401 Unauthorized` informando los intentos restantes.
+- **Nivel 1 (Cooldown 5 min):** Al llegar a 3 fallos consecutivos, la cuenta se bloquea por 5 minutos y responde HTTP `423 Locked` devolviendo `retryAfterMs`.
+- **Nivel 2 (Bloqueo 24 hrs):** Al acumular 5+ fallos totales, la cuenta entra en un bloqueo severo de 24 horas.
+- **Desbloqueo por Restablecimiento:** Al completar con éxito el flujo de restablecer contraseña por correo (`/api/auth/reset-password`), los contadores se limpian automáticamente.
+
+---
+
 ## Diagrama de Seguridad Operativa
 
 ```mermaid
 graph TD
     REQ[Petición del Cliente] --> RATE[Rate Limiter: Max 50/15min]
     RATE -- Bloqueado --> ERR429[Error 429: Too Many Requests]
-    RATE -- Permitido --> IDEM{¿Trae X-Idempotency-Key?}
+    RATE -- Permitido --> LOCK{¿Cuenta bloqueada en DB master?}
+    LOCK -- Sí (bloqueado_hasta > Now) --> ERR423[Error 423 Locked: Cooldown activo]
+    LOCK -- No --> IDEM{¿Trae X-Idempotency-Key?}
     IDEM -- Sí --> CHECK_DB[Consultar DB Master]
     CHECK_DB -- Existe --> RET[Devolver Respuesta Cacheada]
     CHECK_DB -- No Existe --> PROC[Procesar Lógica de Negocio]
@@ -60,7 +81,5 @@ graph TD
 
 ---
 
-[Volver al índice de documentación](../WIKI.md)
-
-**Seguridad y Robustez de Datos**
+**Seguridad y Robustez de Datos**  
 **SICIC-INSAI V2.0**

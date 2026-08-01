@@ -35,7 +35,7 @@ export default function Login() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
-  
+
   // Estado para el segundo paso MFA
   const [mfaPendingToken, setMfaPendingToken] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState('');
@@ -72,6 +72,32 @@ export default function Login() {
     }
   }, [instances, instanceId, setValue]);
 
+  // Estado para bloqueo progresivo por intentos fallidos (HTTP 423)
+  const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
+  const [lockoutMessage, setLockoutMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lockoutSeconds === null || lockoutSeconds <= 0) return;
+
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev === null || prev <= 1) {
+          setLockoutMessage(null);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
     if (isAuthenticated) {
       toast.info('Ya tienes una sesión activa. Redirigiendo...');
@@ -93,11 +119,23 @@ export default function Login() {
       toast.success('¡Bienvenido al sistema SICIC-INSAI!');
       navigate('/home');
     } catch (err: unknown) {
-      const error = err as AxiosError<{ message?: string }>;
+      const error = err as AxiosError<{ message?: string; data?: { retryAfterMs?: number } }>;
       if (!error.response && error.request) {
         toast.error('Error de Conexión', {
           description: 'No se pudo contactar con el servidor. Verifique su internet.',
           duration: 5000,
+        });
+        return;
+      }
+
+      if (error.response?.status === 423) {
+        const retryMs = error.response.data?.data?.retryAfterMs || 5 * 60 * 1000;
+        const secs = Math.ceil(retryMs / 1000);
+        setLockoutSeconds(secs);
+        setLockoutMessage(error.response.data?.message || 'Cuenta bloqueada temporalmente.');
+        toast.warning('Bloqueo por Intentos Fallidos', {
+          description: error.response.data?.message,
+          duration: 8000,
         });
         return;
       }
@@ -199,7 +237,7 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={verifyMfaMutation.isPending || !mfaCode.trim()}
-                  className="w-full h-12 sm:h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] text-sm sm:text-base cursor-pointer"
+                  className="w-full h-12 sm:h-14 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] text-sm sm:text-base cursor-pointer"
                 >
                   {verifyMfaMutation.isPending ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verificando...</>
@@ -220,6 +258,28 @@ export default function Login() {
               </form>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+                {lockoutSeconds !== null && lockoutSeconds > 0 && (
+                  <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-2xl text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-sm">
+                      <Lock className="w-4 h-4 animate-bounce" />
+                      <span>Acceso Temporalmente Bloqueado</span>
+                    </div>
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      {lockoutMessage}
+                    </p>
+                    <div className="text-2xl font-black text-amber-400 font-mono tracking-widest my-1">
+                      {formatCountdown(lockoutSeconds)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotModalOpen(true)}
+                      className="text-xs text-amber-300 underline font-semibold cursor-pointer hover:text-amber-100 transition-colors"
+                    >
+                      ¿Olvidaste tu contraseña? Restablecer para desbloquear
+                    </button>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Correo Electrónico</label>
                   <div className="relative group/input">
@@ -229,7 +289,7 @@ export default function Login() {
                       type="email"
                       placeholder="correo@ejemplo.com"
                       className="pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
-                      disabled={isLoggingIn}
+                      disabled={isLoggingIn || (lockoutSeconds !== null && lockoutSeconds > 0)}
                     />
                   </div>
                   {errors.email && <p className="text-xs text-red-400 font-medium ml-2">{errors.email.message}</p>}
@@ -246,7 +306,7 @@ export default function Login() {
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
-                          disabled={isLoggingIn || !emailIsValid || instancesLoading}
+                          disabled={isLoggingIn || !emailIsValid || instancesLoading || (lockoutSeconds !== null && lockoutSeconds > 0)}
                         >
                           <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
                             <SelectValue
@@ -261,7 +321,7 @@ export default function Login() {
                               }
                             />
                           </SelectTrigger>
-                          <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-[200px] max-h-[300px]">
+                          <SelectContent className="bg-white/10 backdrop-blur-2xl border-white/20 text-white rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 border-t-white/30 border-l-white/30 min-w-50 max-h-75">
                             <div className="p-2">
                               {instances.map((inst) => (
                                 <SelectItem
@@ -299,7 +359,7 @@ export default function Login() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       className="pl-12 pr-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
-                      disabled={isLoggingIn}
+                      disabled={isLoggingIn || (lockoutSeconds !== null && lockoutSeconds > 0)}
                     />
                     <button
                       type="button"
@@ -314,12 +374,16 @@ export default function Login() {
 
                 <Button
                   type="submit"
-                  disabled={isLoggingIn || instancesLoading}
-                  className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-2 text-sm sm:text-base cursor-pointer"
+                  disabled={isLoggingIn || instancesLoading || (lockoutSeconds !== null && lockoutSeconds > 0)}
+                  className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-2 text-sm sm:text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingIn ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Iniciando...</>
-                  ) : 'Iniciar Sesión'}
+                  ) : lockoutSeconds !== null && lockoutSeconds > 0 ? (
+                    `Bloqueado (${formatCountdown(lockoutSeconds)})`
+                  ) : (
+                    'Iniciar Sesión'
+                  )}
                 </Button>
               </form>
             )}

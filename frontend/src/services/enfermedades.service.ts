@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from '@/types/pagination';
 
 export const enfermedadesService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<EnfermedadResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; tipo_id?: string }): Promise<EnfermedadResponse> => {
     const response = await apiClient.get<EnfermedadResponse>('/enfermedades', { params });
     return response.data;
   },

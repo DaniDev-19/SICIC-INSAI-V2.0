@@ -20,7 +20,7 @@ export function useEmpleados(options?: { initialLimit?: number }) {
     queryFn: () => empleadosService.getAll({ 
       page, 
       limit, 
-      search: debouncedSearch, 
+      q: debouncedSearch, 
       departamento_id: departamentoId === 'all' ? undefined : departamentoId,
       status_laboral: statusLaboral === 'all' ? undefined : statusLaboral
     }),
@@ -72,7 +72,7 @@ export function useEmpleados(options?: { initialLimit?: number }) {
     const toastId = toast.loading('Generando reporte Excel...');
     try {
       await empleadosService.export({
-        search: debouncedSearch || undefined,
+        q: debouncedSearch || undefined,
         departamento_id: departamentoId === 'all' ? undefined : departamentoId,
         status_laboral: statusLaboral === 'all' ? undefined : statusLaboral,
       });
@@ -88,7 +88,7 @@ export function useEmpleados(options?: { initialLimit?: number }) {
     const toastId = toast.loading('Generando reporte PDF...');
     try {
       await empleadosService.exportPdf({
-        search: debouncedSearch || undefined,
+        q: debouncedSearch || undefined,
         departamento_id: departamentoId === 'all' ? undefined : departamentoId,
         status_laboral: statusLaboral === 'all' ? undefined : statusLaboral,
       });

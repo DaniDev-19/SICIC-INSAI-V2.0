@@ -14,7 +14,7 @@ function Error() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 z-9999 bg-background flex flex-col items-center justify-center p-4 overflow-y-auto">
             <div className="max-w-md w-full bg-card/50 glass-effect border border-border/50 rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-emerald-500 via-primary to-emerald-500" />
 

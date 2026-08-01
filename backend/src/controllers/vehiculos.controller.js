@@ -5,7 +5,8 @@ export const getVehiculos = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 40;
   const skip = (page - 1) * limit;
-  const { status, tipo, q } = req.query;
+  const { status, tipo, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -14,8 +15,8 @@ export const getVehiculos = async (req, res) => {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

@@ -6,6 +6,7 @@ import {
   type GetSeguimientosParams,
 } from '@/services/seguimientos.service';
 import type { CreateSeguimientoDTO, UpdateSeguimientoDTO } from '@/types/seguimientos';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function useSeguimientos(initialInspeccionId?: number) {
   const queryClient = useQueryClient();
@@ -15,10 +16,12 @@ export function useSeguimientos(initialInspeccionId?: number) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [inspeccionIdFilter, setInspeccionIdFilter] = useState<number | undefined>(initialInspeccionId);
 
+  const debouncedSearch = useDebounce(search, 500);
+
   const queryParams: GetSeguimientosParams = {
     page,
     limit,
-    search: search.trim() || undefined,
+    q: debouncedSearch.trim() || undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     inspeccion_id: inspeccionIdFilter,
   };

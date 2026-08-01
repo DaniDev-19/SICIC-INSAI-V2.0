@@ -9,6 +9,7 @@ import type {
 export interface GetSeguimientosParams {
   page?: number;
   limit?: number;
+  q?: string;
   search?: string;
   status?: string;
   inspeccion_id?: number;

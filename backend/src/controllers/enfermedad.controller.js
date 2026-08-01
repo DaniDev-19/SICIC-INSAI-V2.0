@@ -5,7 +5,8 @@ export const getEnfermedades = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { tipo_enfermedad_id, tipo_id, search } = req.query;
+    const { tipo_enfermedad_id, tipo_id, search, q } = req.query;
+    const searchTerm = (search || q || '').trim();
 
     const effectiveTipoId = tipo_enfermedad_id || tipo_id;
     const where = {};
@@ -14,12 +15,15 @@ export const getEnfermedades = async (req, res) => {
         where.tipo_enfermedad_id = Number(effectiveTipoId);
     }
 
-    if (search && search.trim()) {
-        where.OR = [
-            { nombre: { contains: search.trim(), mode: 'insensitive' } },
-            { nombre_cientifico: { contains: search.trim(), mode: 'insensitive' } },
-            { descripcion: { contains: search.trim(), mode: 'insensitive' } },
-        ];
+    if (searchTerm) {
+        const tokens = searchTerm.split(/\s+/).filter(Boolean);
+        where.AND = tokens.map((token) => ({
+            OR: [
+                { nombre: { contains: token, mode: 'insensitive' } },
+                { nombre_cientifico: { contains: token, mode: 'insensitive' } },
+                { descripcion: { contains: token, mode: 'insensitive' } },
+            ],
+        }));
     }
 
     const [enfermedades, totalCount] = await Promise.all([

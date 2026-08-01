@@ -8,11 +8,12 @@ export const getClientes = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { q } = req.query;
+  const { q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = { AND: [] };
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [
@@ -389,14 +390,15 @@ export const deleteManyClientes = async (req, res) => {
 
 export const exportClientes = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q } = req.query;
+  const { q, search } = req.query;
+  const searchTerm = (q || search || '').trim();
 
-  const where = q ? {
+  const where = searchTerm ? {
     OR: [
-      { nombre: { contains: q, mode: 'insensitive' } },
-      { cedula_rif: { contains: q, mode: 'insensitive' } },
-      { email: { contains: q, mode: 'insensitive' } },
-      { codigo_runsai: { contains: q, mode: 'insensitive' } },
+      { nombre: { contains: searchTerm, mode: 'insensitive' } },
+      { cedula_rif: { contains: searchTerm, mode: 'insensitive' } },
+      { email: { contains: searchTerm, mode: 'insensitive' } },
+      { codigo_runsai: { contains: searchTerm, mode: 'insensitive' } },
     ]
   } : {};
 
@@ -420,7 +422,7 @@ export const exportClientes = async (req, res) => {
   });
 
   let filename = 'reporte_clientes.xlsx';
-  if (q) {
+  if (searchTerm) {
     filename = 'reporte_clientes_filtrado.xlsx';
   }
 
@@ -431,14 +433,15 @@ export const exportClientes = async (req, res) => {
 
 export const exportClientesPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const { q } = req.query;
+  const { q, search } = req.query;
+  const searchTerm = (q || search || '').trim();
 
-  const where = q ? {
+  const where = searchTerm ? {
     OR: [
-      { nombre: { contains: q, mode: 'insensitive' } },
-      { cedula_rif: { contains: q, mode: 'insensitive' } },
-      { email: { contains: q, mode: 'insensitive' } },
-      { codigo_runsai: { contains: q, mode: 'insensitive' } },
+      { nombre: { contains: searchTerm, mode: 'insensitive' } },
+      { cedula_rif: { contains: searchTerm, mode: 'insensitive' } },
+      { email: { contains: searchTerm, mode: 'insensitive' } },
+      { codigo_runsai: { contains: searchTerm, mode: 'insensitive' } },
     ]
   } : {};
 
