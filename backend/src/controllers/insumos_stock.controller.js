@@ -6,20 +6,24 @@ export const getAllStock = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { oficina_id, q, low_stock } = req.query;
+  const { oficina_id, q, search, low_stock } = req.query;
+  const searchTerm = q || search;
 
   const where = {};
   if (oficina_id) {
     where.oficina_id = Number(oficina_id);
   }
-  if (q && q.trim()) {
-    where.insumos = {
-      OR: [
-        { nombre: { contains: q.trim(), mode: 'insensitive' } },
-        { codigo: { contains: q.trim(), mode: 'insensitive' } },
-        { marca: { contains: q.trim(), mode: 'insensitive' } }
-      ]
-    };
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
+    where.AND = tokens.map((token) => ({
+      insumos: {
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { codigo: { contains: token, mode: 'insensitive' } },
+          { marca: { contains: token, mode: 'insensitive' } }
+        ]
+      }
+    }));
   }
 
   const stock = await tenantPrisma.insumos_stock.findMany({
@@ -63,18 +67,27 @@ export const getAllStock = async (req, res) => {
 export const getStockByOficina = async (req, res) => {
   const tenantPrisma = req.db;
   const { oficina_id } = req.params;
-  const { q } = req.query;
+  const { q, search } = req.query;
+  const searchTerm = q || search;
+
+  const where = {
+    oficina_id: Number(oficina_id)
+  };
+
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
+    where.AND = tokens.map((token) => ({
+      insumos: {
+        OR: [
+          { nombre: { contains: token, mode: 'insensitive' } },
+          { codigo: { contains: token, mode: 'insensitive' } }
+        ]
+      }
+    }));
+  }
 
   const stock = await tenantPrisma.insumos_stock.findMany({
-    where: {
-      oficina_id: Number(oficina_id),
-      insumos: q ? {
-        OR: [
-          { nombre: { contains: q, mode: 'insensitive' } },
-          { codigo: { contains: q, mode: 'insensitive' } }
-        ]
-      } : undefined
-    },
+    where,
     include: {
       insumos: {
         include: {
@@ -135,19 +148,23 @@ export const getMovimientos = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { insumo_id, oficina_id, tipo_movimiento, search } = req.query;
+  const { insumo_id, oficina_id, tipo_movimiento, search, q } = req.query;
+  const searchTerm = search || q;
 
   const where = {};
   if (insumo_id) where.insumo_id = Number(insumo_id);
   if (oficina_id) where.oficina_id = Number(oficina_id);
   if (tipo_movimiento) where.tipo_movimiento = String(tipo_movimiento);
-  if (search && search.trim()) {
-    where.OR = [
-      { insumos: { nombre: { contains: search.trim(), mode: 'insensitive' } } },
-      { insumos: { codigo: { contains: search.trim(), mode: 'insensitive' } } },
-      { lote: { contains: search.trim(), mode: 'insensitive' } },
-      { observaciones: { contains: search.trim(), mode: 'insensitive' } }
-    ];
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
+    where.AND = tokens.map((token) => ({
+      OR: [
+        { insumos: { nombre: { contains: token, mode: 'insensitive' } } },
+        { insumos: { codigo: { contains: token, mode: 'insensitive' } } },
+        { lote: { contains: token, mode: 'insensitive' } },
+        { observaciones: { contains: token, mode: 'insensitive' } }
+      ]
+    }));
   }
 
   const [movimientos, totalCount] = await Promise.all([

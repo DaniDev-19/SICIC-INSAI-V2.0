@@ -21,7 +21,8 @@ export const getSolicitudes = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { estatus, prioridad, solicitante_id, propiedad_id, q } = req.query;
+  const { estatus, prioridad, solicitante_id, propiedad_id, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -32,8 +33,8 @@ export const getSolicitudes = async (req, res) => {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [
@@ -478,16 +479,17 @@ export const deleteManySolicitudes = async (req, res) => {
 
 export const exportSolicitudes = async (req, res) => {
   const tenantPrisma = req.db;
-  const { estatus, prioridad, q } = req.query;
+  const { estatus, prioridad, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
       estatus ? { estatus } : {},
       prioridad ? { prioridad } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { descripcion: { contains: q, mode: 'insensitive' } },
+          { codigo: { contains: searchTerm, mode: 'insensitive' } },
+          { descripcion: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]
@@ -537,7 +539,7 @@ export const exportSolicitudes = async (req, res) => {
   });
 
   let filename = 'reporte_solicitudes.xlsx';
-  if (estatus || prioridad || q) {
+  if (estatus || prioridad || searchTerm) {
     filename = 'reporte_solicitudes_filtrado.xlsx';
   }
 
@@ -548,16 +550,17 @@ export const exportSolicitudes = async (req, res) => {
 
 export const exportSolicitudesPdf = async (req, res) => {
   const tenantPrisma = req.db;
-  const { estatus, prioridad, q } = req.query;
+  const { estatus, prioridad, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
       estatus ? { estatus } : {},
       prioridad ? { prioridad } : {},
-      q ? {
+      searchTerm ? {
         OR: [
-          { codigo: { contains: q, mode: 'insensitive' } },
-          { descripcion: { contains: q, mode: 'insensitive' } },
+          { codigo: { contains: searchTerm, mode: 'insensitive' } },
+          { descripcion: { contains: searchTerm, mode: 'insensitive' } },
         ]
       } : {}
     ]

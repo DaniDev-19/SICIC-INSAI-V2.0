@@ -52,7 +52,8 @@ function isInspectorUser(req) {
 }
 
 async function buildPlanificacionesWhere(req, tenantPrisma) {
-  const { status, fecha_programada, q, periodo } = req.query;
+  const { status, fecha_programada, q, search, periodo } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -61,8 +62,8 @@ async function buildPlanificacionesWhere(req, tenantPrisma) {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

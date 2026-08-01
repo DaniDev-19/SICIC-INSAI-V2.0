@@ -38,12 +38,13 @@ async function resolveEmpleadoId(req, tx) {
 }
 
 async function buildAvalesWhere(req, tenantPrisma) {
-  const { q } = req.query;
+  const { q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = { AND: [] };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

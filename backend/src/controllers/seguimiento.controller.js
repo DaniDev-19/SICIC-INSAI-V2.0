@@ -66,7 +66,8 @@ async function resolveEmpleadoId(req, tx) {
 }
 
 async function buildSeguimientosWhere(req, tenantPrisma) {
-  const { inspeccion_id, acta_silo_id, q } = req.query;
+  const { inspeccion_id, acta_silo_id, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -75,8 +76,8 @@ async function buildSeguimientosWhere(req, tenantPrisma) {
     ]
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

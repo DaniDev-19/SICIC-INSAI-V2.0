@@ -16,6 +16,9 @@ Para profundizar en el funcionamiento técnico del frontend, consulta los siguie
 *   [**Gestión de Tipos y Estructura de Archivos**](./docs/gestion_tipos_y_archivos.md): Manual sobre la organización de interfaces TypeScript y jerarquía del proyecto.
 *   [**Módulo de Perfil de Usuario y MFA**](./docs/modulo-perfil-mfa-frontend.md): Guía de la página de perfil (3 pestañas), el modal multi-funcional de MFA y los hooks `useProfile` y `useMfa`.
 *   [**Flujo de Autenticación MFA (2FA) en Login**](./docs/flujo-mfa-login-frontend.md): Manual del flujo de doble paso MFA durante el login, el token temporal `mfaPendingToken` y el hook `useVerifyMfaLogin`.
+*   [**Búsqueda Multitérmino e Interfaz Global**](./docs/busqueda-multitermino-frontend.md): Guía sobre la integración del hook `useDebounce`, filtrado en tablas y la Command Palette de búsqueda global.
+*   [**Módulo de Reportes, Visualización PDF y Exportación**](./docs/modulo-reportes-y-exportacion.md): Manual de la vista `/reportes`, el visor modal `PdfPreviewDialog` y descargas Excel.
+*   [**Módulo de Inventario Agrícola y Trazabilidad Kardex**](./docs/modulo-inventario-kardex-frontend.md): Manual de la vista `/inventario`, gestión de stock por oficina y registro de movimientos Kardex.
 
 
 ---

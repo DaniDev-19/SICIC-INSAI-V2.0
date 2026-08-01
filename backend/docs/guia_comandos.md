@@ -24,17 +24,24 @@ Prisma actúa como el puente entre tu código y las bases de datos PostgreSQL. E
 
 ### 1. Esquema Operativo (db_insai_operativa)
 
-Contiene la lógica de inspecciones, propiedades, silos, etc.
+Contiene la lógica de inspecciones, propiedades, silos, kardex, etc.
 
-- **`npx prisma db pull`**: Lee la base de datos y actualiza el archivo `schema.prisma`.
-- **`npx prisma generate`**: Crea el cliente de JavaScript para que puedas hacer consultas (`prisma.tabla.findMany()`).
+- **`npm run prisma:pull:client`** (ó `npx prisma db pull --schema=prisma/schema.prisma`): Lee la base de datos operativa y actualiza el archivo `prisma/schema.prisma`.
+- **`npm run prisma:generate:client`** (ó `npx prisma generate --schema=prisma/schema.prisma`): Genera el cliente de JavaScript para consultas operativas (`prisma.tabla.findMany()`).
 
 ### 2. Esquema Maestro (db_sicic_insai_master)
 
 Contiene el control global (Usuarios, Roles e Instancias).
 
-- **`npx prisma db pull --schema prisma/master.prisma`**: Sincroniza las tablas de control central.
-- **`npx prisma generate --schema prisma/master.prisma`**: Genera el cliente maestro independiente (ubicado en `node_modules/@prisma/client/master`).
+- **`npm run prisma:pull:master`** (ó `npx prisma db pull --schema=prisma/master.prisma`): Sincroniza las tablas de control central con `prisma/master.prisma`.
+- **`npm run prisma:generate:master`** (ó `npx prisma generate --schema=prisma/master.prisma`): Genera el cliente maestro independiente (ubicado en `node_modules/@prisma/client/master`).
+
+### 3. Comandos Unificados de Sincronización
+
+Para actualizar todo de un solo paso cuando realizas cambios directamente en PostgreSQL:
+
+- **`npm run prisma:pull`**: Ejecuta la introspección secuencial de la DB Operativa y la DB Master.
+- **`npm run prisma:generate`**: Genera los tipos y clientes para ambos esquemas.
 
 ---
 
@@ -42,13 +49,15 @@ Contiene el control global (Usuarios, Roles e Instancias).
 
 Ejecuta estos comandos desde la carpeta `/backend`:
 
-| Comando          | Descripción                                                              |
-| :--------------- | :----------------------------------------------------------------------- |
-| `npm run dev`    | Inicia el servidor con **Nodomon**. Se reinicia solo al guardar cambios. |
-| `npm run test`   | Ejecuta el script de validación de arquitectura Multi-Tenant.            |
-| `npm run lint`   | Analiza el código buscando errores de sintaxis o malas prácticas.        |
-| `npm run format` | Aplica **Prettier** para que todo el código se vea limpio y ordenado.    |
-| `npm start`      | Inicia el servidor en modo producción (sin reinicio automático).         |
+| Comando                       | Descripción                                                                             |
+| :---------------------------- | :-------------------------------------------------------------------------------------- |
+| `npm run dev`                 | Inicia el servidor con **Nodomon**. Se reinicia solo al guardar cambios.                |
+| `npm run prisma:pull`         | Introspecciona y actualiza ambos archivos `.prisma` (Operativo y Master) desde Postgres.|
+| `npm run prisma:generate`     | Genera los clientes TypeScript/JavaScript para ambos esquemas de Prisma.               |
+| `npm run test`                | Ejecuta el script de validación de arquitectura Multi-Tenant.                           |
+| `npm run lint`                | Analiza el código buscando errores de sintaxis o malas prácticas.                       |
+| `npm run format`              | Aplica **Prettier** para que todo el código se vea limpio y ordenado.                   |
+| `npm start`                   | Inicia el servidor en modo producción (sin reinicio automático).                        |
 
 ---
 

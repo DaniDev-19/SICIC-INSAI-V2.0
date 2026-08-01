@@ -7,7 +7,7 @@ import type {
 } from '@/types/oficinas';
 
 export const oficinasService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string }) => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string }) => {
     const { data } = await apiClient.get<OficinaResponse>('/oficinas', { params });
     return data;
   },

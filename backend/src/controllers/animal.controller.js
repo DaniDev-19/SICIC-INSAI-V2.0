@@ -5,7 +5,8 @@ export const getAnimales = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { tipo_animal_id, tipo_id, search } = req.query;
+    const { tipo_animal_id, tipo_id, search, q } = req.query;
+    const searchTerm = (search || q || '').trim();
 
     const effectiveTipoId = tipo_animal_id || tipo_id;
     const where = {};
@@ -14,14 +15,17 @@ export const getAnimales = async (req, res) => {
         where.tipo_animal_id = Number(effectiveTipoId);
     }
 
-    if (search && search.trim()) {
-        where.OR = [
-            { nombre: { contains: search.trim(), mode: 'insensitive' } },
-            { nombre_cientifico: { contains: search.trim(), mode: 'insensitive' } },
-            { descripcion: { contains: search.trim(), mode: 'insensitive' } },
-            { dieta: { contains: search.trim(), mode: 'insensitive' } },
-            { habitat_principal: { contains: search.trim(), mode: 'insensitive' } },
-        ];
+    if (searchTerm) {
+        const tokens = searchTerm.split(/\s+/).filter(Boolean);
+        where.AND = tokens.map((token) => ({
+            OR: [
+                { nombre: { contains: token, mode: 'insensitive' } },
+                { nombre_cientifico: { contains: token, mode: 'insensitive' } },
+                { descripcion: { contains: token, mode: 'insensitive' } },
+                { dieta: { contains: token, mode: 'insensitive' } },
+                { habitat_principal: { contains: token, mode: 'insensitive' } },
+            ],
+        }));
     }
 
     const [animales, totalCount] = await Promise.all([

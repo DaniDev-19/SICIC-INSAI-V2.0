@@ -37,7 +37,27 @@ El frontend debe estar preparado para manejar el límite de tasa impuesto por el
 
 ---
 
-## 3. Mejores Prácticas para el Desarrollador
+## 3. Sistema de Pantallas de Error y Contramedidas de Seguridad (404, 403, 500)
+
+Para garantizar un control perimetral absoluto y proteger la aplicación contra acceso no autorizado, manipulación maliciosa de URLs o fallos de infraestructura, la aplicación integra:
+
+### A. Pantalla de Error 403 (Acceso Denegado / Sin Permisos)
+- **Componente:** `src/pages/error/Error403.tsx`
+- **Integración:** Integrado directamente en `<PermissionRoute />`. Si un usuario intenta escribir directamente la URL de un módulo para el cual su rol no tiene privilegios (ej. `/home/roles`), la interfaz le bloquea el paso mostrando la pantalla 403 de **Acceso Denegado** e impidiendo la carga o renderizado de datos.
+
+### B. Pantalla de Error 500 (Servidor No Disponible)
+- **Componente:** `src/pages/error/Error500.tsx` & `ErrorBoundary.tsx`
+- **Integración:** Captura caídas de red, fallos graves del servidor (`500`, `502`, `503`) o excepciones no controladas en el árbol de renderizado de React. Incluye botón interactivo para reintentar la conexión al backend en tiempo real.
+
+### D. Contramedida de Bloqueo Progresivo por Intentos Fallidos en Login (HTTP 423)
+- **Persistencia:** Los campos `intentos_fallidos` y `bloqueado_hasta` en la base de datos máster rastrean los accesos no autorizados por usuario.
+- **Nivel 1 (Cooldown de 5 min):** Tras acumular entre 3 y 5 fallos consecutivos, el servidor responde con un estado `423 Locked`. La interfaz de `Login.tsx` activa un **Temporizador de Cuenta Regresiva** en vivo deshabilitando el formulario durante 5 minutos.
+- **Nivel 2 (Bloqueo Severo de 24h):** Al agotar los intentos extra (5+ acumulados), la cuenta entra en un estado de bloqueo por 24 horas.
+- **Desbloqueo Inmediato:** El usuario puede omitir la espera utilizando la función **"Restablecer Contraseña"** por correo, la cual limpia los contadores de bloqueo al modificar exitosamente la clave.
+
+---
+
+## 4. Mejores Prácticas para el Desarrollador
 
 Aunque el sistema es automático, se recomiendan las siguientes prácticas:
 
@@ -54,11 +74,14 @@ graph LR
     UI --> Interceptor[Generar UUID Idempotencia]
     Interceptor --> Fetch[Enviar Petición con Header]
     Fetch --> Success[Éxito: Limpiar Estado]
-    Fetch --> Error429[Error 429: Mostrar Aviso de Espera]
-    Fetch --> Error400[Error 400: Mostrar Duplicado/Conflicto]
+    Fetch --> Error429[Error 429: Toast Aviso de Espera]
+    Fetch --> Error401[Error 401: Purga de Token y Redirección a Login]
+    Fetch --> Error403[Error 403: Bloqueo de Vista Acceso Denegado]
+    Fetch --> Error500[Error 500: Pantalla Servidor No Disponible]
 ```
 
 ---
 
 **Arquitectura de Robustez Frontend**
 **SICIC-INSAI V2.0**
+

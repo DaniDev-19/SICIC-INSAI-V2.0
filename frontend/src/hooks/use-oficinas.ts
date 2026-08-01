@@ -18,7 +18,7 @@ export function useOficinas(initialLimit: number = 10) {
     queryFn: () => oficinasService.getAll({ 
       page, 
       limit, 
-      search: debouncedSearch 
+      q: debouncedSearch 
     }),
   });
 

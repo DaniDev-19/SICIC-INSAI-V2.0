@@ -16,6 +16,7 @@ export interface GetMovimientosParams {
   insumo_id?: number;
   oficina_id?: number;
   tipo_movimiento?: string;
+  q?: string;
   search?: string;
   page?: number;
   limit?: number;
@@ -23,11 +24,10 @@ export interface GetMovimientosParams {
 
 export const inventarioService = {
 
-  getInsumos: async (params?: { search?: string; page?: number; limit?: number }): Promise<ApiResponse<Insumo[]>> => {
+  getInsumos: async (params?: { q?: string; search?: string; page?: number; limit?: number }): Promise<ApiResponse<Insumo[]>> => {
     const response = await apiClient.get<ApiResponse<Insumo[]>>('/insumos', {
       params: {
-        q: params?.search,
-        search: params?.search,
+        q: params?.q ?? params?.search,
         page: params?.page,
         limit: params?.limit,
       },

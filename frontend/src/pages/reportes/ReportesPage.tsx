@@ -13,7 +13,6 @@ import {
   Award,
   Warehouse,
   Loader2,
-  FolderGit2,
   UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -67,7 +66,7 @@ export default function ReportesPage() {
     queryFn: () => clientesService.getAll({ limit: 100 }),
   });
 
-  const { data: propiedadesResp, isLoading: loadingProp } = useQuery({
+  const { isLoading: loadingProp } = useQuery({
     queryKey: ['reportes-real-propiedades'],
     queryFn: () => propiedadesService.getAll({ limit: 100 }),
   });
@@ -105,7 +104,6 @@ export default function ReportesPage() {
   const totalInspecciones = inspeccionesResp?.pagination?.totalCount || inspeccionesResp?.data?.length || 0;
   const totalSolicitudes = solicitudesResp?.pagination?.totalCount || solicitudesResp?.data?.length || 0;
   const totalClientes = clientesResp?.pagination?.totalCount || clientesResp?.data?.length || 0;
-  const totalPropiedades = propiedadesResp?.pagination?.totalCount || propiedadesResp?.data?.length || 0;
 
   // Empleados y Programas asignados
   const empleadosList = empleadosResp?.data || [];
@@ -435,7 +433,7 @@ export default function ReportesPage() {
             </Badge>
           </div>
 
-          <div className="h-[260px] w-full" style={{ minWidth: 0 }}>
+          <div className="h-65 w-full" style={{ minWidth: 0 }}>
             {isLoadingGlobal ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="size-8 text-emerald-600 animate-spin" />
@@ -468,7 +466,7 @@ export default function ReportesPage() {
             <h3 className="text-base font-black text-foreground">Inspecciones por Estatus</h3>
           </div>
 
-          <div className="h-[200px] w-full flex items-center justify-center" style={{ minWidth: 0 }}>
+          <div className="h-50 w-full flex items-center justify-center" style={{ minWidth: 0 }}>
             {isLoadingGlobal ? (
               <Loader2 className="size-8 text-emerald-600 animate-spin" />
             ) : (

@@ -23,6 +23,9 @@ Para entender a fondo cómo viajan las peticiones, cómo se protegen los datos y
 - [**Patrones de Diseño y Arquitectura**](./docs/patrones_diseno_arquitectura.md): Explicación de los patrones Strategy, Factory, Singleton y la estructura modular del sistema.
 - [**Autenticación de Dos Factores (MFA/TOTP)**](./docs/autenticacion-mfa-backend.md): Manual técnico completo del sistema MFA: utilidad TOTP, endpoints de activación/desactivación, códigos de respaldo y eventos de bitácora.
 - [**Gestión de Perfil de Usuario**](./docs/gestion-perfil-usuario-backend.md): Manual sobre los endpoints para que un usuario actualice sus propios datos de cuenta y cambie su contraseña.
+- [**Estándar de Búsqueda Multitérmino y Búsqueda Global**](./docs/busqueda_multitermino_estandar.md): Manual sobre el algoritmo de tokenización multitérmino en Prisma y el endpoint `/api/search`.
+- [**Motor de Generación de Reportes PDF y Excel**](./docs/generacion_reportes_pdf_excel.md): Documentación sobre la compilación de documentos PDFKit y exportación `.xlsx` con ExcelJS.
+- [**Servicio de Notificaciones y Correo Electrónico**](./docs/notificaciones_y_correo.md): Manual sobre la integración de transporte de emails, plantillas HTML y eventos de sistema.
 
 ---
 

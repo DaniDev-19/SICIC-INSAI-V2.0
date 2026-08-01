@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from '@/types/pagination';
 
 export const usersService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; status?: string }) => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; status?: string }) => {
     const { data } = await apiClient.get<UsersResponse>('/master/users', { params });
     return data;
   },

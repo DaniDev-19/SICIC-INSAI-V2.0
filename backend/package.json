@@ -12,6 +12,9 @@
     "prisma:generate:client": "prisma generate --schema=prisma/schema.prisma",
     "prisma:generate:master": "prisma generate --schema=prisma/master.prisma",
     "prisma:generate": "npm run prisma:generate:client && npm run prisma:generate:master",
+    "prisma:pull:client": "prisma db pull --schema=prisma/schema.prisma",
+    "prisma:pull:master": "prisma db pull --schema=prisma/master.prisma",
+    "prisma:pull": "npm run prisma:pull:client && npm run prisma:pull:master",
     "hash:password": "node -e \"const bcrypt = require('bcrypt'); const pwd = process.argv[process.argv.length - 1]; if (!pwd || pwd === 'hash:password') throw new Error('Password missing'); bcrypt.hash(pwd, 10).then(console.log).catch(console.error);\""
   },
   "keywords": [],

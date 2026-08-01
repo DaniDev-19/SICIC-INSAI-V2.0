@@ -78,7 +78,8 @@ async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
 }
 
 async function buildActaSilosWhere(req, tx) {
-  const { planificacion_id, q } = req.query;
+  const { planificacion_id, q, search } = req.query;
+  const searchTerm = q || search;
 
   const where = {
     AND: [
@@ -86,8 +87,8 @@ async function buildActaSilosWhere(req, tx) {
     ],
   };
 
-  if (q && q.trim()) {
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

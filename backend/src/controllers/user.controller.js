@@ -13,12 +13,13 @@ export const getUsers = async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const { search, status } = req.query;
+  const { search, q, status } = req.query;
+  const searchTerm = search || q;
 
   const where = { AND: [] };
 
-  if (search && search.trim()) {
-    const tokens = search.trim().split(/\s+/).filter(Boolean);
+  if (searchTerm && searchTerm.trim()) {
+    const tokens = searchTerm.trim().split(/\s+/).filter(Boolean);
     tokens.forEach((token) => {
       where.AND.push({
         OR: [

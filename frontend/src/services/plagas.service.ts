@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from '@/types/pagination';
 
 export const plagasService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<PlagaResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; tipo_id?: string }): Promise<PlagaResponse> => {
     const response = await apiClient.get<PlagaResponse>('/plagas', { params });
     return response.data;
   },

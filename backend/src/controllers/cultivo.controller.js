@@ -5,7 +5,8 @@ export const getCultivos = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { tipo_cultivo_id, tipo_id, search } = req.query;
+    const { tipo_cultivo_id, tipo_id, search, q } = req.query;
+    const searchTerm = (search || q || '').trim();
 
     const where = {};
     const effectiveTipoId = tipo_cultivo_id || tipo_id;
@@ -14,12 +15,15 @@ export const getCultivos = async (req, res) => {
         where.tipo_cultivo_id = Number(effectiveTipoId);
     }
 
-    if (search) {
-        where.OR = [
-            { nombre: { contains: search, mode: 'insensitive' } },
-            { nombre_cientifico: { contains: search, mode: 'insensitive' } },
-            { descripcion: { contains: search, mode: 'insensitive' } },
-        ];
+    if (searchTerm) {
+        const tokens = searchTerm.split(/\s+/).filter(Boolean);
+        where.AND = tokens.map((token) => ({
+            OR: [
+                { nombre: { contains: token, mode: 'insensitive' } },
+                { nombre_cientifico: { contains: token, mode: 'insensitive' } },
+                { descripcion: { contains: token, mode: 'insensitive' } },
+            ],
+        }));
     }
 
     const [cultivos, totalCount] = await Promise.all([

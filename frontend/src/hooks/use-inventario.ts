@@ -7,6 +7,7 @@ import type {
   UpdateInsumoDTO,
   ManualMovimientoDTO,
 } from '@/types/inventario';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export function useInventario(initialLimit: number = 10) {
   const queryClient = useQueryClient();
@@ -31,11 +32,15 @@ export function useInventario(initialLimit: number = 10) {
   const [kardexOficinaId, setKardexOficinaId] = useState<number | undefined>(undefined);
   const [kardexTipoMov, setKardexTipoMov] = useState<string>('ALL');
 
+  const debouncedInsumoSearch = useDebounce(insumoSearch, 500);
+  const debouncedStockSearch = useDebounce(stockSearch, 500);
+  const debouncedKardexSearch = useDebounce(kardexSearch, 500);
+
   const insumosQuery = useQuery({
-    queryKey: ['insumos', insumoSearch, insumoPage, insumoLimit],
+    queryKey: ['insumos', debouncedInsumoSearch, insumoPage, insumoLimit],
     queryFn: () =>
       inventarioService.getInsumos({
-        search: insumoSearch.trim() || undefined,
+        q: debouncedInsumoSearch.trim() || undefined,
         page: insumoPage,
         limit: insumoLimit,
       }),
@@ -52,11 +57,11 @@ export function useInventario(initialLimit: number = 10) {
   });
 
   const stockQuery = useQuery({
-    queryKey: ['insumos_stock', selectedOficinaId, stockSearch, onlyLowStock, stockPage, stockLimit],
+    queryKey: ['insumos_stock', selectedOficinaId, debouncedStockSearch, onlyLowStock, stockPage, stockLimit],
     queryFn: () =>
       inventarioService.getAllStock({
         oficina_id: selectedOficinaId,
-        q: stockSearch.trim() || undefined,
+        q: debouncedStockSearch.trim() || undefined,
         low_stock: onlyLowStock,
         page: stockPage,
         limit: stockLimit,
@@ -69,7 +74,7 @@ export function useInventario(initialLimit: number = 10) {
   });
 
   const kardexParams: GetMovimientosParams = {
-    search: kardexSearch.trim() || undefined,
+    q: debouncedKardexSearch.trim() || undefined,
     insumo_id: kardexInsumoId,
     oficina_id: kardexOficinaId,
     tipo_movimiento: kardexTipoMov !== 'ALL' ? kardexTipoMov : undefined,

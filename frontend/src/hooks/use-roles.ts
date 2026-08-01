@@ -19,7 +19,7 @@ export function useRoles() {
     queryFn: () => roleService.getRoles({ 
       page, 
       limit, 
-      search: debouncedSearch, 
+      q: debouncedSearch, 
       status: status === 'all' ? undefined : status 
     }),
   });

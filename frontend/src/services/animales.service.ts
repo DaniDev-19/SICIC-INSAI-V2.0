@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from '@/types/pagination';
 
 export const animalesService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_id?: string }): Promise<AnimalResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; tipo_id?: string }): Promise<AnimalResponse> => {
     const { data } = await apiClient.get<AnimalResponse>('/animales', { params });
     return data;
   },

@@ -19,7 +19,7 @@ export function useProgramas() {
     queryFn: () => programasService.getAll({ 
       page, 
       limit, 
-      search: debouncedSearch, 
+      q: debouncedSearch, 
       tipo_programa_id: tipoId === 'all' ? undefined : tipoId 
     }),
   });

@@ -10,7 +10,7 @@ import type {
 import type { ApiResponse } from '@/types/pagination';
 
 export const programasService = {
-  getAll: async (params: { page?: number; limit?: number; search?: string; tipo_programa_id?: string }): Promise<ProgramaResponse> => {
+  getAll: async (params: { page?: number; limit?: number; q?: string; search?: string; tipo_programa_id?: string }): Promise<ProgramaResponse> => {
     const response = await apiClient.get<ProgramaResponse>('/programas', { params });
     return response.data;
   },

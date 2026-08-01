@@ -15,15 +15,16 @@ import type {
 import type { SimpleResponse } from '@/types/pagination';
 
 export const empleadosService = {
-  getAll: async ({ search, ...params }: { 
+  getAll: async ({ q, search, ...params }: { 
     page?: number; 
     limit?: number; 
+    q?: string;
     search?: string; 
     departamento_id?: string; 
     status_laboral?: string;
   }): Promise<EmpleadoResponse> => {
     const response = await apiClient.get<EmpleadoResponse>('/empleados', { 
-      params: { ...params, q: search } 
+      params: { ...params, q: q ?? search } 
     });
     return response.data;
   },
@@ -50,13 +51,13 @@ export const empleadosService = {
     return response.data;
   },
 
-  export: async (params?: { search?: string; departamento_id?: string; status_laboral?: string }) => {
+  export: async (params?: { q?: string; search?: string; departamento_id?: string; status_laboral?: string }) => {
     const response = await apiClient.get('/empleados/export', { 
-      params: { ...params, q: params?.search }, 
+      params: { ...params, q: params?.q ?? params?.search }, 
       responseType: 'blob' 
     });
     let filename = 'reporte_empleados.xlsx';
-    if (params?.search || params?.departamento_id || params?.status_laboral) {
+    if (params?.q || params?.search || params?.departamento_id || params?.status_laboral) {
       filename = 'reporte_empleados_filtrado.xlsx';
     }
     const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -68,11 +69,11 @@ export const empleadosService = {
     link.remove();
   },
 
-  exportPdf: async (params?: { search?: string; departamento_id?: string; status_laboral?: string }) => {
+  exportPdf: async (params?: { q?: string; search?: string; departamento_id?: string; status_laboral?: string }) => {
     const toastId = toast.loading('Generando reporte PDF de Empleados...');
     try {
       const response = await apiClient.get('/empleados/export/pdf', { 
-        params: { ...params, q: params?.search }, 
+        params: { ...params, q: params?.q ?? params?.search }, 
         responseType: 'blob' 
       });
       const blob = new Blob([response.data], { type: 'application/pdf' });
