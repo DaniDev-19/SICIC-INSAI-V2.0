@@ -9,8 +9,15 @@ dotenv.config();
  * @returns {string}
  */
 export const generateToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET || 'secret_key', {
-    expiresIn: '24h',
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Falta la variable de entorno JWT_SECRET');
+  }
+
+  const expireTime = process.env.JWT_EXPIRED ? (isNaN(process.env.JWT_EXPIRED) ? process.env.JWT_EXPIRED : parseInt(process.env.JWT_EXPIRED)) : '15m';
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: expireTime,
   });
 };
 
