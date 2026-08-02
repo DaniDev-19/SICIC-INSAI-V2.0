@@ -147,7 +147,6 @@ export const login = async (req, res) => {
     });
   }
 
-  // Verificar si el usuario está actualmente bloqueado por intentos fallidos
   if (usuario.bloqueado_hasta) {
     const ahora = new Date();
     if (usuario.bloqueado_hasta > ahora) {
@@ -179,11 +178,11 @@ export const login = async (req, res) => {
     let mensajeError = 'Credenciales inválidas.';
 
     if (intentosActuales >= 5) {
-      // Nivel 2: Bloqueo Severo de 24 horas por acumulación excesiva
+
       nuevoBloqueadoHasta = new Date(Date.now() + 24 * 60 * 60 * 1000);
       mensajeError = 'Ha superado el número máximo de intentos. Su cuenta ha sido bloqueada por 24 horas por motivos de seguridad. Puede utilizar la opción de Restablecer Contraseña para desbloquearla.';
     } else if (intentosActuales >= 3) {
-      // Nivel 1: Cooldown corto de 5 Minutos (Con 2 intentos adicionales tras expirar)
+
       nuevoBloqueadoHasta = new Date(Date.now() + 5 * 60 * 1000);
       const restantesExtra = 5 - intentosActuales;
       mensajeError = `Ha superado 3 intentos fallidos. Por seguridad, debe esperar 5 minutos antes de volver a intentar. (Le quedará(n) ${restantesExtra} intento(s) adicional(es)).`;
@@ -212,7 +211,7 @@ export const login = async (req, res) => {
     });
   }
 
-  // Si la contraseña es correcta, resetear contadores de intento y bloqueo
+
   if (usuario.intentos_fallidos > 0 || usuario.bloqueado_hasta) {
     await masterPrisma.usuarios.update({
       where: { id: usuario.id },
@@ -223,19 +222,16 @@ export const login = async (req, res) => {
     });
   }
 
-  // Bloquear si ya existe una sesión activa para este usuario
+
   const existingToken = userActiveTokens.get(usuario.id);
   if (existingToken) {
     try {
-      // Verificar que el token almacenado sigue siendo válido (no expirado)
       verifyToken(existingToken);
-      // Token válido = sesión activa, bloquear nuevo intento
       return res.status(409).json({
         status: 'error',
         message: 'Ya existe una sesión activa con esta cuenta. El usuario debe cerrar sesión primero antes de que otra persona pueda ingresar.',
       });
     } catch {
-      // Token expirado o inválido, limpiar y permitir login
       userActiveTokens.delete(usuario.id);
     }
   }
@@ -258,7 +254,6 @@ export const login = async (req, res) => {
     permisos: permisosFinales,
   };
 
-  // Si MFA está activado para este usuario, requerir segundo factor
   if (usuario.mfa_enabled) {
     const mfaPendingToken = jwt.sign(
       {
@@ -362,7 +357,6 @@ export const verifyMfaLogin = async (req, res) => {
     let isCodeValid = await verifyMfaToken(cleanCode, usuario.mfa_secret);
     let usedBackupCode = false;
 
-    // Si no es un token TOTP válido, verificar si es un código de respaldo
     if (!isCodeValid && Array.isArray(usuario.mfa_backup_codes)) {
       const backupCodes = usuario.mfa_backup_codes;
       const matchIndex = backupCodes.findIndex((bCode) => String(bCode).toUpperCase() === cleanCode);
@@ -370,7 +364,6 @@ export const verifyMfaLogin = async (req, res) => {
       if (matchIndex !== -1) {
         isCodeValid = true;
         usedBackupCode = true;
-        // Eliminar código de respaldo usado
         backupCodes.splice(matchIndex, 1);
         await masterPrisma.usuarios.update({
           where: { id: usuario.id },
@@ -452,7 +445,6 @@ export const getMe = async (req, res) => {
     });
   }
 
-  // Refrescar empleado_id desde el tenant en caso de vinculación posterior al login
   let empleadoIdActual = currentInstance?.empleado_id ?? null;
   if (currentInstance?.db_name) {
     try {
@@ -491,7 +483,6 @@ export const logout = (req, res) => {
     userActiveTokens.delete(req.user.id);
   }
 
-  // Registrar cierre de sesión
   if (req.user) {
     bitacoraService.registrar({
       req,
@@ -539,19 +530,16 @@ export const requestPasswordReset = async (req, res) => {
       });
     }
 
-    // Generar un código de recuperación numérico de 6 dígitos
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     const expiraAt = new Date(Date.now() + 30 * 60 * 1000); // Expiración en 30 minutos
 
     const tenantPrisma = getTenantPrisma(instancia.db_name);
 
-    // Inactivar tokens no usados previamente
     await tenantPrisma.recuperacion_pass.updateMany({
       where: { usuario_global_id: usuario.id, usado: false },
       data: { usado: true },
     });
 
-    // Guardar el registro en recuperacion_pass
     await tenantPrisma.recuperacion_pass.create({
       data: {
         usuario_global_id: usuario.id,
@@ -641,7 +629,6 @@ export const resetPassword = async (req, res) => {
 
     const password_hash = await bcrypt.hash(newPassword, 10);
 
-    // Actualizar contraseña global en máster y desbloquear cuenta
     await masterPrisma.usuarios.update({
       where: { id: usuario.id },
       data: {
@@ -652,7 +639,6 @@ export const resetPassword = async (req, res) => {
       },
     });
 
-    // Marcar token como usado
     await tenantPrisma.recuperacion_pass.update({
       where: { id: record.id },
       data: { usado: true },
@@ -702,7 +688,6 @@ export const updateMyProfile = async (req, res) => {
       });
     }
 
-    // Verificar que el nuevo email/username no pertenezca a otro usuario
     const duplicate = await masterPrisma.usuarios.findFirst({
       where: {
         id: { not: userId },
@@ -1034,6 +1019,3 @@ export const regenerateBackupCodes = async (req, res) => {
     });
   }
 };
-
-
-
