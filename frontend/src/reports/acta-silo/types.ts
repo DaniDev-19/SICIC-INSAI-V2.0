@@ -1,6 +1,7 @@
 export interface ActaSiloReporteDto {
   id: number;
   n_control: string;
+  status?: string;
   semana_epid: string;
   fecha_notificacion: string;
   lugar_ubicacion: string;

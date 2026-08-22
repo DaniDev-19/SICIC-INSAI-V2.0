@@ -18,6 +18,8 @@ import {
   Edit,
   Trash2,
   Image as ImageIcon,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import Can from '@/components/auth/Can';
 import type { Seguimiento } from '@/types/seguimientos';
@@ -27,6 +29,8 @@ interface SeguimientoTableProps {
   onViewTimeline: (seguimiento: Seguimiento) => void;
   onEdit: (seguimiento: Seguimiento) => void;
   onDelete: (id: number) => void;
+  onGenerateReport?: (id: number) => void;
+  generatingReportId?: number | null;
 }
 
 export function SeguimientoTable({
@@ -34,6 +38,8 @@ export function SeguimientoTable({
   onViewTimeline,
   onEdit,
   onDelete,
+  onGenerateReport,
+  generatingReportId,
 }: SeguimientoTableProps) {
   if (seguimientos.length === 0) {
     return (
@@ -165,6 +171,25 @@ export function SeguimientoTable({
 
               <TableCell className="px-6 py-5 text-right">
                 <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  {onGenerateReport && (
+                    <Can screen="seguimientos" action="see">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={generatingReportId === seg.id}
+                        onClick={() => onGenerateReport(seg.id)}
+                        title="Generar Informe Técnico (PDF)"
+                        className="size-8 rounded-lg cursor-pointer hover:bg-emerald-500/10 hover:text-emerald-600 text-emerald-600/80"
+                      >
+                        {generatingReportId === seg.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <FileText className="size-4" />
+                        )}
+                      </Button>
+                    </Can>
+                  )}
+
                   <Can screen="seguimientos" action="see">
                     <Button
                       variant="outline"

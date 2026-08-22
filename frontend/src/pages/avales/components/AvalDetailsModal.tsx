@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,11 +18,12 @@ import {
   Clock,
   FileText,
   X,
-  Printer,
   Sparkles,
   Search,
+  Loader2,
 } from 'lucide-react';
 import type { AvalSanitario } from '@/types/avales';
+import { avalesService } from '@/services/avales.service';
 
 interface AvalDetailsModalProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ interface AvalDetailsModalProps {
 }
 
 export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProps) {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   if (!aval) return null;
 
   const isVencido = aval.fecha_vencimiento
@@ -37,6 +41,16 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
     : false;
 
   const bovBuf = aval.aval_hallazgos_bov_buf?.[0];
+
+  const handlePrintPdf = async () => {
+    if (!aval.id) return;
+    setIsGeneratingPdf(true);
+    try {
+      await avalesService.openPdfReport(aval.id);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -76,13 +90,21 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => window.print()}
-              className="rounded-xl h-9 px-3 text-xs font-bold gap-1.5 cursor-pointer border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
-            >
-              <Printer className="size-3.5" /> Imprimir Ficha
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                disabled={isGeneratingPdf}
+                onClick={handlePrintPdf}
+                className="rounded-xl h-9 px-3.5 text-xs font-bold gap-1.5 cursor-pointer bg-emerald-500/10 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/20 shadow-sm transition-all"
+              >
+                {isGeneratingPdf ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <FileText className="size-3.5" />
+                )}
+                Descargar Aval Oficial (PDF)
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 

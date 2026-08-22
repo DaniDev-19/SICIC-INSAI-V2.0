@@ -86,6 +86,7 @@ export async function buildActaSiloReporte(acta) {
   return {
     id: acta.id,
     n_control: nControlActa,
+    status: val(acta.status, 'FINALIZADA'),
     semana_epid: val(acta.semana_epid, 'N/A'),
     fecha_notificacion: formatFechaCorta(acta.fecha_notificacion),
     lugar_ubicacion: val(acta.lugar_ubicacion, lugarCierre),

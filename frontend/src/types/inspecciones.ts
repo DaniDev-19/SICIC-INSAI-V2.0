@@ -57,9 +57,9 @@ export interface Inspeccion {
     solicitudes?: {
       id: number;
       codigo: string;
-      descripcion: string;
-      clientes?: { nombre: string };
-      propiedades?: { nombre: string };
+      descripcion?: string | null;
+      clientes?: { id?: number; nombre: string; cedula_rif?: string };
+      propiedades?: { id?: number; nombre: string; codigo_insai?: string | null };
       t_solicitud?: { nombre: string };
     };
     vehiculos?: { placa: string; marca: string | null; modelo: string | null } | null;
