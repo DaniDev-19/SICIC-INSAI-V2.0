@@ -1,6 +1,8 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type { AvalSanitario, CreateAvalDTO, UpdateAvalDTO } from '@/types/avales';
 import type { ApiResponse } from '@/types/pagination';
+import type { AvalSanitarioReporteDto } from '@/reports/aval-sanitario/types';
 
 export type AvalesResponse = ApiResponse<AvalSanitario[]>;
 
@@ -17,6 +19,67 @@ export const avalesService = {
   getById: async (id: number): Promise<ApiResponse<AvalSanitario>> => {
     const { data } = await apiClient.get<ApiResponse<AvalSanitario>>(`/avales/${id}`);
     return data;
+  },
+
+  getReporte: async (id: number): Promise<AvalSanitarioReporteDto> => {
+    const { data } = await apiClient.get<ApiResponse<AvalSanitarioReporteDto>>(`/avales/${id}/reporte`);
+    return data.data;
+  },
+
+  openPdfReport: async (id: number) => {
+    const toastId = toast.loading('Generando Aval Sanitario Oficial en PDF...');
+    try {
+      const [{ openAvalSanitarioPdf }, reporte] = await Promise.all([
+        import('@/reports/aval-sanitario/generateAvalSanitarioPdf'),
+        avalesService.getReporte(id),
+      ]);
+      await openAvalSanitarioPdf(reporte);
+      toast.success('Aval Sanitario listo', { id: toastId });
+    } catch (error) {
+      console.error('Error generando reporte de aval:', error);
+      toast.error('Error al generar el Aval Sanitario Oficial en PDF', { id: toastId });
+    }
+  },
+
+  exportExcel: async (params?: { q?: string }) => {
+    const toastId = toast.loading('Exportando Avales a Excel...');
+    try {
+      const response = await apiClient.get('/avales/export/excel', {
+        params,
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'reporte_avales_sanitarios.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+      toast.success('Reporte Excel descargado correctamente', { id: toastId });
+    } catch (error) {
+      toast.error('Error al exportar los avales a Excel', { id: toastId });
+    }
+  },
+
+  exportPdf: async (params?: { q?: string }) => {
+    const toastId = toast.loading('Generando reporte PDF consolidado...');
+    try {
+      const response = await apiClient.get('/avales/export/pdf', {
+        params,
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+      toast.success('Reporte PDF consolidado generado', { id: toastId });
+    } catch (error) {
+      toast.error('Error al generar el reporte PDF consolidado', { id: toastId });
+    }
   },
 
   create: async (dto: CreateAvalDTO): Promise<ApiResponse<AvalSanitario>> => {
@@ -88,3 +151,4 @@ export const avalesService = {
     return data;
   },
 };
+

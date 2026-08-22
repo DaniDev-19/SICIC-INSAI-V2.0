@@ -14,6 +14,8 @@ import {
   Calendar,
   User2,
   Search,
+  FileSpreadsheet,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +62,9 @@ const Avales: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedAval, setSelectedAval] = useState<AvalSanitario | null>(null);
   const [deleteAvalId, setDeleteAvalId] = useState<number | null>(null);
+  const [generatingPdfId, setGeneratingPdfId] = useState<number | null>(null);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   useEffect(() => {
     const inspeccionIdParam = searchParams.get('inspeccion_id');
@@ -107,6 +112,33 @@ const Avales: React.FC = () => {
     if (deleteAvalId) {
       await deleteAval(deleteAvalId);
       setDeleteAvalId(null);
+    }
+  };
+
+  const handleDownloadSinglePdf = async (id: number) => {
+    setGeneratingPdfId(id);
+    try {
+      await avalesService.openPdfReport(id);
+    } finally {
+      setGeneratingPdfId(null);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true);
+    try {
+      await avalesService.exportExcel({ q: search });
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      await avalesService.exportPdf({ q: search });
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -217,9 +249,42 @@ const Avales: React.FC = () => {
             className="pl-10 h-11 rounded-xl text-sm bg-background/60 border-border"
           />
         </div>
-        <p className="text-sm text-muted-foreground font-semibold shrink-0">
-          {avales.length} de {pagination?.totalCount ?? avales.length} registros
-        </p>
+
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <p className="text-xs text-muted-foreground font-semibold shrink-0 mr-2 hidden md:block">
+            {avales.length} de {pagination?.totalCount ?? avales.length} registros
+          </p>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isExportingExcel || avales.length === 0}
+            className="h-10 px-3.5 rounded-xl font-bold text-xs gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 cursor-pointer shadow-sm"
+          >
+            {isExportingExcel ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="size-3.5" />
+            )}
+            <span className="hidden sm:inline">Exportar</span> Excel
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPdf}
+            disabled={isExportingPdf || avales.length === 0}
+            className="h-10 px-3.5 rounded-xl font-bold text-xs gap-1.5 border-blue-500/30 text-blue-600 hover:bg-blue-500/10 cursor-pointer shadow-sm"
+          >
+            {isExportingPdf ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <FileText className="size-3.5" />
+            )}
+            <span className="hidden sm:inline">Exportar</span> PDF
+          </Button>
+        </div>
       </div>
 
       {/* ─── TABLE CARD ────────────────────────────────────────────── */}
@@ -346,6 +411,22 @@ const Avales: React.FC = () => {
                         {/* Acciones */}
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-1.5">
+                            <Can screen="avales" action="see">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={generatingPdfId === aval.id}
+                                onClick={() => handleDownloadSinglePdf(aval.id)}
+                                title="Descargar Aval Oficial (PDF)"
+                                className="size-9 p-0 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-600 text-emerald-600/80 cursor-pointer transition-all"
+                              >
+                                {generatingPdfId === aval.id ? (
+                                  <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                  <FileText className="size-4" />
+                                )}
+                              </Button>
+                            </Can>
                             <Can screen="avales" action="see">
                               <Button
                                 size="sm"

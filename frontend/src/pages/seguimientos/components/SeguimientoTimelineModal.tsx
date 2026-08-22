@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { Seguimiento } from '@/types/seguimientos';
 import type { Inspeccion } from '@/types/inspecciones';
+import { seguimientosService } from '@/services/seguimientos.service';
 
 interface SeguimientoTimelineModalProps {
   isOpen: boolean;
@@ -172,6 +173,16 @@ export function SeguimientoTimelineModal({
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-muted text-muted-foreground border">
                             {seg.status}
                           </span>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => seguimientosService.openPdfReport(seg.id)}
+                            className="h-7 px-2 text-[10px] font-bold rounded-lg border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 cursor-pointer gap-1"
+                          >
+                            <FileText className="size-3" />
+                            PDF
+                          </Button>
                         </div>
                       </div>
 

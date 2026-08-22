@@ -14,6 +14,9 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('avales', 'see'), avalesCtrl.getAvales);
+router.get('/export/excel', checkPermission('avales', 'see'), avalesCtrl.exportAvalesExcel);
+router.get('/export/pdf', checkPermission('avales', 'see'), avalesCtrl.exportAvalesPdf);
+router.get('/:id/reporte', checkPermission('avales', 'see'), avalesCtrl.getAvalReporte);
 router.get('/:id', checkPermission('avales', 'see'), avalesCtrl.getAvalById);
 
 router.post('/',

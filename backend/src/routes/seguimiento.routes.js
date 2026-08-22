@@ -13,6 +13,7 @@ router.use(protect);
 router.use(tenantMiddleware);
 
 router.get('/', checkPermission('seguimientos', 'see'), seguimientoController.getSeguimientos);
+router.get('/:id/reporte', checkPermission('seguimientos', 'see'), seguimientoController.getSeguimientoReporte);
 router.get('/:id', checkPermission('seguimientos', 'see'), seguimientoController.getSeguimientoById);
 
 router.post(

@@ -493,7 +493,38 @@ export function ActaInspeccionDocument({
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>13. CIERRE DEL ACTA</Text>
+        {/* DICTAMEN TÉCNICO OFICIAL */}
+        <Text style={styles.sectionTitle}>13. DICTAMEN TÉCNICO Y CONSTATACIÓN OFICIAL</Text>
+        <View style={styles.sectionBody}>
+          <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', marginBottom: 2 }}>
+            {data.status === 'FINALIZADA'
+              ? 'DICTAMEN FAVORABLE: CONFORMIDAD TÉCNICO-SANITARIA'
+              : data.status === 'NO_APROBADA'
+              ? 'DICTAMEN DESFAVORABLE: NO CONFORMIDAD SANITARIA'
+              : data.status === 'SEGUIMIENTO'
+              ? 'DICTAMEN CONDICIONADO: SUJETO A REINSPECCIÓN Y SEGUIMIENTO OBLIGATORIO'
+              : data.status === 'CUARENTENA'
+              ? 'DICTAMEN DE RESTRICCIÓN: MEDIDA CAUTELAR DE CUARENTENA / INMOVILIZACIÓN'
+              : data.status === 'NO_ATENDIDA'
+              ? 'DICTAMEN: ACTA DE IMPOSIBILIDAD DE INSPECCIÓN / NO COMPARECENCIA'
+              : `DICTAMEN: EVALUACIÓN TÉCNICA EN ESTADO ${data.status}`}
+          </Text>
+          <Text style={{ fontSize: 7.2, lineHeight: 1.35, textAlign: 'justify' }}>
+            {data.status === 'FINALIZADA'
+              ? 'Se certifica que los funcionarios técnicos actuantes del INSAI ejecutaron la inspección oficial de campo, constatando el cumplimiento satisfactorio de las normas de salud agrícola integral y avalando la prosecución de los trámites o certificaciones correspondientes.'
+              : data.status === 'NO_APROBADA'
+              ? 'Los funcionarios técnicos actuantes del INSAI constataron la presencia de no conformidades sanitarias y/o riesgos epidemiológicos en la unidad evaluada. Se ordena el acatamiento obligatorio e inmediato de las medidas dictadas en el numeral 11 de la presente Acta.'
+              : data.status === 'SEGUIMIENTO'
+              ? 'Se constata la necesidad de aplicación de correctivos técnicos y sanitarios, quedando la unidad de producción/instalación sujeta a un plan de seguimiento y visitas de control periódico hasta su verificación definitiva.'
+              : data.status === 'CUARENTENA'
+              ? 'En resguardo de la seguridad agroalimentaria nacional, se declara la inmovilización preventiva y protocolo de bioseguridad en el predio ante la sospecha o detección de agentes biológicos de interés cuarentenario.'
+              : data.status === 'NO_ATENDIDA'
+              ? 'Se deja constancia formal de la imposibilidad de ejecutar la inspección por causas no imputables a los funcionarios del INSAI.'
+              : 'Se levanta el presente informe técnico preliminar en el marco del procedimiento ordinario de fiscalización sanitaria.'}
+          </Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>14. CIERRE DEL ACTA</Text>
         <View style={styles.sectionBody}>
           <Text style={{ fontSize: 7.5, lineHeight: 1.3, textAlign: 'justify' }}>
             Se levanta la presente Acta de Inspección, por duplicado, a las{' '}
@@ -503,7 +534,7 @@ export function ActaInspeccionDocument({
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>14. FIRMAS Y SELLOS</Text>
+        <Text style={styles.sectionTitle}>15. FIRMAS Y SELLOS</Text>
         <View style={styles.signRow}>
           <View style={styles.signBox}>
             <Text style={styles.signLabel}>Servidor(es) Público(s) INSAI</Text>
@@ -513,7 +544,7 @@ export function ActaInspeccionDocument({
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>15. VIGENCIA DEL ACTA</Text>
+        <Text style={styles.sectionTitle}>16. VIGENCIA DEL ACTA</Text>
         <View style={styles.sectionBody}>
           <Text style={{ fontSize: 7.5, lineHeight: 1.25 }}>
             En función de los riesgos a la salud agrícola integral, la vigencia de esta Acta de

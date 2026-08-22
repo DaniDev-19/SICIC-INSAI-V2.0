@@ -1,6 +1,7 @@
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
 import inventoryService from '../services/inventory.service.js';
+import seguimientoReporteService from '../services/seguimiento-reporte.service.js';
 
 const SEGUIMIENTO_INCLUDE = {
   inspecciones: {
@@ -402,3 +403,118 @@ export const deleteSeguimiento = async (req, res) => {
     res.status(400).json({ status: 'error', message: error.message });
   }
 };
+
+export const getSeguimientoReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  try {
+    const seguimiento = await tenantPrisma.seguimiento_inspecciones.findUnique({
+      where: { id: Number(id) },
+      include: {
+        inspecciones: {
+          include: {
+            planificaciones: {
+              include: {
+                solicitudes: {
+                  include: {
+                    clientes: true,
+                    propiedades: {
+                      include: {
+                        clientes: true,
+                        propiedad_ubicacion: {
+                          include: {
+                            sectores: {
+                              include: {
+                                parroquias: {
+                                  include: {
+                                    municipios: {
+                                      include: {
+                                        estados: true,
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                planificacion_empleados: {
+                  include: {
+                    empleados: {
+                      include: {
+                        cargos: true,
+                        oficinas: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        acta_silos: {
+          include: {
+            planificaciones: {
+              include: {
+                solicitudes: {
+                  include: {
+                    clientes: true,
+                    propiedades: {
+                      include: {
+                        clientes: true,
+                        propiedad_ubicacion: {
+                          include: {
+                            sectores: {
+                              include: {
+                                parroquias: {
+                                  include: {
+                                    municipios: {
+                                      include: {
+                                        estados: true,
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                planificacion_empleados: {
+                  include: {
+                    empleados: {
+                      include: {
+                        cargos: true,
+                        oficinas: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        seguimiento_fotos: true,
+      },
+    });
+
+    if (!seguimiento) {
+      return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
+    }
+
+    const reporte = await seguimientoReporteService.buildSeguimientoReporte(seguimiento);
+    res.status(200).json({ status: 'success', data: reporte });
+  } catch (error) {
+    console.error('Error generando reporte de seguimiento:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+

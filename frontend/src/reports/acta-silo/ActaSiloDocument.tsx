@@ -433,14 +433,33 @@ export function ActaSiloDocument({
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>10. CIERRE DE LA PLANILLA / ACTA</Text>
+        {/* DICTAMEN TÉCNICO OFICIAL DE SILOS */}
+        <Text style={styles.sectionTitle}>10. DICTAMEN TÉCNICO Y CONSTATACIÓN OFICIAL DE ALMACENAMIENTO</Text>
+        <View style={styles.sectionBody}>
+          <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', marginBottom: 2 }}>
+            {data.cant_afectado_porcentaje > 0 || data.status === 'CUARENTENA'
+              ? 'DICTAMEN: ALERTA FITOSANITARIA EN SILOS - MEDIDAS CORRECTIVAS OBLIGATORIAS'
+              : data.status === 'FINALIZADA'
+              ? 'DICTAMEN: CONFORMIDAD FITOSANITARIA EN ALMACENAMIENTO Y RESGUARDO'
+              : `DICTAMEN: CONSTATACIÓN TÉCNICA EN ESTADO ${data.status}`}
+          </Text>
+          <Text style={{ fontSize: 7.2, lineHeight: 1.35, textAlign: 'justify' }}>
+            {data.cant_afectado_porcentaje > 0 || data.status === 'CUARENTENA'
+              ? `Se constata un nivel de afectación del ${data.cant_afectado_porcentaje.toFixed(2)}% en los volúmenes evaluados. Se certifica la actuación oficial de los inspectores del INSAI y se ordena la aplicación inmediata de las medidas de fumigación, aireación, aislamiento y retención preventiva del lote afectado.`
+              : data.status === 'FINALIZADA'
+              ? 'Se certifica que los inspectores técnicos del INSAI realizaron la verificación presencial de las instalaciones, constatando condiciones de almacenamiento e inocuidad conformes a las exigencias fitosanitarias de la República.'
+              : 'Se deja constancia del levantamiento técnico de capacidades operativas, volúmenes almacenados y estado general de la planta agroindustrial.'}
+          </Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>11. CIERRE DE LA PLANILLA / ACTA</Text>
         <View style={styles.sectionBody}>
           <Text style={{ fontSize: 7.5, lineHeight: 1.3, textAlign: 'justify' }}>
             Se levanta y formaliza la presente planilla de control e inspección de Silos y Almacenamientos, por duplicado, a los {data.cierre.dia || '_____'} días del mes de {data.cierre.mes || '_______________'} del año {data.cierre.anio || '_____'} en {data.cierre.lugar}.
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>11. FIRMAS DE CONFORMIDAD Y SELLOS OFICIALES</Text>
+        <Text style={styles.sectionTitle}>12. FIRMAS DE CONFORMIDAD Y SELLOS OFICIALES</Text>
         <View style={styles.signRow}>
           <View style={styles.signBox}>
             <Text style={styles.signLabel}>Inspector / Servidor Público INSAI</Text>

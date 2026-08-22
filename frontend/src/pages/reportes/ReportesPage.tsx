@@ -13,7 +13,8 @@ import {
   Award,
   Warehouse,
   Loader2,
-  UserCheck
+  UserCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -662,6 +663,13 @@ export default function ReportesPage() {
                 className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm cursor-pointer gap-2 transition-all hover:scale-[1.02]"
               >
                 <FileText className="size-4" /> Exportar Avales PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => avalesService.exportExcel()}
+                className="w-full h-10 rounded-xl border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 text-xs font-bold shadow-sm cursor-pointer gap-2 transition-all"
+              >
+                <FileSpreadsheet className="size-4" /> Exportar Libro Maestro Excel
               </Button>
             </div>
           </div>

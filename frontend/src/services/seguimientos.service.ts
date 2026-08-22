@@ -1,10 +1,12 @@
 import apiClient from '@/lib/api-client';
+import { toast } from 'sonner';
 import type { ApiResponse, SimpleResponse } from '@/types/pagination';
 import type {
   Seguimiento,
   CreateSeguimientoDTO,
   UpdateSeguimientoDTO,
 } from '@/types/seguimientos';
+import type { SeguimientoReporteDto } from '@/reports/seguimiento-informe/types';
 
 export interface GetSeguimientosParams {
   page?: number;
@@ -27,6 +29,26 @@ export const seguimientosService = {
   getById: async (id: number): Promise<ApiResponse<Seguimiento>> => {
     const response = await apiClient.get<ApiResponse<Seguimiento>>(`/seguimientos/${id}`);
     return response.data;
+  },
+
+  getReporte: async (id: number): Promise<SeguimientoReporteDto> => {
+    const response = await apiClient.get<ApiResponse<SeguimientoReporteDto>>(`/seguimientos/${id}/reporte`);
+    return response.data.data;
+  },
+
+  openPdfReport: async (id: number) => {
+    const toastId = toast.loading('Generando Informe Técnico de Seguimiento en PDF...');
+    try {
+      const [{ openSeguimientoInformePdf }, reporte] = await Promise.all([
+        import('@/reports/seguimiento-informe/generateSeguimientoInformePdf'),
+        seguimientosService.getReporte(id),
+      ]);
+      await openSeguimientoInformePdf(reporte);
+      toast.success('Informe Técnico de Seguimiento listo', { id: toastId });
+    } catch (error) {
+      console.error('Error generando reporte de seguimiento:', error);
+      toast.error('Error al generar el Informe Técnico de Seguimiento en PDF', { id: toastId });
+    }
   },
 
   create: async (dto: CreateSeguimientoDTO): Promise<ApiResponse<Seguimiento>> => {

@@ -1,6 +1,9 @@
 import inventoryService from '../services/inventory.service.js';
 import bitacoraService from '../services/bitacora.service.js';
 import storageService from '../services/storage.service.js';
+import avalReporteService, { AVALES_EXPORT_COLUMNS } from '../services/aval-reporte.service.js';
+import excelService from '../services/excel.service.js';
+import pdfService from '../services/pdf.service.js';
 
 function isAdminUser(req) {
   const permisos = req.user?.currentInstance?.permisos;
@@ -511,3 +514,176 @@ export const deleteAval = async (req, res) => {
     res.status(400).json({ status: 'error', message: error.message });
   }
 };
+
+export const getAvalReporte = async (req, res) => {
+  const tenantPrisma = req.db;
+  const { id } = req.params;
+
+  try {
+    const aval = await tenantPrisma.avales_sanitarios.findUnique({
+      where: { id: Number(id) },
+      include: {
+        aval_biologicos: { include: { insumos: true } },
+        aval_hallazgos_bov_buf: true,
+        aval_hallazgos_otras: { include: { t_animales: true } },
+        aval_hierros: true,
+        inspecciones: {
+          include: {
+            planificaciones: {
+              include: {
+                planificacion_empleados: true,
+                solicitudes: {
+                  include: {
+                    clientes: true,
+                    propiedades: {
+                      include: {
+                        clientes: true,
+                        propiedad_hierro: true,
+                        propiedad_ubicacion: {
+                          include: {
+                            sectores: {
+                              include: {
+                                parroquias: {
+                                  include: {
+                                    municipios: {
+                                      include: {
+                                        estados: true,
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        empleados_avales_sanitarios_medico_responsable_idToempleados: {
+          include: { oficinas: true, profesiones: true, cargos: true },
+        },
+        empleados_avales_sanitarios_jefe_osa_idToempleados: {
+          include: { oficinas: true, profesiones: true, cargos: true },
+        },
+      },
+    });
+
+    if (!aval) {
+      return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
+    }
+
+    if (isInspectorUser(req)) {
+      const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
+      const isMedicoOrJefe = aval.medico_responsable_id === empleadoId || aval.jefe_osa_id === empleadoId;
+      const isAssignedToInspeccion = aval.inspecciones?.planificaciones?.planificacion_empleados?.some(
+        (pe) => pe.empleado_id === empleadoId
+      );
+      if (!isMedicoOrJefe && !isAssignedToInspeccion) {
+        return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a este aval sanitario.' });
+      }
+    }
+
+    const reporte = await avalReporteService.buildAvalReporte(aval, tenantPrisma);
+    res.status(200).json({ status: 'success', data: reporte });
+  } catch (error) {
+    console.error('Error generando reporte de aval:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+async function fetchAvalesExportData(tenantPrisma, where) {
+  const avales = await tenantPrisma.avales_sanitarios.findMany({
+    where,
+    orderBy: { created_at: 'desc' },
+    include: {
+      aval_biologicos: { include: { insumos: true } },
+      aval_hallazgos_bov_buf: true,
+      aval_hallazgos_otras: { include: { t_animales: true } },
+      aval_hierros: true,
+      inspecciones: {
+        include: {
+          planificaciones: {
+            include: {
+              solicitudes: {
+                include: {
+                  clientes: true,
+                  propiedades: {
+                    include: {
+                      clientes: true,
+                      propiedad_hierro: true,
+                      propiedad_ubicacion: {
+                        include: {
+                          sectores: {
+                            include: {
+                              parroquias: {
+                                include: {
+                                  municipios: {
+                                    include: {
+                                      estados: true,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      empleados_avales_sanitarios_medico_responsable_idToempleados: {
+        include: { oficinas: true },
+      },
+      empleados_avales_sanitarios_jefe_osa_idToempleados: {
+        include: { oficinas: true },
+      },
+    },
+  });
+
+  return avalReporteService.buildAvalesExportData(avales);
+}
+
+export const exportAvalesExcel = async (req, res) => {
+  const tenantPrisma = req.db;
+  const where = await buildAvalesWhere(req, tenantPrisma);
+  const data = await fetchAvalesExportData(tenantPrisma, where);
+
+  const buffer = await excelService.generate({
+    title: 'Registro y Control de Avales Sanitarios - INSAI',
+    columns: AVALES_EXPORT_COLUMNS,
+    data,
+    sheetName: 'Avales Sanitarios',
+  });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_avales_sanitarios.xlsx');
+  res.send(buffer);
+};
+
+export const exportAvalesPdf = async (req, res) => {
+  const tenantPrisma = req.db;
+  const where = await buildAvalesWhere(req, tenantPrisma);
+  const data = await fetchAvalesExportData(tenantPrisma, where);
+
+  const buffer = await pdfService.generateTable({
+    title: 'Registro y Control de Avales Sanitarios - INSAI',
+    columns: AVALES_EXPORT_COLUMNS.slice(0, 14),
+    data,
+    orientation: 'landscape',
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=reporte_avales_sanitarios.pdf');
+  res.send(buffer);
+};
+

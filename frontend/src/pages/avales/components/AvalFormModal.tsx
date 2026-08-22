@@ -202,14 +202,14 @@ export function AvalFormModal({
     }
   }, [isOpen, aval, initialInspeccionId]);
 
-  // Auto-completar el nombre del predio y personal asignado cuando se vincula o selecciona una inspección
+  // Auto-completar el código del predio y personal asignado cuando se vincula o selecciona una inspección
   useEffect(() => {
     if (isOpen && inspeccionId && inspeccionId !== 'none') {
       const selectedInsp = inspecciones.find((insp) => String(insp.id) === inspeccionId);
       if (selectedInsp) {
-        const predioNombre = selectedInsp.planificaciones?.solicitudes?.propiedades?.nombre;
-        if (predioNombre) {
-          setCodigoPredio(predioNombre);
+        const codigoInsai = selectedInsp.planificaciones?.solicitudes?.propiedades?.codigo_insai;
+        if (codigoInsai) {
+          setCodigoPredio(codigoInsai);
         }
         const asignados = selectedInsp.planificaciones?.planificacion_empleados;
         if (asignados && asignados.length > 0) {
@@ -471,7 +471,7 @@ export function AvalFormModal({
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
                   placeholder="Escriba aquí observaciones del estado zoosanitario, recomendaciones o detalles del predio..."
-                  className="rounded-2xl min-h-[100px] text-xs p-4 bg-card border-border"
+                  className="rounded-2xl min-h-25 text-xs p-4 bg-card border-border"
                 />
               </div>
             </TabsContent>

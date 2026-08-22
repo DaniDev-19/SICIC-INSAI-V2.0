@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSeguimientos } from '@/hooks/use-seguimientos';
+import { seguimientosService } from '@/services/seguimientos.service';
 import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { SeguimientoTable } from './components/SeguimientoTable';
 import { SeguimientoModal } from './components/SeguimientoModal';
@@ -61,6 +62,7 @@ const Seguimientos: React.FC = () => {
   const [preselectedInspeccionId, setPreselectedInspeccionId] = useState<number | null>(
     urlInspeccionId ? Number(urlInspeccionId) : null
   );
+  const [generatingReportId, setGeneratingReportId] = useState<number | null>(null);
 
   const [selectedTimelineSeguimiento, setSelectedTimelineSeguimiento] = useState<Seguimiento | null>(null);
   const [isTimelineOpen, setIsTimelineOpen] = useState<boolean>(false);
@@ -102,6 +104,15 @@ const Seguimientos: React.FC = () => {
     if (deleteId) {
       await deleteSeguimiento(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  const handleGenerateReport = async (id: number) => {
+    setGeneratingReportId(id);
+    try {
+      await seguimientosService.openPdfReport(id);
+    } finally {
+      setGeneratingReportId(null);
     }
   };
 
@@ -201,6 +212,8 @@ const Seguimientos: React.FC = () => {
                 onViewTimeline={handleViewTimeline}
                 onEdit={handleOpenEditModal}
                 onDelete={setDeleteId}
+                onGenerateReport={handleGenerateReport}
+                generatingReportId={generatingReportId}
               />
             </div>
 
