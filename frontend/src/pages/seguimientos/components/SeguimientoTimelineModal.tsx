@@ -143,7 +143,7 @@ export function SeguimientoTimelineModal({
                 {seguimientos.map((seg, idx) => (
                   <div key={seg.id} className="relative group">
                     {/* Node Dot */}
-                    <div className="absolute -left-[31px] top-1 size-5 rounded-full bg-indigo-600 text-white flex items-center justify-center ring-4 ring-background text-[10px] font-black shadow-md">
+                    <div className="absolute -left-7.75 top-1 size-5 rounded-full bg-indigo-600 text-white flex items-center justify-center ring-4 ring-background text-[10px] font-black shadow-md">
                       {seguimientos.length - idx}
                     </div>
 

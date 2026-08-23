@@ -9,7 +9,7 @@ import {
 } from './EjecutivoNuevosDocument';
 
 export async function openCaracStatalPdf(
-  records: any[],
+  dataOrRecords: any,
   logoUrl: string = '/image-insai.png'
 ): Promise<void> {
   const generadoEl = new Date().toLocaleDateString('es-VE', {
@@ -20,7 +20,7 @@ export async function openCaracStatalPdf(
 
   const blob = await pdf(
     <CaracStatalPdfDocument
-      records={records}
+      data={dataOrRecords}
       logoUrl={logoUrl}
       generadoEl={generadoEl}
     />

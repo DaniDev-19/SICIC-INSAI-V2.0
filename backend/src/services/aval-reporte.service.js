@@ -112,12 +112,8 @@ export async function buildAvalReporte(aval, tenantPrisma) {
   const regHierro = propHierro?.num_reg_hierro || '';
   const regGanadero = propHierro?.num_reg_ganadero || '';
 
-  // Priorizar el código INSAI real del predio sobre el nombre si fueron guardados igual
-  let resolvedCodigoPredio = propiedad?.codigo_insai || '';
-  if (!resolvedCodigoPredio && aval.codigo_predio && aval.codigo_predio !== propiedad?.nombre) {
-    resolvedCodigoPredio = aval.codigo_predio;
-  }
-  const codigoPredio = resolvedCodigoPredio || '...........';
+  // Tomar directamente el dato ingresado en el formulario del aval (aval.codigo_predio), con fallback al código INSAI de la propiedad
+  const codigoPredio = (aval.codigo_predio && aval.codigo_predio.trim()) || propiedad?.codigo_insai || '...........';
 
   // Hierro image (prioritizing direct aval hierros, then property hierros)
   let hierroImgDataUrl = null;

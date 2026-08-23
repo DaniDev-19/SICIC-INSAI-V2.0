@@ -31,7 +31,6 @@ import {
   Cell,
 } from 'recharts';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { clientesService } from '@/services/clientes.service';
 import { propiedadesService } from '@/services/propiedades.service';
 import { empleadosService } from '@/services/empleados.service';
@@ -39,8 +38,9 @@ import { inspectionsService } from '@/services/inspecciones.service';
 import { solicitudesService } from '@/services/solicitudes.service';
 import { avalesService } from '@/services/avales.service';
 import { actaSilosService } from '@/services/acta-silos.service';
+import { caracStatalService } from '@/services/carac-statal.service';
+import { ubicacionService } from '@/services/ubicacion.service';
 import {
-  openCaracStatalPdf,
   openRankingClientesPdf,
   openInspeccionesEmpleadoPdf,
   openAvalesSanitariosPdf,
@@ -50,8 +50,14 @@ import {
 
 export default function ReportesPage() {
   const [selectedInspectorId, setSelectedInspectorId] = useState<string>('todos');
+  const [selectedEstadoId, setSelectedEstadoId] = useState<string>('todos');
 
   // Fetch Real Data from APIs
+  const { data: estadosResp } = useQuery({
+    queryKey: ['reportes-real-estados'],
+    queryFn: () => ubicacionService.getEstados(),
+  });
+
   const { data: inspeccionesResp, isLoading: loadingInsp } = useQuery({
     queryKey: ['reportes-real-inspecciones'],
     queryFn: () => inspectionsService.getAll({ limit: 100 }),
@@ -78,15 +84,8 @@ export default function ReportesPage() {
   });
 
   const { data: caracStatalResp, isLoading: loadingCarac } = useQuery({
-    queryKey: ['reportes-real-carac-statal'],
-    queryFn: async () => {
-      try {
-        const res = await apiClient.get('/carac_statal');
-        return res.data;
-      } catch (err) {
-        return { data: [] };
-      }
-    },
+    queryKey: ['reportes-real-carac-statal', selectedEstadoId],
+    queryFn: () => caracStatalService.getReporte(selectedEstadoId === 'todos' ? undefined : selectedEstadoId),
   });
 
   const { data: avalesResp, isLoading: loadingAvales } = useQuery({
@@ -135,14 +134,7 @@ export default function ReportesPage() {
 
   // PDF Generators Handlers
   const handleCaracStatalPdf = async () => {
-    const toastId = toast.loading('Generando Reporte de Caracterización Estatal...');
-    try {
-      const records = caracStatalResp?.data || [];
-      await openCaracStatalPdf(records);
-      toast.success('Reporte de Caracterización Estatal listo', { id: toastId });
-    } catch (error) {
-      toast.error('Error al generar la Caracterización Estatal', { id: toastId });
-    }
+    await caracStatalService.exportPdf(caracStatalResp, selectedEstadoId === 'todos' ? undefined : selectedEstadoId);
   };
 
   const handleRankingClientesPdf = async () => {
@@ -543,6 +535,22 @@ export default function ReportesPage() {
                   Informe de dotación de veterinarios oficiales, paraveterinarios, personal administrativo y vehículos operativos por municipio.
                 </p>
               </div>
+
+              <div className="space-y-1 pt-1">
+                <label className="text-[11px] font-bold text-muted-foreground">Filtrar por Estado:</label>
+                <select
+                  value={selectedEstadoId}
+                  onChange={(e) => setSelectedEstadoId(e.target.value)}
+                  className="w-full h-9 rounded-xl bg-muted/30 border border-border text-xs font-medium px-3 text-foreground"
+                >
+                  <option value="todos">Todos los Estados (Nacional)</option>
+                  {(estadosResp?.data || []).map((est: any) => (
+                    <option key={est.id} value={est.id}>
+                      {est.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="pt-4 border-t border-border/40 space-y-2">
@@ -551,6 +559,13 @@ export default function ReportesPage() {
                 className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm cursor-pointer gap-2 transition-all hover:scale-[1.02]"
               >
                 <FileText className="size-4" /> Exportar Caracterización PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => caracStatalService.exportExcel(selectedEstadoId === 'todos' ? undefined : selectedEstadoId)}
+                className="w-full h-10 rounded-xl border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 text-xs font-bold shadow-sm cursor-pointer gap-2 transition-all"
+              >
+                <FileSpreadsheet className="size-4" /> Exportar Plantilla Oficial Excel
               </Button>
             </div>
           </div>

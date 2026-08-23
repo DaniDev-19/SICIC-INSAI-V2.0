@@ -11,9 +11,11 @@ const router = Router();
 router.use(protect);
 router.use(tenantMiddleware);
 
-router.get('/', checkPermission('carac_statal', 'see'), caracStatalController.getCaracStatal);
-router.get('/municipio/:municipio_id', checkPermission('carac_statal', 'see'), caracStatalController.getCaracStatalByMunicipio);
-router.post('/', checkPermission('carac_statal', 'create'), validateSchema(createCaracStatalSchema), caracStatalController.createOrUpdateCaracStatal);
-router.delete('/:id', checkPermission('carac_statal', 'delete'), caracStatalController.deleteCaracStatal);
+router.get('/', checkPermission('reportes', 'see'), caracStatalController.getCaracStatal);
+router.get('/reporte', checkPermission('reportes', 'see'), caracStatalController.getCaracStatalReporte);
+router.get('/export/excel', checkPermission('reportes', 'see'), caracStatalController.exportCaracStatalExcel);
+router.get('/municipio/:municipio_id', checkPermission('reportes', 'see'), caracStatalController.getCaracStatalByMunicipio);
+router.post('/', checkPermission('reportes', 'see'), validateSchema(createCaracStatalSchema), caracStatalController.createOrUpdateCaracStatal);
+router.delete('/:id', checkPermission('reportes', 'see'), caracStatalController.deleteCaracStatal);
 
 export default router;
