@@ -1,4 +1,5 @@
 import bitacoraService from '../services/bitacora.service.js';
+import caracStatalReporteService from '../services/carac_statal_reporte.service.js';
 
 export const getCaracStatal = async (req, res) => {
   const tenantPrisma = req.db;
@@ -104,3 +105,33 @@ export const deleteCaracStatal = async (req, res) => {
 
   res.status(200).json({ status: 'success', message: 'Registro eliminado exitosamente' });
 };
+
+export const getCaracStatalReporte = async (req, res) => {
+  try {
+    const tenantPrisma = req.db;
+    const { estado_id } = req.query;
+    const data = await caracStatalReporteService.buildCaracStatalData(tenantPrisma, estado_id);
+    res.status(200).json({ status: 'success', data });
+  } catch (error) {
+    console.error('Error generando reporte de caracterización estatal:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const exportCaracStatalExcel = async (req, res) => {
+  try {
+    const tenantPrisma = req.db;
+    const { estado_id } = req.query;
+    const data = await caracStatalReporteService.buildCaracStatalData(tenantPrisma, estado_id);
+    const buffer = await caracStatalReporteService.generateExcel(data);
+
+    const safeEstadoName = (data.estado || 'estatal').toLowerCase().replace(/[^a-z0-9_]/gi, '_');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=caracterizacion_${safeEstadoName}.xlsx`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error exportando Excel de caracterización estatal:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+

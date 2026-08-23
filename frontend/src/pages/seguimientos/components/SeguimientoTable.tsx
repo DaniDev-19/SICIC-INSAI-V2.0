@@ -102,23 +102,23 @@ export function SeguimientoTable({
               key={seg.id}
               className="group hover:bg-primary/5 transition-all duration-300 cursor-pointer"
             >
-              <TableCell className="px-6 py-5">
+              <TableCell className="px-6 py-5 max-w-70">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
                     <Activity className="size-5" />
                   </div>
-                  <div className="min-w-0 space-y-0.5">
-                    <span className="font-bold text-foreground block text-sm truncate">
+                  <div className="min-w-0 space-y-0.5 flex-1">
+                    <span className="font-bold text-foreground block text-sm wrap-break-words whitespace-normal leading-tight" title={insp?.n_control || `Inspección #${seg.inspeccion_id}`}>
                       {insp?.n_control || `Inspección #${seg.inspeccion_id}`}
                     </span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                      <span className="flex items-center gap-1 text-primary font-bold">
-                        <Building2 className="size-3" />
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                      <span className="flex items-center gap-1 text-primary font-bold wrap-break-words whitespace-normal">
+                        <Building2 className="size-3 shrink-0" />
                         {propName}
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <User className="size-3" />
+                      <span className="flex items-center gap-1 wrap-break-words whitespace-normal">
+                        <User className="size-3 shrink-0" />
                         {prodName}
                       </span>
                     </div>

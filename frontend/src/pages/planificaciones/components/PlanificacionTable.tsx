@@ -128,9 +128,12 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                   </div>
                 </TableCell>
 
-                <TableCell className="px-6 py-5">
+                <TableCell className="px-6 py-5 max-w-70">
                   <div className="space-y-1">
-                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/5 text-primary border border-primary/10 whitespace-nowrap">
+                    <div
+                      className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/5 text-primary border border-primary/10 max-w-full wrap-break-words whitespace-normal leading-snug"
+                      title={plan.actividad || 'Visita Técnica'}
+                    >
                       {plan.actividad || 'Visita Técnica'}
                     </div>
                     {plan.vehiculos ? (

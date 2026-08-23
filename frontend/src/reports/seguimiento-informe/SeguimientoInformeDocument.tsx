@@ -10,302 +10,295 @@ import type { SeguimientoReporteDto } from './types';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 28,
-    paddingBottom: 32,
-    fontSize: 7.5,
+    paddingTop: 36,
+    paddingBottom: 45,
+    paddingHorizontal: 40,
+    fontSize: 9,
     fontFamily: 'Helvetica',
-    color: '#000000',
+    color: '#111827',
     backgroundColor: '#ffffff',
+    lineHeight: 1.45,
   },
 
-  // ─── ENCABEZADO INSTITUCIONAL MINIMALISTA ────────────────────────
-  headerTable: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#000000',
-    marginBottom: 8,
-  },
-  headerLogoCell: {
-    width: '26%',
-    padding: 4,
-    borderRightWidth: 1,
-    borderColor: '#000000',
-    justifyContent: 'center',
+  // ─── MEMBRETE OFICIAL FORMAL ──────────────────────────────────────
+  headerContainer: {
     alignItems: 'center',
+    marginBottom: 12,
   },
   logoImg: {
-    width: 90,
-    height: 38,
+    width: 130,
+    height: 48,
     objectFit: 'contain',
+    marginBottom: 6,
   },
-  headerCenterCell: {
-    width: '48%',
-    padding: 5,
-    borderRightWidth: 1,
-    borderColor: '#000000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  countryText: {
-    fontSize: 6.5,
-    fontFamily: 'Helvetica-Bold',
-    textAlign: 'center',
-  },
-  ministryText: {
-    fontSize: 6,
-    fontFamily: 'Helvetica',
-    textAlign: 'center',
-    marginTop: 1,
-  },
-  instituteText: {
-    fontSize: 7,
-    fontFamily: 'Helvetica-Bold',
-    textAlign: 'center',
-    marginTop: 1,
-  },
-  headerRightCell: {
-    width: '26%',
-    padding: 5,
-    justifyContent: 'center',
-  },
-  controlLabel: {
-    fontSize: 6.5,
-    fontFamily: 'Helvetica-Bold',
-    color: '#333333',
-  },
-  controlValue: {
+  headerTextCountry: {
     fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    marginTop: 1,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    color: '#000000',
+  },
+  headerTextMinistry: {
+    fontSize: 7,
+    fontFamily: 'Helvetica',
+    textAlign: 'center',
+    marginTop: 1.5,
+    color: '#1f2937',
+  },
+  headerTextInstitute: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    textAlign: 'center',
+    marginTop: 2,
+    color: '#000000',
+  },
+  headerTextCoord: {
+    fontSize: 7.5,
+    fontFamily: 'Helvetica-Bold',
+    textAlign: 'center',
+    marginTop: 1.5,
+    color: '#374151',
+  },
+  headerDivider: {
+    width: '100%',
+    height: 1.5,
+    backgroundColor: '#1e293b',
+    marginTop: 8,
+    marginBottom: 10,
   },
 
-  // ─── TÍTULO DEL DOCUMENTO ─────────────────────────────────────────
-  titleBar: {
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#000000',
-    paddingVertical: 4,
+  // ─── IDENTIFICACIÓN Y TÍTULO DEL ACTA ─────────────────────────────
+  titleSection: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  titleText: {
-    fontSize: 8.5,
+  titleMain: {
+    fontSize: 10.5,
     fontFamily: 'Helvetica-Bold',
+    textAlign: 'center',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+    color: '#0f172a',
+  },
+  metaBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 6,
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#94a3b8',
+    fontSize: 8,
+  },
+  metaTextBold: {
+    fontFamily: 'Helvetica-Bold',
+    color: '#0f172a',
+  },
+  metaText: {
+    fontFamily: 'Helvetica',
+    color: '#334155',
   },
 
-  // ─── RESUMEN DEL PROCEDIMIENTO ───────────────────────────────────
-  metaTable: {
-    borderWidth: 1,
-    borderColor: '#000000',
-    marginBottom: 8,
-  },
-  metaRow: {
-    flexDirection: 'row',
+  // ─── PÁRRAFOS DEL ACTA (FORMATO CIRCUNSTANCIADO NARRATIVO) ────────
+  sectionHeading: {
+    fontSize: 8.5,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    marginTop: 10,
+    marginBottom: 4,
+    color: '#0f172a',
     borderBottomWidth: 0.5,
     borderBottomColor: '#cbd5e1',
+    paddingBottom: 2,
   },
-  metaRowLast: {
-    flexDirection: 'row',
-  },
-  metaCell: {
-    padding: 4,
-    borderRightWidth: 0.5,
-    borderRightColor: '#cbd5e1',
-  },
-  metaCellLabel: {
-    fontSize: 6.5,
-    fontFamily: 'Helvetica-Bold',
-    color: '#475569',
-    textTransform: 'uppercase',
-  },
-  metaCellValue: {
-    fontSize: 7.5,
+  paragraph: {
+    fontSize: 8.5,
     fontFamily: 'Helvetica',
-    marginTop: 1,
+    textAlign: 'justify',
+    lineHeight: 1.45,
+    marginBottom: 6,
+    textIndent: 16,
   },
-
-  // ─── SECCIÓN TABULAR ─────────────────────────────────────────────
-  sectionHeader: {
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#000000',
-    paddingVertical: 3.5,
-    paddingHorizontal: 6,
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 7.5,
-    textTransform: 'uppercase',
-  },
-  sectionBody: {
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: '#000000',
-    padding: 6,
-    marginBottom: 8,
-  },
-
-  // Grid de datos
-  dataRow: {
-    flexDirection: 'row',
-    marginBottom: 3,
-  },
-  colHalf: {
-    width: '50%',
-    paddingRight: 4,
-  },
-  colThird: {
-    width: '33.33%',
-    paddingRight: 4,
-  },
-  fieldLabel: {
-    fontSize: 6.8,
-    fontFamily: 'Helvetica-Bold',
-    color: '#333333',
-  },
-  fieldValue: {
-    fontSize: 7.5,
+  paragraphNoIndent: {
+    fontSize: 8.5,
     fontFamily: 'Helvetica',
-    marginTop: 1,
+    textAlign: 'justify',
+    lineHeight: 1.45,
+    marginBottom: 6,
+  },
+  bold: {
+    fontFamily: 'Helvetica-Bold',
   },
 
-  // ─── TABLA DE CONSTATACIÓN TÉCNICA (ANTECEDENTES VS SEGUIMIENTO) ──
-  compTable: {
-    borderWidth: 1,
-    borderColor: '#000000',
-    marginBottom: 8,
+  // ─── BLOQUES RESALTADOS / CITAS FORMALES ──────────────────────────
+  formalQuoteBox: {
+    borderLeftWidth: 2.5,
+    borderLeftColor: '#1e293b',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginVertical: 4,
   },
-  compTableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    paddingVertical: 4,
-  },
-  compHeaderLeft: {
-    width: '50%',
-    paddingHorizontal: 6,
-    borderRightWidth: 1,
-    borderRightColor: '#000000',
+  quoteLabel: {
+    fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    fontSize: 7,
-    textTransform: 'uppercase',
+    color: '#334155',
+    marginBottom: 1.5,
   },
-  compHeaderRight: {
-    width: '50%',
-    paddingHorizontal: 6,
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 7,
-    textTransform: 'uppercase',
-  },
-  compTableBody: {
-    flexDirection: 'row',
-  },
-  compBodyLeft: {
-    width: '50%',
-    padding: 6,
-    borderRightWidth: 1,
-    borderRightColor: '#000000',
-  },
-  compBodyRight: {
-    width: '50%',
-    padding: 6,
-  },
-  textContent: {
-    fontSize: 7.2,
+  quoteValue: {
+    fontSize: 8.2,
+    fontFamily: 'Helvetica',
+    color: '#0f172a',
     lineHeight: 1.35,
     textAlign: 'justify',
-    marginTop: 2,
-    marginBottom: 5,
+    marginBottom: 3,
   },
 
-  // ─── DICTAMEN TÉCNICO OFICIAL ────────────────────────────────────
-  dictamenBox: {
+  // ─── DISPOSICIÓN / DICTAMEN OFICIAL ───────────────────────────────
+  resolutionBox: {
     borderWidth: 1,
-    borderColor: '#000000',
-    padding: 6,
+    borderColor: '#334155',
+    backgroundColor: '#f8fafc',
+    padding: 7,
+    marginTop: 6,
     marginBottom: 8,
-    backgroundColor: '#fafafa',
   },
-  dictamenHeader: {
+  resolutionTitle: {
+    fontSize: 8.5,
     fontFamily: 'Helvetica-Bold',
-    fontSize: 7.5,
+    color: '#0f172a',
     textTransform: 'uppercase',
     marginBottom: 2,
   },
-  dictamenText: {
-    fontSize: 7.2,
-    lineHeight: 1.35,
-    textAlign: 'justify',
-  },
-
-  // ─── FOTOS ───────────────────────────────────────────────────────
-  fotoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  fotoItem: {
-    width: 110,
-    height: 75,
-    borderWidth: 1,
-    borderColor: '#000000',
-    objectFit: 'cover',
-  },
-
-  // ─── FIRMAS ──────────────────────────────────────────────────────
-  signTable: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 14,
-  },
-  signCell: {
-    width: '48%',
-    borderWidth: 1,
-    borderColor: '#000000',
-    padding: 6,
-    alignItems: 'center',
-  },
-  signLine: {
-    width: '80%',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    marginTop: 26,
+  resolutionStatusTag: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
     marginBottom: 4,
   },
-  signTitle: {
-    fontSize: 7.5,
-    fontFamily: 'Helvetica-Bold',
-    textAlign: 'center',
-  },
-  signSubtitle: {
-    fontSize: 6.5,
+  resolutionText: {
+    fontSize: 8.2,
     fontFamily: 'Helvetica',
-    color: '#444444',
-    textAlign: 'center',
-    marginTop: 1,
-  },
-  signFoot: {
-    fontSize: 6,
-    fontFamily: 'Helvetica-Oblique',
-    color: '#666666',
-    marginTop: 2,
+    textAlign: 'justify',
+    lineHeight: 1.35,
   },
 
-  // ─── PIE DE PÁGINA ───────────────────────────────────────────────
-  pageFooter: {
-    position: 'absolute',
-    bottom: 14,
-    left: 28,
-    right: 28,
-    borderTopWidth: 0.5,
-    borderTopColor: '#cccccc',
-    paddingTop: 3,
+  // ─── FIRMAS OFICIALES ─────────────────────────────────────────────
+  signSection: {
+    marginTop: 16,
+    paddingTop: 10,
+  },
+  signGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    fontSize: 6,
-    color: '#666666',
+    gap: 20,
+  },
+  signCol: {
+    width: '48%',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  signLine: {
+    width: '90%',
+    height: 1,
+    backgroundColor: '#000000',
+    marginBottom: 4,
+    marginTop: 32,
+  },
+  signRoleTitle: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    color: '#0f172a',
+    marginBottom: 2,
+  },
+  signName: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: '#1e293b',
+  },
+  signDetail: {
+    fontSize: 7.2,
+    fontFamily: 'Helvetica',
+    color: '#475569',
+    marginTop: 1,
+  },
+  stampBox: {
+    marginTop: 4,
+    borderWidth: 0.5,
+    borderColor: '#94a3b8',
+    borderStyle: 'dashed',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  stampText: {
+    fontSize: 6.5,
+    fontFamily: 'Helvetica',
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+
+  // ─── PIE DE PÁGINA ────────────────────────────────────────────────
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    borderTopWidth: 0.5,
+    borderTopColor: '#cbd5e1',
+    paddingTop: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 6.5,
+    color: '#64748b',
+  },
+
+  // ─── ANEXO FOTOGRÁFICO ────────────────────────────────────────────
+  anexoHeader: {
+    alignItems: 'center',
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#0f172a',
+    paddingBottom: 6,
+  },
+  anexoTitle: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    color: '#0f172a',
+  },
+  anexoSubtitle: {
+    fontSize: 8,
+    fontFamily: 'Helvetica',
+    color: '#475569',
+    marginTop: 2,
+  },
+  anexoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 6,
+  },
+  anexoCard: {
+    width: '48%',
+    borderWidth: 0.5,
+    borderColor: '#cbd5e1',
+    padding: 4,
+    backgroundColor: '#ffffff',
+    marginBottom: 8,
+  },
+  anexoImg: {
+    width: '100%',
+    height: 140,
+    objectFit: 'cover',
+  },
+  anexoCaption: {
+    fontSize: 7,
+    fontFamily: 'Helvetica',
+    color: '#475569',
+    marginTop: 3,
+    textAlign: 'center',
   },
 });
 
@@ -319,185 +312,205 @@ export function SeguimientoInformeDocument({
   logoUrl,
 }: SeguimientoInformeDocumentProps) {
   const defaultLogo = logoUrl || `${window.location.origin}/image-insai.png`;
+
   const inspector = data.servidores?.[0] || {
     nombre: 'Funcionario Inspector Oficial',
     cedula: 'Oficial INSAI',
     cargo: 'Inspector Técnico Evaluador',
-    oficina: 'Sede Regional',
+    oficina: 'Oficina / Sede Regional',
   };
 
   const cumplio = Boolean(data.recomendaciones_cumplidas);
 
   return (
     <Document>
+      {/* ─── PÁGINA 1: ACTA CIRCUNSTANCIADA ─── */}
       <Page size="LETTER" style={styles.page}>
-        {/* 1. ENCABEZADO INSTITUCIONAL */}
-        <View style={styles.headerTable}>
-          <View style={styles.headerLogoCell}>
-            <Image src={defaultLogo} style={styles.logoImg} />
-          </View>
-          <View style={styles.headerCenterCell}>
-            <Text style={styles.countryText}>REPÚBLICA BOLIVARIANA DE VENEZUELA</Text>
-            <Text style={styles.ministryText}>MINISTERIO DEL PODER POPULAR PARA LA AGRICULTURA PRODUCTIVA Y TIERRAS</Text>
-            <Text style={styles.instituteText}>INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI)</Text>
-          </View>
-          <View style={styles.headerRightCell}>
-            <Text style={styles.controlLabel}>N° DE CONTROL:</Text>
-            <Text style={styles.controlValue}>{data.n_control}</Text>
-            <Text style={[styles.controlLabel, { marginTop: 3 }]}>FECHA DE VISITA:</Text>
-            <Text style={styles.fieldValue}>{data.fecha_seguimiento}</Text>
-          </View>
-        </View>
+        {/* 1. MEMBRETE INSTITUCIONAL */}
+        {/* <View style={styles.headerContainer}>
+          <Image src={defaultLogo} style={styles.logoImg} />
+          <Text style={styles.headerTextCountry}>REPÚBLICA BOLIVARIANA DE VENEZUELA</Text>
+          <Text style={styles.headerTextMinistry}>
+            MINISTERIO DEL PODER POPULAR PARA LA AGRICULTURA PRODUCTIVA Y TIERRAS
+          </Text>
+          <Text style={styles.headerTextInstitute}>
+            INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI)
+          </Text>
+          <Text style={styles.headerTextCoord}>
+            DIRECCIÓN DE SALUD AGRÍCOLA INTEGRAL • {inspector.oficina || 'COORDINACIÓN REGIONAL'}
+          </Text>
+          <View style={styles.headerDivider} />
+        </View> */}
 
-        {/* 2. TÍTULO */}
-        <View style={styles.titleBar}>
-          <Text style={styles.titleText}>INFORME TÉCNICO DE SEGUIMIENTO Y CONSTATACIÓN SANITARIA</Text>
-        </View>
-
-        {/* 3. RESUMEN DEL EXPEDIENTE */}
-        <View style={styles.metaTable}>
-          <View style={styles.metaRow}>
-            <View style={[styles.metaCell, { width: '40%' }]}>
-              <Text style={styles.metaCellLabel}>Inspección Base / Origen:</Text>
-              <Text style={styles.metaCellValue}>{data.referencia_origen}</Text>
-            </View>
-            <View style={[styles.metaCell, { width: '30%' }]}>
-              <Text style={styles.metaCellLabel}>Estado del Registro:</Text>
-              <Text style={styles.metaCellValue}>{data.status}</Text>
-            </View>
-            <View style={[styles.metaCell, { width: '30%', borderRightWidth: 0 }]}>
-              <Text style={styles.metaCellLabel}>Medidas Sanitarias:</Text>
-              <Text style={[styles.metaCellValue, { fontFamily: 'Helvetica-Bold' }]}>
-                {cumplio ? 'CUMPLIDAS AL 100%' : 'PENDIENTES / NO CUMPLIDAS'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.metaRowLast}>
-            <View style={[styles.metaCell, { width: '100%', borderRightWidth: 0 }]}>
-              <Text style={styles.metaCellLabel}>Oficina / Coordinación Regional Ejecutora:</Text>
-              <Text style={styles.metaCellValue}>{inspector.oficina || 'Sede Regional'}</Text>
-            </View>
+        {/* 2. TÍTULO Y CONTROL */}
+        <View style={styles.titleSection}>
+          <Text style={styles.titleMain}>
+            ACTA CIRCUNSTANCIADA DE SEGUIMIENTO Y CONSTATACIÓN SANITARIA
+          </Text>
+          <View style={styles.metaBar}>
+            <Text style={styles.metaText}>
+              <Text style={styles.metaTextBold}>ACTA N°: </Text>
+              {data.n_control}
+            </Text>
+            <Text style={styles.metaText}>
+              <Text style={styles.metaTextBold}>EXPEDIENTE BASE: </Text>
+              {data.referencia_origen}
+            </Text>
+            <Text style={styles.metaText}>
+              <Text style={styles.metaTextBold}>FECHA: </Text>
+              {data.fecha_seguimiento}
+            </Text>
           </View>
         </View>
 
-        {/* 4. IDENTIFICACIÓN DEL PREDIO Y ADMINISTRADO */}
-        <Text style={styles.sectionHeader}>I. Identificación de la Unidad de Producción y Administrado</Text>
-        <View style={styles.sectionBody}>
-          <View style={styles.dataRow}>
-            <View style={styles.colHalf}>
-              <Text style={styles.fieldLabel}>Nombre del Predio / Instalación:</Text>
-              <Text style={styles.fieldValue}>{data.predio?.nombre || 'No especificado'}</Text>
-            </View>
-            <View style={styles.colHalf}>
-              <Text style={styles.fieldLabel}>Código INSAI del Predio:</Text>
-              <Text style={styles.fieldValue}>{data.predio?.codigo_insai || 'No registrado'}</Text>
-            </View>
-          </View>
+        {/* 3. I. COMPARECENCIA Y CONSTITUCIÓN EN EL PREDIO */}
+        <Text style={styles.sectionHeading}>
+          I. Comparecencia y Constitución en la Unidad de Producción
+        </Text>
+        <Text style={styles.paragraph}>
+          En la jurisdicción del Municipio <Text style={styles.bold}>{data.ubicacion?.municipio || 'S/E'}</Text>,{' '}
+          Parroquia <Text style={styles.bold}>{data.ubicacion?.parroquia || 'S/E'}</Text>,{' '}
+          Sector <Text style={styles.bold}>{data.ubicacion?.sector || 'S/E'}</Text>,{' '}
+          Estado <Text style={styles.bold}>{data.ubicacion?.estado || 'Yaracuy'}</Text>{' '}
+          {data.predio?.punto_referencia ? `(Punto de referencia: ${data.predio.punto_referencia}), ` : ', '}
+          en la fecha <Text style={styles.bold}>{data.fecha_seguimiento}</Text>, se constituyó formalmente en la
+          unidad de producción agropecuaria denominada <Text style={styles.bold}>«{data.predio?.nombre || 'Sin nombre'}»</Text>,
+          identificada con Código INSAI del Predio: <Text style={styles.bold}>{data.predio?.codigo_insai || 'No registrado'}</Text>{' '}
+          y una superficie estimada de <Text style={styles.bold}>{data.predio?.hectareas || 'N/A'}</Text>,
+          propiedad y/o administrada por el ciudadano(a) <Text style={styles.bold}>{data.productor?.nombre || 'No especificado'}</Text>,
+          titular de la Cédula de Identidad / RIF N° <Text style={styles.bold}>{data.productor?.ci_rif || 'N/A'}</Text>;{' '}
+          el funcionario público actuante ciudadano <Text style={styles.bold}>{inspector.nombre}</Text>,
+          titular de la C.I. <Text style={styles.bold}>{inspector.cedula}</Text>, en su condición de{' '}
+          <Text style={styles.bold}>{inspector.cargo}</Text>, adscrito a la dependencia{' '}
+          <Text style={styles.bold}>{inspector.oficina || 'Sede Regional'}</Text> del Instituto Nacional de Salud Agrícola Integral (INSAI),
+          a los fines de dar apertura formal a la presente diligencia técnica.
+        </Text>
 
-          <View style={styles.dataRow}>
-            <View style={styles.colThird}>
-              <Text style={styles.fieldLabel}>Productor / Titular:</Text>
-              <Text style={styles.fieldValue}>{data.productor?.nombre || 'No especificado'}</Text>
-            </View>
-            <View style={styles.colThird}>
-              <Text style={styles.fieldLabel}>Cédula / RIF:</Text>
-              <Text style={styles.fieldValue}>{data.productor?.ci_rif || 'N/A'}</Text>
-            </View>
-            <View style={styles.colThird}>
-              <Text style={styles.fieldLabel}>Superficie:</Text>
-              <Text style={styles.fieldValue}>{data.predio?.hectareas || 'N/A'}</Text>
-            </View>
-          </View>
+        {/* 4. II. DEL OBJETO Y ANTECEDENTES DE LA ACTUACIÓN */}
+        <Text style={styles.sectionHeading}>
+          II. Del Objeto de la Actuación y Antecedentes Técnicos
+        </Text>
+        <Text style={styles.paragraph}>
+          La presente diligencia tiene como objeto verificar y constatar el cumplimiento efectivo de las medidas técnicas,
+          observaciones zoosanitarias y requerimientos legales impuestos en la inspección precedente identificada con el número{' '}
+          <Text style={styles.bold}>{data.referencia_origen}</Text>, en la cual se registraron los siguientes antecedentes:
+        </Text>
 
-          <View style={[styles.dataRow, { marginBottom: 0 }]}>
-            <View style={{ width: '100%' }}>
-              <Text style={styles.fieldLabel}>Ubicación Geográfica:</Text>
-              <Text style={styles.fieldValue}>
-                Sector: {data.ubicacion?.sector} | Parroquia: {data.ubicacion?.parroquia} | Municipio: {data.ubicacion?.municipio} | Estado: {data.ubicacion?.estado}
-              </Text>
-            </View>
-          </View>
+        <View style={styles.formalQuoteBox}>
+          <Text style={styles.quoteLabel}>Aspectos y Observaciones Precedentes:</Text>
+          <Text style={styles.quoteValue}>
+            {data.aspectos_previos || 'Sin no conformidades críticas asentadas en el procedimiento inicial.'}
+          </Text>
+          <Text style={styles.quoteLabel}>Medidas y Recomendaciones Sanitarias Dictadas:</Text>
+          <Text style={styles.quoteValue}>
+            {data.medidas_previas || 'Mantenimiento del plan sanitario preventivo y observancia de la normativa legal vigente.'}
+          </Text>
         </View>
 
-        {/* 5. TABLA COMPARATIVA: ANTECEDENTES VS CONSTATACIÓN ACTUAL */}
-        <View style={styles.compTable}>
-          <View style={styles.compTableHeader}>
-            <Text style={styles.compHeaderLeft}>1. Inspección Precedente (Antecedentes)</Text>
-            <Text style={styles.compHeaderRight}>2. Visita de Seguimiento (Constatación Actual)</Text>
-          </View>
-
-          <View style={styles.compTableBody}>
-            {/* Izquierda: Precedente */}
-            <View style={styles.compBodyLeft}>
-              <Text style={styles.fieldLabel}>Aspectos Observados Originalmente:</Text>
-              <Text style={styles.textContent}>
-                {data.aspectos_previos || 'Sin no conformidades críticas registradas en la visita inicial.'}
-              </Text>
-
-              <Text style={styles.fieldLabel}>Medidas Técnicas / Sanitarias Ordenadas:</Text>
-              <Text style={styles.textContent}>
-                {data.medidas_previas || 'Plan de vigilancia sanitaria y cumplimiento normativo ordinario.'}
-              </Text>
-            </View>
-
-            {/* Derecha: Seguimiento Actual */}
-            <View style={styles.compBodyRight}>
-              <Text style={styles.fieldLabel}>Estado de Cumplimiento Técnico:</Text>
-              <Text style={[styles.textContent, { fontFamily: 'Helvetica-Bold' }]}>
-                {cumplio
-                  ? 'Conforme: Las medidas ordenadas fueron subsanadas en su totalidad.'
-                  : 'No Conforme: Se constató incumplimiento o medidas pendientes.'}
-              </Text>
-
-              <Text style={styles.fieldLabel}>Hallazgos Técnicos Verificados en Campo:</Text>
-              <Text style={styles.textContent}>{data.hallazgos_seguimiento}</Text>
-            </View>
-          </View>
+        {/* 5. III. DE LOS HECHOS CONSTATADOS Y HALLAZGOS EN CAMPO */}
+        <Text style={styles.sectionHeading}>
+          III. De los Hechos Constatados y Hallazgos en Campo
+        </Text>
+        <Text style={styles.paragraph}>
+          Habiéndose practicado la inspección ocular, el recorrido técnico por las instalaciones, mangas de manejo y áreas de producción,
+          en presencia del administrado o su representante legal, la comisión técnica del INSAI deja formal constancia de los
+          siguientes hechos y evidencias verificadas:
+        </Text>
+        <View style={styles.formalQuoteBox}>
+          <Text style={styles.quoteValue}>{data.hallazgos_seguimiento}</Text>
         </View>
 
-        {/* 6. DICTAMEN TÉCNICO OFICIAL */}
-        <View style={styles.dictamenBox}>
-          <Text style={styles.dictamenHeader}>{data.dictamen?.titulo}</Text>
-          <Text style={styles.dictamenText}>{data.dictamen?.detalle}</Text>
+        {/* 6. IV. DICTAMEN TÉCNICO Y DISPOSICIÓN SANITARIA */}
+        <Text style={styles.sectionHeading}>
+          IV. Dictamen Técnico y Disposición Sanitaria Oficial
+        </Text>
+        <View style={styles.resolutionBox}>
+          <Text style={styles.resolutionTitle}>
+            DICTAMEN: {data.dictamen?.titulo || 'EVALUACIÓN TÉCNICA OFICIAL'}
+          </Text>
+          <Text style={styles.resolutionStatusTag}>
+            ESTADO DE LAS MEDIDAS: {cumplio ? 'CUMPLIDAS A CABALIDAD (CONFORME)' : 'NO CUMPLIDAS / MEDIDAS PENDIENTES'}
+            {'  '}|{'  '}ESTATUS: {data.status}
+          </Text>
+          <Text style={styles.resolutionText}>
+            {data.dictamen?.detalle || 'Sin observaciones complementarias por la comisión técnica actuante.'}
+          </Text>
         </View>
 
-        {/* 7. REGISTRO FOTOGRÁFICO */}
-        {data.fotos && data.fotos.length > 0 && (
-          <>
-            <Text style={styles.sectionHeader}>II. Registro Fotográfico de la Visita</Text>
-            <View style={[styles.sectionBody, { minHeight: 80 }]}>
-              <View style={styles.fotoGrid}>
-                {data.fotos.slice(0, 4).map((f, idx) => (
-                  <Image key={f.id || idx} src={f.dataUrl} style={styles.fotoItem} />
-                ))}
+        {/* 7. V. DEL CIERRE Y NOTIFICACIÓN FORMAL */}
+        <Text style={styles.paragraph}>
+          Leída que fue la presente acta a los comparecientes y enterados de su contenido y alcance legal, se ratifican
+          en todas sus partes en señal de conformidad y notificación formal, suscribiéndose en dos (2) ejemplares de un mismo tenor y efecto.
+        </Text>
+
+        {/* 8. SECCIÓN DE FIRMAS */}
+        <View style={styles.signSection}>
+          <View style={styles.signGrid}>
+            <View style={styles.signCol}>
+              <View style={styles.signLine} />
+              <Text style={styles.signRoleTitle}>POR EL INSAI (FUNCIONARIO ACTUANTE)</Text>
+              <Text style={styles.signName}>{inspector.nombre}</Text>
+              <Text style={styles.signDetail}>C.I. {inspector.cedula} • {inspector.cargo}</Text>
+              <Text style={styles.signDetail}>{inspector.oficina || 'Instituto Nacional de Salud Agrícola Integral'}</Text>
+              <View style={styles.stampBox}>
+                <Text style={styles.stampText}>Sello Oficial de la Dependencia</Text>
               </View>
             </View>
-          </>
-        )}
 
-        {/* 8. FIRMAS OFICIALES */}
-        <View style={styles.signTable}>
-          <View style={styles.signCell}>
-            <View style={styles.signLine} />
-            <Text style={styles.signTitle}>{inspector.nombre}</Text>
-            <Text style={styles.signSubtitle}>C.I. {inspector.cedula} | {inspector.cargo}</Text>
-            <Text style={styles.signFoot}>Funcionario Técnico Evaluador - INSAI</Text>
-          </View>
-
-          <View style={styles.signCell}>
-            <View style={styles.signLine} />
-            <Text style={styles.signTitle}>{data.productor?.nombre || 'Productor / Administrado'}</Text>
-            <Text style={styles.signSubtitle}>C.I. / RIF: {data.productor?.ci_rif || 'N/A'}</Text>
-            <Text style={styles.signFoot}>Firma de Notificación y Enterado</Text>
+            <View style={styles.signCol}>
+              <View style={styles.signLine} />
+              <Text style={styles.signRoleTitle}>POR EL ADMINISTRADO (NOTIFICADO)</Text>
+              <Text style={styles.signName}>{data.productor?.nombre || 'Propietario / Representante'}</Text>
+              <Text style={styles.signDetail}>C.I. / RIF: {data.productor?.ci_rif || 'N/A'}</Text>
+              <Text style={styles.signDetail}>Titular / Encargado de la Unidad de Producción</Text>
+              <View style={styles.stampBox}>
+                <Text style={styles.stampText}>Firma / Huella Dactilar</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* 9. PIE DE PÁGINA */}
-        <View style={styles.pageFooter}>
-          <Text>Documento Oficial emitido por el Sistema Integral de Control y Certificación (SICIC - INSAI)</Text>
-          <Text>Página 1 de 1</Text>
+        {/* PIE DE PÁGINA */}
+        <View style={styles.footer} fixed>
+          <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIC</Text>
+          <Text
+            render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+          />
         </View>
       </Page>
+
+      {/* ─── PÁGINA 2: ANEXO FOTOGRÁFICO (OPCIONAL SI HAY FOTOS) ─── */}
+      {data.fotos && data.fotos.length > 0 && (
+        <Page size="LETTER" style={styles.page}>
+          <View style={styles.anexoHeader}>
+            <Image src={defaultLogo} style={[styles.logoImg, { height: 38, width: 100 }]} />
+            <Text style={styles.anexoTitle}>
+              ANEXO FOTOGRÁFICO • EVIDENCIAS TÉCNICAS EN CAMPO
+            </Text>
+            <Text style={styles.anexoSubtitle}>
+              Soporte Gráfico del Acta N° {data.n_control} • Unidad de Producción: «{data.predio?.nombre || 'Predio'}»
+            </Text>
+          </View>
+
+          <View style={styles.anexoGrid}>
+            {data.fotos.map((f, idx) => (
+              <View key={f.id || idx} style={styles.anexoCard}>
+                <Image src={f.dataUrl} style={styles.anexoImg} />
+                <Text style={styles.anexoCaption}>
+                  Registro Fotográfico N° {idx + 1} — Inspección de Seguimiento en Sitio
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.footer} fixed>
+            <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIC</Text>
+            <Text
+              render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+            />
+          </View>
+        </Page>
+      )}
     </Document>
   );
 }

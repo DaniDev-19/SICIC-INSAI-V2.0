@@ -119,8 +119,8 @@ const Seguimientos: React.FC = () => {
   // Filter timeline items for selected inspection
   const timelineSeguimientos = selectedTimelineSeguimiento
     ? seguimientos.filter(
-        (s) => s.inspeccion_id === selectedTimelineSeguimiento.inspeccion_id
-      )
+      (s) => s.inspeccion_id === selectedTimelineSeguimiento.inspeccion_id
+    )
     : [];
 
   return (
@@ -172,7 +172,7 @@ const Seguimientos: React.FC = () => {
             <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
             {/* Search Bar */}
-            <div className="w-full sm:w-[18rem] lg:w-[22rem]">
+            <div className="w-full sm:w-[18rem] lg:w-88">
               <SearchInput
                 placeholder="N° Control, propiedad o hallazgos..."
                 value={search}

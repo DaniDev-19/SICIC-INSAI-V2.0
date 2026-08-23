@@ -147,89 +147,261 @@ const styles = StyleSheet.create({
 
 // Component for Caracterización Estatal
 export function CaracStatalPdfDocument({
-  records,
+  data,
   logoUrl,
   generadoEl,
 }: {
-  records: any[];
+  data: any;
   logoUrl: string;
   generadoEl: string;
 }) {
-  const totalVets = records.reduce((acc, r) => acc + (Number(r.num_veterinarios_oficiales) || 0), 0);
-  const totalPara = records.reduce((acc, r) => acc + (Number(r.num_paraveterinarios_oficiales) || 0), 0);
-  const totalAdmin = records.reduce((acc, r) => acc + (Number(r.num_administrativos_oficiales) || 0), 0);
-  const totalVeh = records.reduce((acc, r) => acc + (Number(r.num_vehiculos_operativos) || 0), 0);
+  const records = Array.isArray(data) ? data : data?.records || [];
+  const estadoNombre = data?.estado || records[0]?.estado || records[0]?.municipios?.estados?.nombre || 'YARACUY';
+
+  const totales = data?.totales || records.reduce(
+    (acc: any, r: any) => {
+      acc.area_km2 += Number(r.area_km2) || 0;
+      acc.num_veterinarios_oficiales += Number(r.num_veterinarios_oficiales) || 0;
+      acc.num_paraveterinarios_oficiales += Number(r.num_paraveterinarios_oficiales) || 0;
+      acc.num_administrativos_oficiales += Number(r.num_administrativos_oficiales) || 0;
+      acc.num_vehiculos_operativos += Number(r.num_vehiculos_operativos) || 0;
+      acc.num_predios += Number(r.num_predios) || 0;
+      acc.bovinos += Number(r.bovinos) || 0;
+      acc.bufalinos += Number(r.bufalinos) || 0;
+      acc.porcinos += Number(r.porcinos) || 0;
+      acc.pequenos_rumiantes += Number(r.pequenos_rumiantes) || 0;
+      acc.equidos += Number(r.equidos) || 0;
+      acc.aves += Number(r.aves) || 0;
+      return acc;
+    },
+    {
+      area_km2: 0,
+      num_veterinarios_oficiales: 0,
+      num_paraveterinarios_oficiales: 0,
+      num_administrativos_oficiales: 0,
+      num_vehiculos_operativos: 0,
+      num_predios: 0,
+      bovinos: 0,
+      bufalinos: 0,
+      porcinos: 0,
+      pequenos_rumiantes: 0,
+      equidos: 0,
+      aves: 0,
+    }
+  );
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerLogo}>
-            <Image src={logoUrl} style={styles.headerLogoImg} />
+      <Page size="LETTER" orientation="landscape" style={[styles.page, { padding: 18, paddingBottom: 28 }]}>
+        {/* Encabezado Institucional */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <View style={{ width: '45%' }}>
+            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#000000' }}>
+              GOBIERNO BOLIVARIANO DE VENEZUELA
+            </Text>
+            <Text style={{ fontSize: 6.5, fontFamily: 'Helvetica', color: '#333333', marginTop: 1 }}>
+              Ministerio del Poder Popular para la Agricultura Productiva y Tierras
+            </Text>
           </View>
-          <View style={styles.headerCenter}>
-            <Text style={styles.instName}>INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI)</Text>
-            <Text style={styles.subInstName}>CARACTERIZACIÓN ESTATAL Y CAPACIDAD DE RECURSOS SANITARIOS</Text>
+          <View style={{ width: '20%', alignItems: 'center' }}>
+            <Image src={logoUrl} style={{ width: 85, height: 32, objectFit: 'contain' }} />
           </View>
-          <View style={styles.headerRight}>
-            <Text style={{ fontSize: 6, color: '#64748b' }}>FECHA DE EMISIÓN</Text>
-            <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#0f172a' }}>{generadoEl}</Text>
+          <View style={{ width: '35%', alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#990000' }}>
+              INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL
+            </Text>
+            <Text style={{ fontSize: 6, color: '#64748b', marginTop: 1 }}>
+              Fecha de Emisión: {generadoEl}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.titleBar}>
-          <Text style={styles.titleText}>REPORTE OFICIAL DE CARACTERIZACIÓN ESTATAL Y RECURSOS MUNICIPIO A MUNICIPIO</Text>
+        {/* Banner Rojo Oficial */}
+        <View style={{ backgroundColor: '#990000', paddingVertical: 4, alignItems: 'center', marginBottom: 4 }}>
+          <Text style={{ fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: '#ffffff', letterSpacing: 0.5 }}>
+            CARACTERIZACIÓN DEL ESTADO: {String(estadoNombre).toUpperCase()}
+          </Text>
         </View>
 
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.th, { width: '25%' }]}>MUNICIPIO</Text>
-            <Text style={[styles.th, { width: '20%' }]}>ESTADO</Text>
-            <Text style={[styles.th, { width: '15%', textAlign: 'center' }]}>VETERINARIOS</Text>
-            <Text style={[styles.th, { width: '15%', textAlign: 'center' }]}>PARAVETERINARIOS</Text>
-            <Text style={[styles.th, { width: '15%', textAlign: 'center' }]}>ADMINISTRATIVOS</Text>
-            <Text style={[styles.th, { width: '10%', textAlign: 'center' }]}>VEHÍCULOS</Text>
+        {/* Tabla Oficial de Caracterización */}
+        <View style={{ borderWidth: 0.5, borderColor: '#999999' }}>
+          {/* Fila 1 de Encabezado */}
+          <View style={{ flexDirection: 'row', backgroundColor: '#f5e6e6', minHeight: 22, borderBottomWidth: 0.5, borderBottomColor: '#999999' }}>
+            <Text style={{ width: '13%', padding: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              MUNICIPIO
+            </Text>
+            <Text style={{ width: '8%', padding: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              ÁREA GEOGRÁFICA (Km²)
+            </Text>
+            <Text style={{ width: '6.5%', padding: 2, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              MÉDICOS VET. OFICIALES
+            </Text>
+            <Text style={{ width: '6.5%', padding: 2, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              PARAVET. OFICIALES
+            </Text>
+            <Text style={{ width: '6.5%', padding: 2, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              PERSONAL ADMIN.
+            </Text>
+            <Text style={{ width: '6.5%', padding: 2, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              VEHÍCULOS OPERATIVOS
+            </Text>
+            <Text style={{ width: '6%', padding: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              N° DE PREDIOS
+            </Text>
+            {/* Header Agrupador Población Animal */}
+            <View style={{ width: '47%', backgroundColor: '#990000', justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ fontSize: 6.8, fontFamily: 'Helvetica-Bold', color: '#ffffff', textAlign: 'center' }}>
+                POBLACIÓN ANIMAL
+              </Text>
+            </View>
           </View>
+
+          {/* Fila 2 de Encabezado (Sub-columnas Animales) */}
+          <View style={{ flexDirection: 'row', backgroundColor: '#f5e6e6', minHeight: 14, borderBottomWidth: 0.5, borderBottomColor: '#999999' }}>
+            <View style={{ width: '53%', borderRightWidth: 0.5, borderRightColor: '#999999' }} />
+            <Text style={{ width: '7.8%', padding: 1.5, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000', borderRightWidth: 0.5, borderRightColor: '#ffffff' }}>
+              BOVINOS
+            </Text>
+            <Text style={{ width: '7.8%', padding: 1.5, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000', borderRightWidth: 0.5, borderRightColor: '#ffffff' }}>
+              BUFALINOS
+            </Text>
+            <Text style={{ width: '7.8%', padding: 1.5, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000', borderRightWidth: 0.5, borderRightColor: '#ffffff' }}>
+              PORCINOS
+            </Text>
+            <Text style={{ width: '8%', padding: 1.5, fontSize: 4.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000', borderRightWidth: 0.5, borderRightColor: '#ffffff' }}>
+              PQ. RUMIANTES
+            </Text>
+            <Text style={{ width: '7.8%', padding: 1.5, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000', borderRightWidth: 0.5, borderRightColor: '#ffffff' }}>
+              ÉQUIDOS
+            </Text>
+            <Text style={{ width: '7.8%', padding: 1.5, fontSize: 5.2, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#ffffff', backgroundColor: '#b30000' }}>
+              AVES
+            </Text>
+          </View>
+
+          {/* Filas de Datos */}
           {records.length === 0 ? (
-            <View style={styles.tableRow}>
-              <Text style={[styles.td, { width: '100%', textAlign: 'center' }]}>No hay datos de caracterización registrados.</Text>
+            <View style={{ padding: 12, alignItems: 'center' }}>
+              <Text style={{ fontSize: 7, color: '#666666' }}>No hay registros de municipios cargados en el sistema.</Text>
             </View>
           ) : (
-            records.map((r, i) => (
-              <View key={r.id || i} style={styles.tableRow}>
-                <Text style={[styles.td, { width: '25%', fontFamily: 'Helvetica-Bold' }]}>{r.municipios?.nombre || 'Municipio'}</Text>
-                <Text style={[styles.td, { width: '20%' }]}>{r.municipios?.estados?.nombre || 'Estado'}</Text>
-                <Text style={[styles.td, { width: '15%', textAlign: 'center', fontFamily: 'Helvetica-Bold' }]}>{r.num_veterinarios_oficiales || 0}</Text>
-                <Text style={[styles.td, { width: '15%', textAlign: 'center' }]}>{r.num_paraveterinarios_oficiales || 0}</Text>
-                <Text style={[styles.td, { width: '15%', textAlign: 'center' }]}>{r.num_administrativos_oficiales || 0}</Text>
-                <Text style={[styles.td, { width: '10%', textAlign: 'center', fontFamily: 'Helvetica-Bold' }]}>{r.num_vehiculos_operativos || 0}</Text>
-              </View>
-            ))
+            records.map((r: any, idx: number) => {
+              const bg = idx % 2 === 1 ? '#fdf8f8' : '#ffffff';
+              const munName = r.municipio || r.municipios?.nombre || 'MUNICIPIO';
+              const area = Number(r.area_km2) || 0;
+
+              return (
+                <View
+                  key={r.id || idx}
+                  style={{
+                    flexDirection: 'row',
+                    backgroundColor: bg,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#e0e0e0',
+                    minHeight: 13,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ width: '13%', paddingHorizontal: 3, fontSize: 5.8, fontFamily: 'Helvetica-Bold', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {munName}
+                  </Text>
+                  <Text style={{ width: '8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#333333', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {area > 0 ? `${area} km²` : '-'}
+                  </Text>
+                  <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.num_veterinarios_oficiales || 0)}
+                  </Text>
+                  <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#333333', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.num_paraveterinarios_oficiales || 0)}
+                  </Text>
+                  <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#333333', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.num_administrativos_oficiales || 0)}
+                  </Text>
+                  <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.num_vehiculos_operativos || 0)}
+                  </Text>
+                  <Text style={{ width: '6%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.num_predios || 0)}
+                  </Text>
+                  <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.bovinos || 0)}
+                  </Text>
+                  <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.bufalinos || 0)}
+                  </Text>
+                  <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.porcinos || 0)}
+                  </Text>
+                  <Text style={{ width: '8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.pequenos_rumiantes || 0)}
+                  </Text>
+                  <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#e0e0e0' }}>
+                    {String(r.equidos || 0)}
+                  </Text>
+                  <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, textAlign: 'center', color: '#000000' }}>
+                    {String(r.aves || 0)}
+                  </Text>
+                </View>
+              );
+            })
           )}
+
+          {/* Fila de Totales del Estado */}
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: '#f0d0d0',
+              borderTopWidth: 1,
+              borderTopColor: '#990000',
+              minHeight: 16,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ width: '13%', paddingHorizontal: 3, fontSize: 5.8, fontFamily: 'Helvetica-Bold', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              TOTAL DEL ESTADO
+            </Text>
+            <Text style={{ width: '8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {totales.area_km2 > 0 ? `${totales.area_km2} km²` : '-'}
+            </Text>
+            <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.num_veterinarios_oficiales || 0)}
+            </Text>
+            <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.num_paraveterinarios_oficiales || 0)}
+            </Text>
+            <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.num_administrativos_oficiales || 0)}
+            </Text>
+            <Text style={{ width: '6.5%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.num_vehiculos_operativos || 0)}
+            </Text>
+            <Text style={{ width: '6%', paddingHorizontal: 2, fontSize: 5.8, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.num_predios || 0)}
+            </Text>
+            <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.bovinos || 0)}
+            </Text>
+            <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.bufalinos || 0)}
+            </Text>
+            <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.porcinos || 0)}
+            </Text>
+            <Text style={{ width: '8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.pequenos_rumiantes || 0)}
+            </Text>
+            <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000', borderRightWidth: 0.5, borderRightColor: '#999999' }}>
+              {String(totales.equidos || 0)}
+            </Text>
+            <Text style={{ width: '7.8%', paddingHorizontal: 2, fontSize: 5.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#000000' }}>
+              {String(totales.aves || 0)}
+            </Text>
+          </View>
         </View>
 
-        {/* Resumen Totales */}
-        <View style={styles.summaryBox}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>TOTAL VETERINARIOS</Text>
-            <Text style={styles.summaryValue}>{totalVets}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>TOTAL PARAVETERINARIOS</Text>
-            <Text style={styles.summaryValue}>{totalPara}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>TOTAL ADMINISTRATIVOS</Text>
-            <Text style={styles.summaryValue}>{totalAdmin}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>VEHÍCULOS OPERATIVOS</Text>
-            <Text style={styles.summaryValue}>{totalVeh}</Text>
-          </View>
-        </View>
-
+        {/* Pie de Página Oficial */}
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL DEL INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI) • SICIC</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
