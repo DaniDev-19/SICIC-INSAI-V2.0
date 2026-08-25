@@ -438,6 +438,8 @@ model notificaciones {
   tipo              String?   @default("INFO") @db.VarChar(50)
   leido             Boolean?  @default(false)
   created_at        DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([usuario_global_id, leido], map: "idx_notificaciones_user_leido")
 }
 
 model oficinas {

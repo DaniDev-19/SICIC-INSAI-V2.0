@@ -1,3 +1,5 @@
+import notificationService from './notification.service.js';
+
 class InventoryService {
   async registrarMovimiento({
     tx,
@@ -46,6 +48,17 @@ class InventoryService {
 
       if (Number(updated.stock_actual) <= Number(updated.stock_minimo)) {
         console.warn(`[ALERTA INVENTARIO] Stock bajo para insumo ${insumo_id} en oficina ${oficina_id}. Actual: ${updated.stock_actual}`);
+        tx.insumos.findUnique({ where: { id: insumo_id }, select: { nombre: true, codigo: true } })
+          .then((insumoInfo) => {
+            const nombreInsumo = insumoInfo?.nombre ? `"${insumoInfo.nombre}"` : `ID ${insumo_id}`;
+            return notificationService.notificarPorOficina({
+              db: tx,
+              oficina_id,
+              mensaje: `⚠️ Alerta de Inventario: El insumo ${nombreInsumo} está en nivel crítico o mínimo (Stock actual: ${updated.stock_actual}).`,
+              tipo: 'STOCK',
+            });
+          })
+          .catch((err) => console.error('[InventoryService] Error enviando alerta de stock:', err.message));
       }
     } else {
       await tx.insumos_stock.create({
