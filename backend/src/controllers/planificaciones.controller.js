@@ -3,6 +3,7 @@ import excelService from '../services/excel.service.js';
 import * as statusSyncService from '../services/status-sync.service.js';
 import pdfService from '../services/pdf.service.js';
 import mailService from '../services/mail.service.js';
+import notificationService from '../services/notification.service.js';
 
 const parseTimeInput = (timeStr) => {
   if (!timeStr) return null;
@@ -330,8 +331,18 @@ export const createPlanificacion = async (req, res) => {
         });
         const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
         await mailService.sendPlanificacionNotification({ tipoEvento: 'CREACION', planificacion: fullPlan, inspectores });
+
+        const userIds = inspectores.map(i => i.usuario_global_id).filter(Boolean);
+        if (userIds.length > 0) {
+          await notificationService.crearNotificacionesBatch({
+            db: tenantPrisma,
+            usuarios_ids: userIds,
+            mensaje: `📋 Nueva Planificación Asignada: Se te ha asignado la actividad "${response.codigo || response.actividad}" para la fecha ${new Date(response.fecha_programada).toLocaleDateString('es-VE')}.`,
+            tipo: 'INSPECCION',
+          });
+        }
       } catch (err) {
-        console.error('⚠️  Error al enviar correo de notificación (crear planificación):', err.message);
+        console.error('⚠️  Error al enviar notificación de planificación:', err.message);
       }
     });
 
@@ -431,8 +442,18 @@ export const updatePlanificacion = async (req, res) => {
       });
       const inspectores = fullPlan?.planificacion_empleados?.map(pe => pe.empleados).filter(Boolean) || [];
       await mailService.sendPlanificacionNotification({ tipoEvento: 'ACTUALIZACION', planificacion: fullPlan, inspectores });
+
+      const userIds = inspectores.map(i => i.usuario_global_id).filter(Boolean);
+      if (userIds.length > 0) {
+        await notificationService.crearNotificacionesBatch({
+          db: tenantPrisma,
+          usuarios_ids: userIds,
+          mensaje: `🔄 Planificación Actualizada: Se ha actualizado la planificación "${response.codigo || response.actividad}".`,
+          tipo: 'INSPECCION',
+        });
+      }
     } catch (err) {
-      console.error('⚠️  Error al enviar correo de notificación (actualizar planificación):', err.message);
+      console.error('⚠️  Error al enviar notificación de actualización de planificación:', err.message);
     }
   });
 

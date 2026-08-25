@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { GlobalSearch } from "@/components/GlobalSearch"
+import { NotificationBell } from "@/components/NotificationBell"
 
 export default function Layout() {
     return (
@@ -50,8 +51,9 @@ function LayoutContent() {
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
                         <GlobalSearch />
+                        <NotificationBell />
                         <HelpButton />
                         <ThemeToggle />
                     </div>
