@@ -199,7 +199,7 @@ export function NotificationBell() {
         </div>
 
         {/* List Content */}
-        <div className="max-h-[380px] overflow-y-auto divide-y divide-border/40 scrollbar-thin">
+        <div className="max-h-95 overflow-y-auto divide-y divide-border/40 scrollbar-thin">
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[1, 2, 3].map((i) => (
@@ -218,7 +218,7 @@ export function NotificationBell() {
                 <Bell className="h-5 w-5 opacity-40" />
               </div>
               <p className="text-sm font-medium text-foreground">Sin notificaciones</p>
-              <p className="text-xs text-muted-foreground max-w-[200px]">
+              <p className="text-xs text-muted-foreground max-w-50">
                 {activeTab === 'unread'
                   ? 'No tienes notificaciones pendientes por leer.'
                   : 'No se han registrado eventos o alertas recientes.'}
@@ -230,7 +230,7 @@ export function NotificationBell() {
                 key={item.id}
                 className={cn(
                   "p-3.5 flex items-start gap-3 transition-colors hover:bg-muted/40 group relative",
-                  !item.leido && "bg-primary/[0.03] dark:bg-primary/[0.06]"
+                  !item.leido && "bg-primary/3 dark:bg-primary/3"
                 )}
               >
                 {/* Icon */}
@@ -249,7 +249,7 @@ export function NotificationBell() {
                       <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" title="No leída" />
                     )}
                   </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed break-words font-normal">
+                  <p className="text-xs text-foreground/90 leading-relaxed wrap-break-words font-normal">
                     {item.mensaje}
                   </p>
                 </div>
