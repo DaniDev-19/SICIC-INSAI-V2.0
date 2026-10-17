@@ -500,7 +500,7 @@ export const exportSolicitudes = async (req, res) => {
     include: {
       clientes: { select: { nombre: true, cedula_rif: true } },
       propiedades: { select: { nombre: true, codigo_insai: true } },
-      t_solicitud: { select: { font: true, nombre: true } }
+      t_solicitud: { select: { nombre: true } }
     },
     orderBy: { created_at: 'desc' }
   });

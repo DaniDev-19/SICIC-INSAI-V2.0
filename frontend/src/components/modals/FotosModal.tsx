@@ -76,7 +76,7 @@ export function FotosModal({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
-    
+
     // Check photo limits (max 10 total)
     if (fotos.length + selectedFiles.length + files.length > 10) {
       toast.error('El límite total es de 10 fotografías por registro.');
@@ -126,26 +126,26 @@ export function FotosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[min(94vh,54rem)] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
+      <DialogContent className="w-[calc(100vw-1rem)] sm:w-full sm:max-w-4xl max-h-[92vh] flex flex-col p-0 border border-border/60 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden bg-background gap-0">
         {/* Header */}
-        <DialogHeader className="p-5 sm:p-6 pb-4 bg-muted/40 border-b border-border/50 sticky top-0 backdrop-blur-md z-20">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="size-11 shrink-0 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-                <ImageIcon className="size-5" />
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 bg-muted/40 border-b border-border/50 shrink-0 pr-12 sm:pr-14">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="size-9 sm:size-11 shrink-0 rounded-xl sm:rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                <ImageIcon className="size-4 sm:size-5" />
               </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg sm:text-xl font-black uppercase tracking-wide truncate">
+              <div className="min-w-0 text-left">
+                <DialogTitle className="text-[10px] sm:text-lg font-black uppercase tracking-wide">
                   {title}
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground truncate">
+                <DialogDescription className="wrap-break-words text-[10px] sm:text-xs text-muted-foreground">
                   {subtitle || `${fotos.length} evidencia(s) fotográfica(s) registrada(s)`}
                 </DialogDescription>
               </div>
             </div>
 
             {canEdit && (
-              <div>
+              <div className="shrink-0">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -156,25 +156,27 @@ export function FotosModal({
                 />
                 <Button
                   onClick={() => fileInputRef.current?.click()}
-                  size="sm"
+                  size="xs"
+                  title='Agregar Nueva Evidencia'
                   disabled={fotos.length + selectedFiles.length >= 10 || isUploading}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md cursor-pointer gap-2 text-xs"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md cursor-pointer gap-1 sm:gap-2 text-[11px] sm:text-xs h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl"
                 >
-                  <Plus className="size-4" />
-                  Agregar fotos
+                  <Plus className="size-3.5 sm:size-4" />
+                  <span className="hidden sm:inline">Agregar</span>
+                  <span className="sm:hidden">Evidencia</span>
                 </Button>
               </div>
             )}
           </div>
         </DialogHeader>
 
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-3 sm:p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
           {/* New uploads preview queue if user selected files */}
           {selectedFiles.length > 0 && (
-            <div className="p-4 rounded-2xl border border-primary/30 bg-primary/5 space-y-3 animate-in fade-in duration-300">
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-primary/30 bg-primary/5 space-y-3 animate-in fade-in duration-300">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Upload className="size-4 animate-bounce" />
+                <p className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Upload className="size-3.5 sm:size-4 animate-bounce" />
                   Fotos listas para guardar ({selectedFiles.length})
                 </p>
                 <div className="flex items-center gap-2">
@@ -187,7 +189,7 @@ export function FotosModal({
                       setPreviews([]);
                     }}
                     disabled={isUploading}
-                    className="h-8 text-xs font-bold text-muted-foreground hover:text-rose-500"
+                    className="h-7 sm:h-8 text-[11px] sm:text-xs font-bold text-muted-foreground hover:text-rose-500 px-2 sm:px-3"
                   >
                     Cancelar
                   </Button>
@@ -195,24 +197,24 @@ export function FotosModal({
                     size="sm"
                     onClick={handleSaveUploads}
                     disabled={isUploading}
-                    className="h-8 text-xs font-black bg-primary hover:bg-primary/90 text-white gap-1.5"
+                    className="h-7 sm:h-8 text-[11px] sm:text-xs font-black bg-primary hover:bg-primary/90 text-white gap-1 sm:gap-1.5 px-2.5 sm:px-3"
                   >
                     {isUploading ? (
                       <>
-                        <Loader2 className="size-3.5 animate-spin" /> Subiendo...
+                        <Loader2 className="size-3 sm:size-3.5 animate-spin" /> Subiendo...
                       </>
                     ) : (
                       <>
-                        <Upload className="size-3.5" /> Guardar fotos
+                        <Upload className="size-3 sm:size-3.5" /> Guardar fotos
                       </>
                     )}
                   </Button>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2">
                 {previews.map((url, idx) => (
-                  <div key={idx} className="relative size-20 rounded-xl overflow-hidden border border-primary/30 group">
+                  <div key={idx} className="relative size-16 sm:size-20 rounded-xl overflow-hidden border border-primary/30 group bg-black/40">
                     <img src={url} alt="Nuevo" className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -230,38 +232,64 @@ export function FotosModal({
 
           {/* Existing Photos View */}
           {fotos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-border/60 rounded-3xl bg-muted/10 space-y-3">
-              <div className="size-16 rounded-2xl bg-muted/30 flex items-center justify-center">
-                <ImageIcon className="size-8 text-muted-foreground/50" />
+            <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center border-2 border-dashed border-border/60 rounded-2xl sm:rounded-3xl bg-muted/10 space-y-3">
+              <div className="size-12 sm:size-16 rounded-xl sm:rounded-2xl bg-muted/30 flex items-center justify-center">
+                <ImageIcon className="size-6 sm:size-8 text-muted-foreground/50" />
               </div>
-              <p className="font-bold text-foreground text-sm">No hay evidencias fotográficas cargadas</p>
-              <p className="text-xs text-muted-foreground max-w-xs">
+              <p className="font-bold text-foreground text-xs sm:text-sm">No hay evidencias fotográficas cargadas</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground max-w-xs px-2">
                 {canEdit
                   ? 'Haz clic en «Agregar fotos» arriba para adjuntar evidencias de la inspección.'
                   : 'Este registro no posee imágenes adjuntas.'}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4 mx-auto">
               {/* Main Photo Showcase */}
               {currentFoto && (
-                <div className="relative rounded-3xl overflow-hidden bg-black/95 border border-border/40 group min-h-[20rem] max-h-[28rem] flex items-center justify-center shadow-xl">
+                <div className="relative rounded-2xl sm:rounded-2xl overflow-hidden bg-black/90 border border-border/40 group h-60 xs:h-72 sm:h-96 md:h-100 flex items-center justify-center shadow-xl">
                   <img
                     src={resolveMediaUrl(currentFoto.imagen)}
+                    title={`Evidencia número ${selectedIndex + 1}`}
                     alt={`Evidencia ${selectedIndex + 1}`}
-                    className="max-h-[28rem] w-auto object-contain select-none transition-all duration-300"
+                    className="cursor-pointer w-full h-full object-contain select-none transition-all duration-300"
+                    onClick={() => {
+                      if (currentFoto.id) {
+                        const url = resolveMediaUrl(currentFoto.imagen);
+                        window.open(url, '_blank', 'noopener noreferrer');
+                      }
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.parentElement?.querySelector('.img-error-fallback');
+                      if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                    }}
                   />
 
+                  {/* Fallback de error si la imagen no carga */}
+                  <div className="img-error-fallback hidden flex-col items-center justify-center p-6 text-center text-muted-foreground gap-2">
+                    <AlertTriangle className="size-8 text-amber-500 animate-pulse" />
+                    <p className="text-xs font-bold text-white">No se pudo cargar la imagen</p>
+                    <a
+                      href={resolveMediaUrl(currentFoto.imagen)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-primary hover:underline underline-offset-2 flex items-center gap-1 mt-1"
+                    >
+                      Abrir enlace directo <ExternalLink className="size-3" />
+                    </a>
+                  </div>
+
                   {/* Top Bar Actions on Image */}
-                  <div className="absolute top-3 right-3 flex items-center gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 flex items-center gap-1.5 sm:gap-2 opacity-95 group-hover:opacity-100 transition-opacity z-10">
                     <a
                       href={resolveMediaUrl(currentFoto.imagen)}
                       target="_blank"
                       rel="noreferrer"
                       title="Abrir en pestaña nueva"
-                      className="size-9 rounded-xl bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                      className="size-8 sm:size-9 rounded-lg sm:rounded-xl bg-black/70 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/90 transition-colors shadow-md"
                     >
-                      <ExternalLink className="size-4" />
+                      <ExternalLink className="size-3.5 sm:size-4" />
                     </a>
 
                     {canEdit && (
@@ -271,12 +299,12 @@ export function FotosModal({
                         title="Eliminar esta foto"
                         onClick={() => setConfirmDeleteId(currentFoto.id)}
                         disabled={deletingId === currentFoto.id}
-                        className="size-9 rounded-xl shadow-md cursor-pointer"
+                        className="size-8 sm:size-9 rounded-lg sm:rounded-xl shadow-md cursor-pointer"
                       >
                         {deletingId === currentFoto.id ? (
-                          <Loader2 className="size-4 animate-spin" />
+                          <Loader2 className="size-3.5 sm:size-4 animate-spin" />
                         ) : (
-                          <Trash2 className="size-4" />
+                          <Trash2 className="size-3.5 sm:size-4" />
                         )}
                       </Button>
                     )}
@@ -290,42 +318,42 @@ export function FotosModal({
                         onClick={() =>
                           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : fotos.length - 1))
                         }
-                        className="absolute left-3 size-10 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center opacity-80 hover:opacity-100 hover:scale-110 transition-all cursor-pointer"
+                        className="absolute left-2 size-8 sm:size-10 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center opacity-85 hover:opacity-100 transition-all cursor-pointer shadow-md z-10 active:scale-95"
                       >
-                        <ChevronLeft className="size-6" />
+                        <ChevronLeft className="size-5 sm:size-6" />
                       </button>
                       <button
                         type="button"
                         onClick={() =>
                           setSelectedIndex((prev) => (prev < fotos.length - 1 ? prev + 1 : 0))
                         }
-                        className="absolute right-3 size-10 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center opacity-80 hover:opacity-100 hover:scale-110 transition-all cursor-pointer"
+                        className="absolute right-2 size-8 sm:size-10 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center opacity-85 hover:opacity-100 transition-all cursor-pointer shadow-md z-10 active:scale-95"
                       >
-                        <ChevronRight className="size-6" />
+                        <ChevronRight className="size-5 sm:size-6" />
                       </button>
                     </>
                   )}
 
                   {/* Bottom Counter Badge */}
-                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-white text-xs font-bold tracking-wider">
+                  <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[12px] sm:text-xs font-bold tracking-wider z-10">
                     {selectedIndex + 1} de {fotos.length}
                   </div>
                 </div>
               )}
 
               {/* Thumbnails Bar */}
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 pt-1 custom-scrollbar">
                 {fotos.map((foto, idx) => {
                   const isSelected = idx === selectedIndex;
                   return (
-                    <div key={foto.id} className="relative shrink-0 group">
+                    <div key={foto.id} className="relative shrink-0 group p-1 mx-2">
                       <button
                         type="button"
                         onClick={() => setSelectedIndex(idx)}
                         className={cn(
-                          'relative size-20 sm:size-24 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer block',
+                          'relative size-16 sm:size-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer block bg-black/40',
                           isSelected
-                            ? 'border-primary ring-4 ring-primary/20 scale-105 shadow-md'
+                            ? 'border-primary ring-3 ring-primary/30 scale-105 shadow-md'
                             : 'border-border/50 opacity-70 hover:opacity-100'
                         )}
                       >
@@ -344,9 +372,9 @@ export function FotosModal({
                             setConfirmDeleteId(foto.id);
                           }}
                           title="Eliminar foto"
-                          className="absolute -top-1.5 -right-1.5 size-6 rounded-full bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
+                          className="absolute -top-1 -right-1 size-5 sm:size-6 rounded-full bg-rose-600 text-white flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
                         >
-                          <X className="size-3.5" />
+                          <X className="size-3 sm:size-3.5" />
                         </button>
                       )}
                     </div>

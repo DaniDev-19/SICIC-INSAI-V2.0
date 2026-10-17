@@ -9,6 +9,7 @@ const TOKEN_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
+  path: '/',
   maxAge: 1000 * 60 * 60 * 8,
 };
 export const userActiveTokens = new Map();
@@ -104,7 +105,7 @@ export const getInstances = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password, instanceId } = req.body;
+  const { email, password, instanceId, force } = req.body;
 
   if (!instanceId) {
     return res.status(400).json({
@@ -224,16 +225,26 @@ export const login = async (req, res) => {
 
 
   const existingToken = userActiveTokens.get(usuario.id);
+  let hasActiveSession = false;
   if (existingToken) {
     try {
       verifyToken(existingToken);
-      return res.status(409).json({
-        status: 'error',
-        message: 'Ya existe una sesión activa con esta cuenta. El usuario debe cerrar sesión primero antes de que otra persona pueda ingresar.',
-      });
+      hasActiveSession = true;
     } catch {
       userActiveTokens.delete(usuario.id);
     }
+  }
+
+  if (hasActiveSession && !force) {
+    return res.status(409).json({
+      status: 'error',
+      code: 'ACTIVE_SESSION_EXISTS',
+      message: 'Ya existe una sesión activa con esta cuenta. El usuario debe cerrar sesión primero antes de que otra persona pueda ingresar.',
+      data: {
+        hasActiveSession: true,
+        mfaRequired: Boolean(usuario.mfa_enabled),
+      },
+    });
   }
 
   const permisosFinales = mergePermisos(ui.roles.permisos, ui.permisos_personalizados);
@@ -254,6 +265,8 @@ export const login = async (req, res) => {
     permisos: permisosFinales,
   };
 
+  const isForceLogout = Boolean(hasActiveSession && force);
+
   if (usuario.mfa_enabled) {
     const mfaPendingToken = jwt.sign(
       {
@@ -262,6 +275,7 @@ export const login = async (req, res) => {
         username: usuario.username,
         currentInstanceData,
         isMfaPending: true,
+        isForceLogout,
       },
       process.env.JWT_SECRET || 'secret_key',
       { expiresIn: '5m' }
@@ -269,11 +283,27 @@ export const login = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: 'Autenticación de dos factores requerida',
+      message: isForceLogout
+        ? 'Autenticación de dos factores requerida para forzar el cierre de sesión previa e ingresar'
+        : 'Autenticación de dos factores requerida',
       data: {
         mfaRequired: true,
         mfaPendingToken,
+        isForceLogout,
       },
+    });
+  }
+
+  if (isForceLogout) {
+    userActiveTokens.delete(usuario.id);
+    bitacoraService.registrar({
+      manualUser: {
+        id: usuario.id,
+        username: usuario.username,
+        db_name: ui.instancias.db_name,
+      },
+      accion: 'CIERRE_SESION_FORZADO',
+      modulo: 'Seguridad',
     });
   }
 
@@ -301,7 +331,7 @@ export const login = async (req, res) => {
       username: usuario.username,
       db_name: ui.instancias.db_name
     },
-    accion: 'INICIO_SESION',
+    accion: isForceLogout ? 'INICIO_SESION_FORZADO' : 'INICIO_SESION',
     modulo: 'Seguridad'
   });
 
@@ -379,6 +409,19 @@ export const verifyMfaLogin = async (req, res) => {
       });
     }
 
+    if (decoded.isForceLogout) {
+      userActiveTokens.delete(usuario.id);
+      bitacoraService.registrar({
+        manualUser: {
+          id: usuario.id,
+          username: usuario.username,
+          db_name: decoded.currentInstanceData.db_name,
+        },
+        accion: 'CIERRE_SESION_FORZADO',
+        modulo: 'Seguridad',
+      });
+    }
+
     const token = generateToken({
       id: usuario.id,
       email: usuario.email,
@@ -397,13 +440,18 @@ export const verifyMfaLogin = async (req, res) => {
 
     res.cookie('token', token, TOKEN_COOKIE_OPTIONS);
 
+    let mfaAccion = usedBackupCode ? 'INICIO_SESION_MFA_BACKUP' : 'INICIO_SESION_MFA';
+    if (decoded.isForceLogout) {
+      mfaAccion = usedBackupCode ? 'INICIO_SESION_MFA_BACKUP_FORZADO' : 'INICIO_SESION_MFA_FORZADO';
+    }
+
     bitacoraService.registrar({
       manualUser: {
         id: usuario.id,
         username: usuario.username,
         db_name: decoded.currentInstanceData.db_name,
       },
-      accion: usedBackupCode ? 'INICIO_SESION_MFA_BACKUP' : 'INICIO_SESION_MFA',
+      accion: mfaAccion,
       modulo: 'Seguridad',
     });
 
@@ -491,7 +539,8 @@ export const logout = (req, res) => {
     });
   }
 
-  res.clearCookie('token', TOKEN_COOKIE_OPTIONS);
+  const { maxAge, ...clearOptions } = TOKEN_COOKIE_OPTIONS;
+  res.clearCookie('token', clearOptions);
   res.status(200).json({
     status: 'success',
     message: 'Sesión cerrada exitosamente',

@@ -21,6 +21,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLoginInstances } from '@/hooks/use-login-instances';
 import { useVerifyMfaLogin } from '@/hooks/use-mfa';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import ForceLoginModal from './ForceLoginModal';
+import type { LoginResponse } from '@/types/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Introduce un correo electrónico válido'),
@@ -35,6 +37,8 @@ export default function Login() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [isForceModalOpen, setIsForceModalOpen] = useState(false);
+  const [isForceLogoutFlow, setIsForceLogoutFlow] = useState(false);
 
   // Estado para el segundo paso MFA
   const [mfaPendingToken, setMfaPendingToken] = useState<string | null>(null);
@@ -116,6 +120,10 @@ export default function Login() {
         return;
       }
 
+      if (res?.data?.token) {
+        localStorage.setItem('token', res.data.token);
+      }
+
       toast.success('¡Bienvenido al sistema SICIC-INSAI!');
       navigate('/home');
     } catch (err: unknown) {
@@ -141,16 +149,17 @@ export default function Login() {
       }
 
       if (error.response?.status === 409) {
+        setIsForceModalOpen(true);
         toast.warning('Sesión Activa Detectada', {
-          description: error.response.data.message || 'Ya existe una sesión activa con esta cuenta.',
-          duration: 8000,
+          description: error.response.data?.message || 'Ya existe una sesión activa con esta cuenta.',
+          duration: 6000,
         });
         return;
       }
 
       if (error.response?.status === 429) {
         toast.warning('Acceso Restringido', {
-          description: error.response.data.message || 'Demasiados intentos. Intente más tarde.',
+          description: error.response.data?.message || 'Demasiados intentos. Intente más tarde.',
         });
         return;
       }
@@ -162,6 +171,27 @@ export default function Login() {
     }
   };
 
+  const handleForceLoginSuccess = (res: LoginResponse) => {
+    if (res?.data?.mfaRequired && res.data.mfaPendingToken) {
+      setMfaPendingToken(res.data.mfaPendingToken);
+      setIsForceLogoutFlow(Boolean(res.data.isForceLogout));
+      toast.info('Autenticación de Dos Factores requerida', {
+        description: 'Ingrese el código de su aplicación autenticadora para finalizar la desconexión e ingresar.',
+      });
+      return;
+    }
+
+    if (res.data?.token) {
+      localStorage.setItem('token', res.data.token);
+    }
+
+    queryClient.setQueryData(['auth-user'], res);
+    toast.success('Sesión previa desconectada exitosamente', {
+      description: '¡Bienvenido al sistema SICIC-INSAI!',
+    });
+    navigate('/home');
+  };
+
   const handleVerifyMfaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!mfaPendingToken || !mfaCode.trim()) return;
@@ -170,11 +200,18 @@ export default function Login() {
       { mfaPendingToken, code: mfaCode.trim() },
       {
         onSuccess: (res) => {
+          if (res.data?.token) {
+            localStorage.setItem('token', res.data.token);
+          }
           queryClient.setQueryData(['auth-user'], res);
-          queryClient.invalidateQueries({ queryKey: ['auth-user'] });
-          toast.success('¡Autenticación MFA Exitosa!', {
-            description: 'Bienvenido al sistema SICIC-INSAI.',
-          });
+          toast.success(
+            isForceLogoutFlow
+              ? '¡Sesión previa desconectada y acceso autorizado!'
+              : '¡Autenticación MFA Exitosa!',
+            {
+              description: 'Bienvenido al sistema SICIC-INSAI.',
+            }
+          );
           navigate('/home');
         },
       }
@@ -208,11 +245,29 @@ export default function Login() {
 
             {mfaPendingToken ? (
               <form onSubmit={handleVerifyMfaSubmit} className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col items-center justify-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center space-y-2">
-                  <ShieldCheck className="w-8 h-8 text-emerald-400" />
-                  <h3 className="text-sm font-bold text-white">Verificación de Segundo Factor</h3>
-                  <p className="text-xs text-emerald-100/70 leading-relaxed">
-                    Ingrese el código de 6 dígitos generado por su app autenticadora o uno de sus códigos de respaldo.
+                <div
+                  className={`flex flex-col items-center justify-center p-4 border rounded-2xl text-center space-y-2 ${
+                    isForceLogoutFlow
+                      ? 'bg-amber-500/10 border-amber-500/20'
+                      : 'bg-emerald-500/10 border-emerald-500/20'
+                  }`}
+                >
+                  <ShieldCheck
+                    className={`w-8 h-8 ${isForceLogoutFlow ? 'text-amber-400' : 'text-emerald-400'}`}
+                  />
+                  <h3 className="text-sm font-bold text-white">
+                    {isForceLogoutFlow
+                      ? 'Autorización 2FA de Desconexión'
+                      : 'Verificación de Segundo Factor'}
+                  </h3>
+                  <p
+                    className={`text-xs leading-relaxed ${
+                      isForceLogoutFlow ? 'text-amber-100/80' : 'text-emerald-100/70'
+                    }`}
+                  >
+                    {isForceLogoutFlow
+                      ? 'Para desconectar la sesión previa de forma segura e ingresar aquí, introduce tu código de seguridad (TOTP o código de respaldo).'
+                      : 'Ingrese el código de 6 dígitos generado por su app autenticadora o uno de sus códigos de respaldo.'}
                   </p>
                 </div>
 
@@ -237,11 +292,19 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={verifyMfaMutation.isPending || !mfaCode.trim()}
-                  className="w-full h-12 sm:h-14 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] text-sm sm:text-base cursor-pointer"
+                  className={`w-full h-12 sm:h-14 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl active:scale-[0.97] text-sm sm:text-base cursor-pointer ${
+                    isForceLogoutFlow
+                      ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-900/40'
+                      : 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/40'
+                  }`}
                 >
                   {verifyMfaMutation.isPending ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verificando...</>
-                  ) : 'Verificar y Acceder'}
+                  ) : isForceLogoutFlow ? (
+                    'Confirmar y Desconectar Sesión Previa'
+                  ) : (
+                    'Verificar y Acceder'
+                  )}
                 </Button>
 
                 <button
@@ -249,6 +312,7 @@ export default function Login() {
                   onClick={() => {
                     setMfaPendingToken(null);
                     setMfaCode('');
+                    setIsForceLogoutFlow(false);
                   }}
                   className="w-full flex items-center justify-center space-x-2 py-2 text-xs text-emerald-200/60 hover:text-white transition-colors"
                 >
@@ -402,6 +466,14 @@ export default function Login() {
         onClose={() => setIsForgotModalOpen(false)}
         defaultEmail={email}
         defaultInstanceId={instanceId}
+      />
+
+      <ForceLoginModal
+        isOpen={isForceModalOpen}
+        onClose={() => setIsForceModalOpen(false)}
+        email={watch('email')}
+        instanceId={watch('instanceId')}
+        onSuccess={handleForceLoginSuccess}
       />
 
       <div className="absolute top-[-10%] right-[-10%] w-60 sm:w-96 h-60 sm:h-96 bg-emerald-500/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />

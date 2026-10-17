@@ -15,6 +15,7 @@ export const loginSchema = z.object({
     instanceId: z.string({
       required_error: 'Debe seleccionar una instancia para continuar',
     }).min(1, 'Debe seleccionar una instancia para continuar'),
+    force: z.boolean().optional(),
   }),
 });
 

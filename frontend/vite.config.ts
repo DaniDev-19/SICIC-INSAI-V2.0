@@ -19,5 +19,8 @@ export default defineConfig({
     }),
     tailwindcss()
   ],
+  server: {
+    host: true,
+  },
   base: '/'
 })
