@@ -15,6 +15,10 @@ export function useAuth() {
   } = useQuery({
     queryKey: ['auth-user'],
     queryFn: async () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
+        return { data: { user: null, currentInstance: null } } as LoginResponse;
+      }
       try {
         const response = await authService.getMe();
         return response;
@@ -42,22 +46,34 @@ export function useAuth() {
     mutationFn: authService.login,
     onSuccess: (response) => {
       if (!response.data?.mfaRequired) {
+        if (response.data?.token) {
+          localStorage.setItem('token', response.data.token);
+        }
         queryClient.setQueryData(['auth-user'], response);
-        queryClient.invalidateQueries({ queryKey: ['auth-user'] });
       }
     },
   });
 
   const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('selected_instance');
+    localStorage.removeItem('auth-storage');
+    sessionStorage.clear();
     queryClient.setQueryData(['auth-user'], null);
     queryClient.removeQueries();
+    queryClient.clear();
     window.location.href = '/login';
   };
 
-  const logoutMutation = useMutation({
-    mutationFn: authService.logout,
-    onSettled: clearSession,
-  });
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.warn('Error al comunicarse con el servidor para cerrar sesión:', error);
+    } finally {
+      clearSession();
+    }
+  };
 
   return {
     user: authData?.data?.user as User | null,
@@ -65,7 +81,7 @@ export function useAuth() {
     isAuthenticated: !!authData?.data?.user,
     isLoading,
     login: loginMutation.mutateAsync,
-    logout: logoutMutation.mutateAsync,
+    logout,
     isLoggingIn: loginMutation.isPending,
   };
 }

@@ -9,6 +9,7 @@ export interface LoginCredentials {
   email: string;
   password: string;
   instanceId: string;
+  force?: boolean;
 }
 
 export type PermissionObject = Record<string, string[]>;
@@ -25,11 +26,15 @@ export interface Instance {
 export interface LoginResponse {
   status: 'success' | 'error';
   message: string;
+  code?: string;
   data: {
     user?: User | null;
     currentInstance?: Instance | null;
     mfaRequired?: boolean;
     mfaPendingToken?: string;
+    hasActiveSession?: boolean;
+    isForceLogout?: boolean;
+    token?: string;
   };
 }
 

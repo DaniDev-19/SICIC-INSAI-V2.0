@@ -81,7 +81,6 @@ export default function Inspecciones() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [initialPlanificacionId, setInitialPlanificacionId] = useState<number | undefined>();
 
-  // Fotos modal state
   const [isPhotosOpen, setIsPhotosOpen] = useState(false);
   const [photosInspeccion, setPhotosInspeccion] = useState<Inspeccion | null>(null);
 
@@ -160,7 +159,7 @@ export default function Inspecciones() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 sm:max-w-7xl max-w-2xl animate-in fade-in duration-500 pb-28 sm:pb-32">
       <div className="flex flex-col gap-5 md:gap-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
           <div className="space-y-1.5 sm:space-y-2 min-w-0">
@@ -177,13 +176,13 @@ export default function Inspecciones() {
                 Inspecciones Generales
               </h1>
             </div>
-            <p className="text-muted-foreground font-medium text-sm sm:text-base pl-0 sm:pl-12">
+            <p className="text-muted-foreground font-medium text-sm sm:text-base pl-2 pr-20 sm:pr-0 sm:pl-12">
               Registro y seguimiento de inspecciones de campo vinculadas a planificaciones.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0">
-            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-3 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
                   title="Filtrar por estatus"
@@ -294,7 +293,7 @@ export default function Inspecciones() {
               canEdit={canUpdate}
               canDelete={canDelete}
             />
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-t border-border bg-muted/20">
+            <div className="w-full px-3 sm:px-6 py-3 sm:py-4 border-t border-border bg-muted/20">
               <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
             </div>
           </>

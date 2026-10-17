@@ -14,6 +14,11 @@ apiClient.interceptors.request.use((config) => {
     delete config.headers['Content-Type'];
   }
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && !config.headers['Authorization']) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const methods = ['post', 'put', 'patch', 'delete'];
   if (methods.includes(config.method?.toLowerCase() || '')) {
     if (!config.headers['X-Idempotency-Key']) {

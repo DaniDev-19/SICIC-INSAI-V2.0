@@ -1,4 +1,4 @@
-import { masterPrisma, getTenantPrisma } from './config/prisma.js';
+import { masterPrisma, getTenantPrisma } from '../config/prisma.js';
 
 async function testMultiTenant() {
   try {

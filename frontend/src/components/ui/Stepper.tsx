@@ -43,9 +43,16 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               )}
             </div>
             
-            <div className="absolute top-12 flex flex-col items-center text-center w-32">
+            <div
+              className={cn(
+                "absolute top-12 flex flex-col w-20 sm:w-28",
+                index === 0 && "left-0 items-start text-left",
+                index === steps.length - 1 && "right-0 items-end text-right",
+                index > 0 && index < steps.length - 1 && "left-1/2 -translate-x-1/2 items-center text-center"
+              )}
+            >
               <span className={cn(
-                "text-[10px] font-black uppercase tracking-widest transition-colors duration-300",
+                "text-[10px] font-black uppercase tracking-widest transition-colors duration-300 truncate max-w-full",
                 isActive ? "text-primary" : isCompleted ? "text-foreground/80" : "text-muted-foreground/50"
               )}>
                 {step.title}

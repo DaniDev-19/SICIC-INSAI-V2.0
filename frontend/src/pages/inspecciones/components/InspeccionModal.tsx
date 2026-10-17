@@ -91,44 +91,44 @@ function toPayloadEmail(value: string | undefined): string | undefined {
 
 function buildFormSchema(allowPastFecha: boolean) {
   return z.object({
-  planificacion_id: z.string().min(1, 'Seleccione una planificación'),
-  fecha_inspeccion: z
-    .string()
-    .min(1, 'La fecha es requerida')
-    .refine(
-      (val) => allowPastFecha || val >= new Date().toISOString().split('T')[0],
-      { message: 'La fecha no puede ser anterior a hoy' }
-    ),
-  hora_inspeccion: z.string().optional(),
-  status: z.string().min(1, 'Seleccione un estatus'),
-  atendido_por_nombre: z.string().optional(),
-  atendido_por_cedula: z.string().optional(),
-  atendido_por_email: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val?.trim() || val === OPCIONAL_DEFAULT || z.string().email().safeParse(val).success,
-      { message: 'Email inválido' }
-    ),
-  atendido_por_tlf: z.string().optional(),
-  insp_utm_norte: z.string().min(1, 'UTM Norte es requerido'),
-  insp_utm_este: z.string().min(1, 'UTM Este es requerido'),
-  insp_utm_zona: z.string().min(1, 'Zona UTM es requerida'),
-  google_maps_url: z
-    .string()
-    .optional()
-    .refine((val) => !val?.trim() || /^https?:\/\/.+/i.test(val.trim()), {
-      message: 'Ingrese una URL válida (https://...)',
-    }),
-  aspectos_constatados: z.string().optional(),
-  medidas_ordenadas: z.string().optional(),
-  posee_certificado: z.string().optional(),
-  vigencia_dias: z
-    .string()
-    .optional()
-    .refine((val) => !val?.trim() || (!Number.isNaN(Number(val)) && Number(val) > 0), {
-      message: 'La vigencia debe ser un número mayor a 0',
-    }),
+    planificacion_id: z.string().min(1, 'Seleccione una planificación'),
+    fecha_inspeccion: z
+      .string()
+      .min(1, 'La fecha es requerida')
+      .refine(
+        (val) => allowPastFecha || val >= new Date().toISOString().split('T')[0],
+        { message: 'La fecha no puede ser anterior a hoy' }
+      ),
+    hora_inspeccion: z.string().optional(),
+    status: z.string().min(1, 'Seleccione un estatus'),
+    atendido_por_nombre: z.string().optional(),
+    atendido_por_cedula: z.string().optional(),
+    atendido_por_email: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val?.trim() || val === OPCIONAL_DEFAULT || z.string().email().safeParse(val).success,
+        { message: 'Email inválido' }
+      ),
+    atendido_por_tlf: z.string().optional(),
+    insp_utm_norte: z.string().min(1, 'UTM Norte es requerido'),
+    insp_utm_este: z.string().min(1, 'UTM Este es requerido'),
+    insp_utm_zona: z.string().min(1, 'Zona UTM es requerida'),
+    google_maps_url: z
+      .string()
+      .optional()
+      .refine((val) => !val?.trim() || /^https?:\/\/.+/i.test(val.trim()), {
+        message: 'Ingrese una URL válida (https://...)',
+      }),
+    aspectos_constatados: z.string().optional(),
+    medidas_ordenadas: z.string().optional(),
+    posee_certificado: z.string().optional(),
+    vigencia_dias: z
+      .string()
+      .optional()
+      .refine((val) => !val?.trim() || (!Number.isNaN(Number(val)) && Number(val) > 0), {
+        message: 'La vigencia debe ser un número mayor a 0',
+      }),
   });
 }
 
@@ -381,9 +381,9 @@ export function InspeccionModal({
       setFinalidadesRows(
         inspeccion.finalidad_inspeccion?.length
           ? inspeccion.finalidad_inspeccion.map((fi) => ({
-              finalidad_id: fi.finalidad_id,
-              objetivo: fi.objetivo || '',
-            }))
+            finalidad_id: fi.finalidad_id,
+            objetivo: fi.objetivo || '',
+          }))
           : [{ finalidad_id: 0, objetivo: '' }]
       );
     } else {
@@ -519,14 +519,14 @@ export function InspeccionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-y-auto border-none shadow-2xl glass-effect custom-scrollbar p-4 sm:p-6">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(85vh,52rem)] overflow-y-auto overflow-x-hidden border-none rounded-xl shadow-2xl glass-effect custom-scrollbar p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <Eye className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">
+              <DialogTitle className="text-sm  font-black uppercase tracking-tight">
                 {isEditing ? 'Editar Inspección' : 'Registrar Inspección'}
               </DialogTitle>
               <DialogDescription className="text-sm">
@@ -538,18 +538,18 @@ export function InspeccionModal({
 
         <Stepper steps={STEPS} currentStep={step} className="mb-6" />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 min-w-0 max-w-full">
           {step === 0 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
+            <div className="space-y-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0 max-w-full">
                 <FieldLabel required>Planificación asociada</FieldLabel>
                 <Select
                   value={watch('planificacion_id')}
                   onValueChange={(v) => setValue('planificacion_id', v, { shouldValidate: true })}
                   disabled={isEditing || loadingPlans}
                 >
-                  <SelectTrigger className="h-12 rounded-xl">
-                    <SelectValue placeholder={loadingPlans ? 'Cargando...' : 'Seleccionar planificación'} />
+                  <SelectTrigger className="h-12 rounded-xl w-full min-w-0 max-w-full">
+                    <SelectValue className="truncate" placeholder={loadingPlans ? 'Cargando...' : 'Seleccionar planificación'} />
                   </SelectTrigger>
                   <SelectContent>
                     {planificaciones.map((p) => (
@@ -566,12 +566,12 @@ export function InspeccionModal({
               </div>
 
               {selectedPlan && (
-                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm space-y-1">
-                  <p>
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm space-y-1 min-w-0">
+                  <p className="wrap-break-word">
                     <span className="font-bold">Solicitud:</span> {selectedPlan.solicitudes?.codigo} —{' '}
                     {selectedPlan.solicitudes?.descripcion}
                   </p>
-                  <p>
+                  <p className="wrap-break-word">
                     <span className="font-bold">Predio:</span>{' '}
                     {selectedPlan.solicitudes?.propiedades?.nombre || '—'}
                   </p>
@@ -654,7 +654,7 @@ export function InspeccionModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Se sugiere según la ubicación del predio o la sede del inspector asignado.
                   </p>
                 </div>
@@ -678,7 +678,7 @@ export function InspeccionModal({
                       </span>
                     )}
                     {codigosPreview?.t_codigo && !/^E\d+-M\d+-P\d+-S\d+/i.test(codigosPreview.t_codigo) && (
-                      <p className="text-[10px] text-amber-600/90 mt-2 leading-relaxed">
+                      <p className="text-xs text-amber-600/90 mt-2 leading-relaxed">
                         Para el formato territorial (E-M-P-S-PR-YYYYMM-0001), la propiedad debe tener
                         ubicación con estado, municipio, parroquia y sector en su ficha.
                       </p>
@@ -714,7 +714,7 @@ export function InspeccionModal({
                   </p>
                 )}
 
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Formato: ABR-CEDULA-DDMMYYYY-NN (ej. YAR-18456789-04052026-01). La secuencia se
                   calcula por día, inspector y sede; al eliminar un registro el correlativo no se reutiliza.
                 </p>
@@ -777,7 +777,7 @@ export function InspeccionModal({
               </div>
 
               <div className="space-y-2">
-                <FieldLabel>URL Google Maps</FieldLabel>
+                <FieldLabel>URL Google Maps (opcional)</FieldLabel>
                 <Input {...register('google_maps_url')} placeholder="https://maps.google.com/..." className="h-12 rounded-xl" />
                 {errors.google_maps_url && (
                   <p className="text-xs text-rose-500">{errors.google_maps_url.message}</p>
@@ -978,7 +978,7 @@ export function InspeccionModal({
             </div>
           )}
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-4 border-t border-border/50">
+          <DialogFooter className="flex flex-row sm:flex-row gap-2 pt-4 border-t border-border/50">
             {step > 0 ? (
               <Button type="button" variant="outline" onClick={handleBack} className="cursor-pointer">
                 <ChevronLeft className="size-4 mr-1" /> Anterior
