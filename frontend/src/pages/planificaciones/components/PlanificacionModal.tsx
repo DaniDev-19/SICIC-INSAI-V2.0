@@ -219,8 +219,8 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50  top-0  backdrop-blur-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 top-0 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
               <Calendar className="size-6" />
@@ -236,7 +236,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -299,7 +299,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             <div className="flex items-center gap-3 mb-4 text-primary font-bold uppercase tracking-widest text-xs">
               <Clock className="size-4" /> Configuración de Horario
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Fecha Programada <span className="text-rose-500">*</span></label>
                 <Input {...register('fecha_programada')} type="date" min={new Date().toISOString().split('T')[0]} className="h-12 rounded-xl bg-background border-border" />
@@ -425,7 +425,7 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
             {errors.empleados && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.empleados.message}</p>}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/50 sticky bottom-0 z-50 bg-background/95 backdrop-blur-md pb-4">
+          <div className="flex items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-border/50 sticky bottom-0 z-50 bg-background/95 backdrop-blur-md pb-4">
             <Button
               type="button"
               variant="ghost"

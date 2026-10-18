@@ -176,7 +176,7 @@ export default function ForgotPasswordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] glass-effect border-emerald-500/20 max-w-md rounded-3xl p-0 text-foreground shadow-2xl overflow-hidden flex flex-col max-h-[min(92vh,42rem)]">
+      <DialogContent className="w-[calc(95vw-1.5rem)] glass-effect border-emerald-500/20 max-w-md rounded-xl p-0 text-foreground shadow-2xl overflow-hidden flex flex-col max-h-[min(85vh,40rem)]">
         <DialogHeader className="flex flex-col items-center text-center space-y-2 p-6 pb-4 border-b border-border/30 shrink-0">
           <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner mb-1">
             {step === 3 ? (
@@ -205,19 +205,16 @@ export default function ForgotPasswordModal({
         {/* Indicators Steps */}
         <div className="flex items-center justify-center gap-2 py-3 border-b border-border/20 bg-muted/5 shrink-0">
           <div
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              step >= 1 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${step >= 1 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
+              }`}
           />
           <div
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              step >= 2 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${step >= 2 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
+              }`}
           />
           <div
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              step >= 3 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${step >= 3 ? 'w-8 bg-emerald-500' : 'w-2 bg-muted'
+              }`}
           />
         </div>
 
@@ -265,10 +262,10 @@ export default function ForgotPasswordModal({
                               !emailIsValid
                                 ? 'Ingrese correo válido primero'
                                 : isLoadingInstances
-                                ? 'Cargando sedes...'
-                                : instances.length === 0
-                                ? 'Sin sedes asociadas'
-                                : 'Seleccione sede'
+                                  ? 'Cargando sedes...'
+                                  : instances.length === 0
+                                    ? 'Sin sedes asociadas'
+                                    : 'Seleccione sede'
                             }
                           />
                         </SelectTrigger>
