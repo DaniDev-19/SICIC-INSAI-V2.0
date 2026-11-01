@@ -2,7 +2,7 @@ import { useDashboardStats } from "@/hooks/use-dashboard";
 import {
     Users, ClipboardList, CheckCircle2, Clock, Activity,
     Building2, Award, TrendingUp, FileText, Loader2,
-    ShieldCheck, MapPin, CalendarDays, ArrowRight, Zap
+    ShieldCheck, MapPin, CalendarDays, ArrowRight, Zap, RefreshCw
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,12 +12,13 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { AdminMetrics, InspectorMetrics } from "@/services/dashboard.service";
 
 export default function Home() {
     const navigate = useNavigate();
     const { user, currentInstance } = useAuth();
-    const { data: dashboardData, isLoading } = useDashboardStats();
+    const { data: dashboardData, isLoading, isFetching, refetch } = useDashboardStats();
 
     const isInspector = dashboardData?.roleType === 'inspector';
     const roleTitle = currentInstance?.rol || 'Usuario';
@@ -45,7 +46,7 @@ export default function Home() {
                         <Loader2 className="size-8 animate-spin text-emerald-500" />
                     </div>
                 </div>
-                <p className="text-sm text-muted-foreground font-medium">Cargando estadísticas del sistema...</p>
+                <p className="text-sm text-muted-foreground font-medium">Cargando estadisticas del sistema...</p>
             </div>
         );
     }
@@ -86,7 +87,7 @@ export default function Home() {
                             </div>
 
                             <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight">
-                                ¡Bienvenido,{' '}
+                                Bienvenido,{' '}
                                 <span className="text-emerald-500">
                                     {user?.username}
                                 </span>
@@ -107,7 +108,20 @@ export default function Home() {
                     </div>
 
                     {/* Right CTA */}
-                    <div className="flex items-center gap-3 lg:shrink-0">
+                    <div className="flex items-center gap-3 lg:shrink-0 flex-wrap">
+                        {/* Boton de recarga manual de estadisticas */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                            title="Actualizar estadisticas"
+                            className="rounded-2xl h-9 px-3 gap-1.5 text-xs font-medium text-muted-foreground border-border hover:text-foreground"
+                        >
+                            <RefreshCw className={cn("size-3.5", isFetching && "animate-spin text-emerald-500")} />
+                            <span className="hidden sm:inline">Actualizar datos</span>
+                        </Button>
+
                         <Button
                             onClick={() => navigate('/home/planificacion')}
                             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl h-11 px-5 shadow-sm cursor-pointer text-sm gap-2 transition-all hover:scale-105"
@@ -135,15 +149,15 @@ export default function Home() {
                             sub="Total en tu historial"
                         />
                         <MetricCard icon={<Clock className="size-5" />} color="amber"
-                            label="Pendientes / Por Vacío"
+                            label="Pendientes / Por Vacio"
                             value={(metrics as InspectorMetrics)?.misPendientes || 0}
-                            sub="Requieren atención"
+                            sub="Requieren atencion"
                             valueColor="text-amber-400"
                         />
                         <MetricCard icon={<Award className="size-5" />} color="teal"
                             label="Finalizadas"
                             value={(metrics as InspectorMetrics)?.misFinalizadas || 0}
-                            sub="Completadas con éxito"
+                            sub="Completadas con exito"
                         />
                     </>
                 ) : (
@@ -184,11 +198,11 @@ export default function Home() {
                             <h3 className="text-base font-bold text-foreground">
                                 {isInspector ? 'Tu Tendencia Semanal de Planificaciones' : 'Actividad General de Inspecciones'}
                             </h3>
-                            <p className="text-xs text-muted-foreground">Registro dinámico de los últimos 7 días</p>
+                            <p className="text-xs text-muted-foreground">Registro de los ultimos 7 dias</p>
                         </div>
                     </div>
 
-                    <div className="h-[260px] w-full" style={{ minWidth: 0 }}>
+                    <div className="h-65 w-full" style={{ minWidth: 0 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
@@ -223,7 +237,7 @@ export default function Home() {
                                 <Award className="size-5 text-emerald-400" />
                                 <h3 className="font-bold text-sm text-foreground">Rendimiento por Empleado</h3>
                             </div>
-                            <p className="text-xs text-muted-foreground mb-4">Top inspectores con más asignaciones</p>
+                            <p className="text-xs text-muted-foreground mb-4">Top inspectores con mas asignaciones</p>
                             <div className="space-y-2.5 flex-1 overflow-y-auto">
                                 {topInspectores.map((insp, idx) => (
                                     <div key={insp.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border border-border/50">
@@ -250,7 +264,7 @@ export default function Home() {
                             </div>
                             <div>
                                 <h4 className="font-bold text-foreground">Sistema SICIC-INSAI</h4>
-                                <p className="text-xs text-muted-foreground mt-1">Conexión cifrada y monitoreada en tiempo real.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Conexion cifrada y monitoreada.</p>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
                                 <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -263,14 +277,14 @@ export default function Home() {
 
             {/* ── RECENT ACTIVITY TABLE ───────────────────────────────── */}
             <div className="p-6 rounded-3xl border border-border bg-card/50 backdrop-blur-md shadow-xl space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
                             <FileText className="size-5" />
                         </div>
                         <div>
                             <h3 className="text-base font-bold text-foreground">
-                                {isInspector ? 'Mis Próximas Inspecciones Asignadas' : 'Últimas Planificaciones Registradas'}
+                                {isInspector ? 'Mis Proximas Inspecciones Asignadas' : 'Ultimas Planificaciones Registradas'}
                             </h3>
                             <p className="text-xs text-muted-foreground">Listado de inspecciones y evaluaciones en sistema</p>
                         </div>
@@ -297,7 +311,7 @@ export default function Home() {
                                     <th className="py-3 px-4 font-semibold">Predio / Propiedad</th>
                                     <th className="py-3 px-4 font-semibold">Tipo de Solicitud</th>
                                     <th className="py-3 px-4 font-semibold">Estatus</th>
-                                    <th className="py-3 px-4 font-semibold text-right">Acción</th>
+                                    <th className="py-3 px-4 font-semibold text-right">Accion</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/30">
@@ -306,7 +320,7 @@ export default function Home() {
                                         <td className="py-3 px-4 font-medium text-foreground">
                                             {item.propiedades?.nombre_predio || 'Sin propiedad asignada'}
                                             <span className="block text-[10px] text-muted-foreground font-normal">
-                                                Cód: {item.propiedades?.codigo_propiedad || 'N/A'}
+                                                Cod: {item.propiedades?.codigo_propiedad || 'N/A'}
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-muted-foreground">
@@ -348,10 +362,10 @@ type MetricCardProps = {
 
 const colorMap: Record<MetricCardProps['color'], { bg: string; text: string; hover: string }> = {
     emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', hover: 'hover:border-emerald-500/30' },
-    blue:    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    hover: 'hover:border-blue-500/30'    },
-    purple:  { bg: 'bg-purple-500/10',  text: 'text-purple-400',  hover: 'hover:border-purple-500/30'  },
-    amber:   { bg: 'bg-amber-500/10',   text: 'text-amber-400',   hover: 'hover:border-amber-500/30'   },
-    teal:    { bg: 'bg-teal-500/10',    text: 'text-teal-400',    hover: 'hover:border-teal-500/30'    },
+    blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', hover: 'hover:border-blue-500/30' },
+    purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', hover: 'hover:border-purple-500/30' },
+    amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', hover: 'hover:border-amber-500/30' },
+    teal: { bg: 'bg-teal-500/10', text: 'text-teal-400', hover: 'hover:border-teal-500/30' },
 };
 
 function MetricCard({ icon, color, label, value, sub, valueColor }: MetricCardProps) {

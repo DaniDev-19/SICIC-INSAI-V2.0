@@ -43,7 +43,7 @@ export function NotificationBell() {
   } = useNotifications({
     unreadOnly: activeTab === 'unread',
     limit: 25,
-    enabled: true,
+    enabled: isOpen,
   });
 
   const getNotificationIcon = (type: NotificationType) => {
@@ -69,20 +69,20 @@ export function NotificationBell() {
   const getNotificationBadge = (type: NotificationType) => {
     switch (type) {
       case 'STOCK':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">Inventario</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10 shrink-0">Inventario</Badge>;
       case 'INSPECCION':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/10">Inspección</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/10 shrink-0">Inspección</Badge>;
       case 'SOLICITUD':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/10">Solicitud</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/10 shrink-0">Solicitud</Badge>;
       case 'WARNING':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">Aviso</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10 shrink-0">Aviso</Badge>;
       case 'ERROR':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/10">Urgente</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/10 shrink-0">Urgente</Badge>;
       case 'SUCCESS':
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">Éxito</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 shrink-0">Éxito</Badge>;
       case 'INFO':
       default:
-        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-sky-500/30 text-sky-600 dark:text-sky-400 bg-sky-500/10">Info</Badge>;
+        return <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-sky-500/30 text-sky-600 dark:text-sky-400 bg-sky-500/10 shrink-0">Info</Badge>;
     }
   };
 
@@ -98,7 +98,15 @@ export function NotificationBell() {
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) {
+          refetch();
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -120,35 +128,46 @@ export function NotificationBell() {
       </PopoverTrigger>
 
       <PopoverContent
-        align="end"
+        align="center"
         sideOffset={8}
-        className="w-80 sm:w-96 p-0 shadow-2xl border-border/80 bg-background/95 backdrop-blur-md rounded-xl overflow-hidden"
+        className={cn(
+          // Base — ancho casi completo en móvil con margen lateral
+          "w-[calc(100vw-1.8rem)] max-w-80",
+          // A partir de sm usa un ancho fijo
+          "sm:w-95 md:w-100",
+          "p-0 shadow-2xl border-border/80 bg-background/95 backdrop-blur-md rounded-xl overflow-hidden"
+        )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-3.5 border-b bg-muted/30">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm tracking-tight text-foreground">
+        {/* ── Header ─────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-3.5 py-3 border-b bg-muted/30">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="font-semibold text-sm tracking-tight text-foreground shrink-0">
               Notificaciones
             </h3>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="px-1.5 py-0 text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+              <Badge
+                variant="secondary"
+                className="px-1.5 py-0 text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
+              >
                 {unreadCount} nueva{unreadCount > 1 ? 's' : ''}
               </Badge>
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            {/* Botón actualizar */}
             <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground"
               onClick={() => refetch()}
-              title="Actualizar"
+              title="Actualizar notificaciones"
               disabled={isFetching}
             >
               <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin text-primary")} />
             </Button>
 
+            {/* Marcar todas — solo ícono en móvil, texto en sm+ */}
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
@@ -158,20 +177,20 @@ export function NotificationBell() {
                 disabled={isMarkingAllRead}
                 title="Marcar todas como leídas"
               >
-                <CheckCheck className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="hidden sm:inline">Leer todas</span>
+                <CheckCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Leer todas</span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* Tabs Filter */}
-        <div className="flex items-center border-b px-3 bg-muted/10 gap-2">
+        {/* ── Tabs ────────────────────────────────────────── */}
+        <div className="flex items-center border-b px-3 bg-muted/10 gap-1">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
             className={cn(
-              "py-2 text-xs font-medium border-b-2 transition-colors -mb-px px-2",
+              "py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px px-2.5",
               activeTab === 'all'
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -183,7 +202,7 @@ export function NotificationBell() {
             type="button"
             onClick={() => setActiveTab('unread')}
             className={cn(
-              "py-2 text-xs font-medium border-b-2 transition-colors -mb-px px-2 flex items-center gap-1.5",
+              "py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px px-2.5 flex items-center gap-1.5",
               activeTab === 'unread'
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -198,14 +217,19 @@ export function NotificationBell() {
           </button>
         </div>
 
-        {/* List Content */}
-        <div className="max-h-95 overflow-y-auto divide-y divide-border/40 scrollbar-thin">
+        {/* ── Lista ───────────────────────────────────────── */}
+        {/*
+          Altura máxima responsive:
+          - Mobile : 55vh  — deja espacio para ver el contenido de fondo
+          - sm+    : 420px — altura fija cómoda en tablet/desktop
+        */}
+        <div className="max-h-[55vh] sm:max-h-105 overflow-y-auto divide-y divide-border/40 scrollbar-thin">
           {isLoading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-5 space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex gap-3 animate-pulse">
                   <div className="h-8 w-8 rounded-full bg-muted shrink-0" />
-                  <div className="space-y-1.5 flex-1">
+                  <div className="space-y-2 flex-1">
                     <div className="h-3.5 bg-muted rounded w-3/4" />
                     <div className="h-3 bg-muted rounded w-1/2" />
                   </div>
@@ -213,8 +237,8 @@ export function NotificationBell() {
               ))}
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground">
+            <div className="py-10 px-6 text-center flex flex-col items-center justify-center gap-2">
+              <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground">
                 <Bell className="h-5 w-5 opacity-40" />
               </div>
               <p className="text-sm font-medium text-foreground">Sin notificaciones</p>
@@ -229,64 +253,75 @@ export function NotificationBell() {
               <div
                 key={item.id}
                 className={cn(
-                  "p-3.5 flex items-start gap-3 transition-colors hover:bg-muted/40 group relative",
-                  !item.leido && "bg-primary/3 dark:bg-primary/3"
+                  "px-3.5 py-3 flex items-start gap-3 transition-colors hover:bg-muted/40 group",
+                  !item.leido && "bg-primary/3 dark:bg-primary/4"
                 )}
               >
-                {/* Icon */}
+                {/* Ícono tipo */}
                 <div className="mt-0.5 p-1.5 rounded-lg bg-background border shadow-xs shrink-0">
                   {getNotificationIcon(item.tipo)}
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0 pr-6">
+                {/* Contenido principal — ocupa el espacio disponible */}
+                <div className="flex-1 min-w-0">
+                  {/* Fila: badge + tiempo + punto no-leída */}
                   <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                     {getNotificationBadge(item.tipo)}
-                    <span className="text-[11px] text-muted-foreground font-normal">
+                    <span className="text-[11px] text-muted-foreground font-normal leading-none">
                       {formatNotificationTime(item.created_at)}
                     </span>
                     {!item.leido && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" title="No leída" />
+                      <span
+                        className="h-1.5 w-1.5 rounded-full bg-primary inline-block shrink-0"
+                        title="No leída"
+                      />
                     )}
                   </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed wrap-break-words font-normal">
+
+                  {/* Mensaje — texto completo sin truncar */}
+                  <p className="text-xs text-foreground/90 leading-relaxed wrap-break-words">
                     {item.mensaje}
                   </p>
-                </div>
 
-                {/* Actions */}
-                <div className="absolute top-3 right-2 flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                  {!item.leido && (
+                  {/*
+                    Acciones en línea debajo del mensaje.
+                    En móvil son siempre visibles (sin hover necesario en touch).
+                    En desktop aparecen al hacer hover para no ocupar espacio.
+                  */}
+                  <div className="flex items-center gap-0.5 mt-1.5 -ml-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    {!item.leido && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        onClick={() => markAsRead(item.id)}
+                        title="Marcar como leída"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 rounded text-muted-foreground hover:text-primary hover:bg-primary/10"
-                      onClick={() => markAsRead(item.id)}
-                      title="Marcar como leída"
+                      className="h-6 w-6 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                      onClick={() => deleteNotification(item.id)}
+                      title="Eliminar notificación"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-                    onClick={() => deleteNotification(item.id)}
-                    title="Eliminar notificación"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        {/* Footer */}
+        {/* ── Footer ──────────────────────────────────────── */}
         {notifications.length > 0 && (
-          <div className="p-2 border-t bg-muted/20 text-center">
+          <div className="px-3.5 py-2 border-t bg-muted/20 text-center">
             <p className="text-[11px] text-muted-foreground">
-              {notifications.length} {notifications.length === 1 ? 'notificación mostrada' : 'notificaciones mostradas'}
+              {notifications.length}{' '}
+              {notifications.length === 1 ? 'notificación mostrada' : 'notificaciones mostradas'}
             </p>
           </div>
         )}

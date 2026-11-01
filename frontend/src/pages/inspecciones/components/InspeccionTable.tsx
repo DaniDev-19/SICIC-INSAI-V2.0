@@ -421,7 +421,7 @@ export function InspeccionTable({
                   key={inspeccion.id}
                   className="group transition-colors hover:bg-primary/5"
                 >
-                  <TableCell className="px-6 py-4 max-w-60">
+                  <TableCell className="px-4 py-4 max-w-60">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="size-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                         <Eye className="size-5" />
@@ -430,21 +430,21 @@ export function InspeccionTable({
                         <span className="font-bold text-foreground block wrap-break-words whitespace-normal leading-snug" title={inspeccion.n_control}>
                           {inspeccion.n_control}
                         </span>
-                        <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest block mt-0.5 break-all whitespace-normal leading-tight" title={inspeccion.t_codigo || '10-00-M00-P00-F01'}>
+                        {/* <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest block mt-0.5 break-all whitespace-normal leading-tight" title={inspeccion.t_codigo || '10-00-M00-P00-F01'}>
                           Form: {inspeccion.t_codigo || '10-00-M00-P00-F01'}
-                        </span>
+                        </span> */}
                       </div>
                     </div>
                   </TableCell>
 
-                  <TableCell className="px-6 py-4 max-w-65">
+                  <TableCell className="px-2 py-4 max-w-65">
                     <div className="space-y-1 min-w-0">
-                      <div className="flex items-start gap-1.5 text-xs text-foreground font-bold min-w-0">
+                      {/* <div className="flex items-start gap-1.5 text-xs text-foreground font-bold min-w-0">
                         <User className="size-3.5 text-primary shrink-0 mt-0.5" />
                         <span className="wrap-break-words whitespace-normal leading-snug" title={solic?.clientes?.nombre || ''}>
                           {solic?.clientes?.nombre || '—'}
                         </span>
-                      </div>
+                      </div> */}
                       <div className="flex items-start gap-1.5 text-xs text-muted-foreground font-medium min-w-0">
                         <MapPin className="size-3.5 shrink-0 mt-0.5" />
                         <span className="wrap-break-words whitespace-normal leading-snug" title={solic?.propiedades?.nombre || ''}>
@@ -454,7 +454,7 @@ export function InspeccionTable({
                     </div>
                   </TableCell>
 
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                  <TableCell className="px-2 py-4 whitespace-nowrap">
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-xs text-foreground font-bold">
                         <Calendar className="size-3.5 text-primary shrink-0" />
@@ -468,7 +468,7 @@ export function InspeccionTable({
                     </div>
                   </TableCell>
 
-                  <TableCell className="px-6 py-4">
+                  <TableCell className="px-1 py-1">
                     <div className="flex flex-col items-start gap-1.5">
                       {canEdit && onStatusChange && inspeccion.status !== 'FINALIZADA' ? (
                         <Select

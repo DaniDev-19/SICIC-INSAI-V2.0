@@ -10,6 +10,7 @@ import inspeccionReporteService, {
   INSPECCION_REPORT_INCLUDE,
 } from '../services/inspeccion-reporte.service.js';
 import * as statusSyncService from '../services/status-sync.service.js';
+import notificationService from '../services/notification.service.js';
 
 function parseAreasBody(areas_inspeccion) {
   if (areas_inspeccion === undefined || areas_inspeccion === null) return undefined;
@@ -189,8 +190,10 @@ async function buildInspeccionesWhere(req, tx) {
 export const getInspecciones = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+  const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+  const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+  const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
   const where = await buildInspeccionesWhere(req, tenantPrisma);
 
   const [inspecciones, totalCount] = await Promise.all([
@@ -455,6 +458,19 @@ export const createInspeccion = async (req, res) => {
       accion: 'CREAR',
       modulo: 'Inspecciones',
       payload_nuevo: response
+    });
+
+    setImmediate(async () => {
+      try {
+        await notificationService.crearNotificacion({
+          db: tenantPrisma,
+          usuario_global_id: req.user.id,
+          mensaje: `Inspeccion ${response.codigo || response.id} registrada para la planificacion ${response.planificacion_id || ""}.`,
+          tipo: 'INSPECCION',
+        });
+      } catch (err) {
+        console.error('[Notifications] Error al notificar creacion de inspeccion:', err.message);
+      }
     });
 
     res.status(201).json({ status: 'success', data: response });
@@ -850,6 +866,19 @@ export const updateInspeccionStatus = async (req, res) => {
     modulo: 'Inspecciones',
     payload_previo: existing,
     payload_nuevo: updatedInspeccion,
+  });
+
+  setImmediate(async () => {
+    try {
+      await notificationService.crearNotificacion({
+        db: tenantPrisma,
+        usuario_global_id: req.user.id,
+        mensaje: `Inspeccion actualizada: el estatus cambio a ${status}.`,
+        tipo: status === 'FINALIZADA' ? 'SUCCESS' : 'INSPECCION',
+      });
+    } catch (err) {
+      console.error('[Notifications] Error al notificar cambio de estatus de inspeccion:', err.message);
+    }
   });
 
   res.status(200).json({ status: 'success', data: updatedInspeccion });

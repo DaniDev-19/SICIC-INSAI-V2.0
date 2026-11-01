@@ -1,4 +1,5 @@
 import bitacoraService from '../services/bitacora.service.js';
+import notificationService from '../services/notification.service.js';
 import storageService from '../services/storage.service.js';
 import inventoryService from '../services/inventory.service.js';
 import actaSiloReporteService, { ACTA_SILO_REPORT_INCLUDE } from '../services/acta-silo-reporte.service.js';
@@ -147,8 +148,10 @@ async function buildActaSilosWhere(req, tx) {
 export const getActaSilos = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+  const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+  const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+  const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
   const where = await buildActaSilosWhere(req, tenantPrisma);
 
   const [actas, totalCount] = await Promise.all([
@@ -327,6 +330,19 @@ export const createActaSilo = async (req, res) => {
       accion: 'CREAR',
       modulo: 'Acta Silos',
       payload_nuevo: response
+    });
+
+    setImmediate(async () => {
+      try {
+        await notificationService.crearNotificacion({
+          db: tenantPrisma,
+          usuario_global_id: req.user.id,
+          mensaje: `Acta de Inspeccion de Silos registrada para la planificacion ${response.planificacion_id || response.id}.`,
+          tipo: 'INSPECCION',
+        });
+      } catch (err) {
+        console.error('[Notifications] Error al notificar creacion de acta silo:', err.message);
+      }
     });
 
     res.status(201).json({ status: 'success', data: response });

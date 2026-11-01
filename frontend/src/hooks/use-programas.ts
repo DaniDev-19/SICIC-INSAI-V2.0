@@ -5,10 +5,10 @@ import { programasService } from '@/services/programas.service';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 
-export function useProgramas() {
+export function useProgramas(options?: { initialLimit?: number }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(options?.initialLimit || 10);
   const [search, setSearch] = useState('');
   const [tipoId, setTipoId] = useState('all');
 

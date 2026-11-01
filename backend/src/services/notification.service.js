@@ -211,6 +211,60 @@ class NotificationService {
       where: { id: Number(id) },
     });
   }
+
+  /**
+   * Verifica avales sanitarios que ya hayan alcanzado su fecha de vencimiento
+   * y genera la notificación de aviso correspondiente sin emojis ni duplicados.
+   */
+  async verificarAvalesVencidos({ db, usuario_global_id }) {
+    if (!usuario_global_id) return;
+
+    try {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const avalesVencidos = await db.avales_sanitarios.findMany({
+        where: {
+          fecha_vencimiento: {
+            not: null,
+            lte: hoy,
+          },
+        },
+        select: {
+          id: true,
+          numero_aval: true,
+          fecha_vencimiento: true,
+        },
+        take: 20,
+      });
+
+      for (const aval of avalesVencidos) {
+        const fechaStr = aval.fecha_vencimiento
+          ? new Date(aval.fecha_vencimiento).toLocaleDateString('es-VE')
+          : '';
+
+        const yaNotificado = await db.notificaciones.findFirst({
+          where: {
+            usuario_global_id: Number(usuario_global_id),
+            mensaje: {
+              contains: `Aval Sanitario N° ${aval.numero_aval}`,
+            },
+          },
+        });
+
+        if (!yaNotificado) {
+          await this.crearNotificacion({
+            db,
+            usuario_global_id: Number(usuario_global_id),
+            mensaje: `Aviso de Vencimiento: El Aval Sanitario N° ${aval.numero_aval} vencio el ${fechaStr}.`,
+            tipo: 'WARNING',
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[NotificationService] Error al verificar avales vencidos:', err.message);
+    }
+  }
 }
 
 export default new NotificationService();

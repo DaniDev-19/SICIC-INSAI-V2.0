@@ -17,17 +17,25 @@ export function useNotifications(filters?: {
   enabled?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const hasToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('token')) : false;
 
-  // Consulta de conteo de no leídas con refresco periódico cada 30 segundos
-  const { data: unreadData, isLoading: isLoadingCount } = useQuery({
+  // Consulta de conteo de no leídas (100% manual o al cargar sesión, SIN sondeo periódico en segundo plano)
+  const {
+    data: unreadData,
+    isLoading: isLoadingCount,
+    isFetching: isFetchingCount,
+    refetch: refetchCount,
+  } = useQuery({
     queryKey: NOTIFICATIONS_KEYS.unreadCount(),
     queryFn: notificationService.getUnreadCount,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true,
-    staleTime: 10000,
+    enabled: hasToken,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
   });
 
-  // Consulta de listado de notificaciones
+  // Consulta de listado de notificaciones (solo activa cuando se despliega el menú o se recarga manualmente)
+  const isListEnabled = hasToken && filters?.enabled !== false;
   const {
     data: notificationsData,
     isLoading: isLoadingList,
@@ -36,8 +44,10 @@ export function useNotifications(filters?: {
   } = useQuery({
     queryKey: NOTIFICATIONS_KEYS.list(filters),
     queryFn: () => notificationService.getNotificaciones(filters),
-    enabled: filters?.enabled !== false,
-    staleTime: 10000,
+    enabled: isListEnabled,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
   });
 
   // Marcar una como leída
@@ -78,13 +88,19 @@ export function useNotifications(filters?: {
     },
   });
 
+  const refreshAll = async () => {
+    await Promise.all([refetchCount(), refetchList()]);
+  };
+
   return {
     notifications: notificationsData?.data || [],
     pagination: notificationsData?.pagination,
     unreadCount: unreadData?.data?.unreadCount || 0,
     isLoading: isLoadingList || isLoadingCount,
-    isFetching: isFetchingList,
-    refetch: refetchList,
+    isFetching: isFetchingList || isFetchingCount,
+    refetch: refreshAll,
+    refetchList,
+    refetchCount,
     markAsRead: markAsReadMutation.mutate,
     markAllAsRead: markAllAsReadMutation.mutate,
     deleteNotification: deleteNotificationMutation.mutate,

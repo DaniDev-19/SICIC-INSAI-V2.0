@@ -3,8 +3,10 @@ import bitacoraService from '../services/bitacora.service.js';
 export const getMunicipios = async (req, res) => {
     const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 40;
-    const skip = (page - 1) * limit;
+    // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+    const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+    const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+    const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
     const { estado_id } = req.query;
 
     const where = estado_id ? { estado_id: Number(estado_id) } : {};
