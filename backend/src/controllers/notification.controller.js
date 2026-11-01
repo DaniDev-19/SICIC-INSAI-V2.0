@@ -31,6 +31,18 @@ export const getUnreadCount = async (req, res, next) => {
       usuario_global_id: usuarioGlobalId,
     });
 
+    // Verificar avales vencidos de forma diferida, sin bloquear la respuesta
+    setImmediate(async () => {
+      try {
+        await notificationService.verificarAvalesVencidos({
+          db: req.db,
+          usuario_global_id: usuarioGlobalId,
+        });
+      } catch (err) {
+        console.error('[Notifications] Error al verificar avales vencidos:', err.message);
+      }
+    });
+
     res.status(200).json({
       status: 'success',
       data: result,

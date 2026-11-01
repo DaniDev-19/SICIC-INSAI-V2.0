@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Camera, User, MapPin, Briefcase, ClipboardList, X, Plus, Pencil, Trash2, Check, Mail, Phone } from 'lucide-react';
+import { Loader2, Camera, User, MapPin, Briefcase, ClipboardList, Search, X, Plus, Pencil, Trash2, Check, Mail, Phone } from 'lucide-react';
 import { useEmpleados } from '@/hooks/use-empleados';
 import { useProgramas } from '@/hooks/use-programas';
 import type { Empleado } from '@/types/empleados';
@@ -83,7 +83,7 @@ export function EmpleadoModal({
     deleteContrato
   } = useEmpleados();
 
-  const { programas } = useProgramas();
+  const { programas } = useProgramas({ initialLimit: 1000 });
 
   // Fetch completo del empleado para edición (incluye residencia y programas)
   const { data: fullEmpleadoResp } = useQuery({
@@ -97,6 +97,7 @@ export function EmpleadoModal({
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedProgramas, setSelectedProgramas] = useState<number[]>([]);
+  const [programaSearch, setProgramaSearch] = useState('');
 
   // Estados para creación en línea de catálogos
   const [showNewCargo, setShowNewCargo] = useState(false);
@@ -299,6 +300,7 @@ export function EmpleadoModal({
         setParroquias([]);
         setSectores([]);
       }
+      setProgramaSearch('');
       setFotoFile(null);
     }
   }, [empleado, fullEmpleado, reset, isOpen]);
@@ -894,31 +896,79 @@ export function EmpleadoModal({
             <div className="h-px bg-border/50 w-full" />
 
             {/* Sección Programas */}
-            <div className="space-y-4 pb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                  <ClipboardList className="size-4" />
+            <div className="space-y-3 pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                    <ClipboardList className="size-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground/80 flex items-center gap-2 flex-wrap">
+                      Programas Asignados
+                      {selectedProgramas.length > 0 && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 lowercase">
+                          {selectedProgramas.length} {selectedProgramas.length === 1 ? 'seleccionado' : 'seleccionados'}
+                        </span>
+                      )}
+                    </h3>
+                  </div>
                 </div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-foreground/80">Programas Asignados</h3>
-              </div>
-              <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1 rounded-xl">
-                {programas.map(prog => (
-                  <button
-                    key={prog.id}
-                    type="button"
-                    onClick={() => togglePrograma(prog.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 flex items-center gap-2 ${selectedProgramas.includes(prog.id)
-                      ? 'bg-amber-500/10 text-amber-600 border-amber-500/30 ring-2 ring-amber-500/20'
-                      : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50'
-                      }`}
-                  >
-                    <ClipboardList className={`size-3 ${selectedProgramas.includes(prog.id) ? 'text-amber-500' : 'text-muted-foreground/50'}`} />
-                    {prog.nombre}
-                  </button>
-                ))}
-                {programas.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No hay programas disponibles para asignar.</p>
+
+                {/* Buscador local de programas */}
+                {programas.length > 2 && (
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="text"
+                      value={programaSearch}
+                      onChange={(e) => setProgramaSearch(e.target.value)}
+                      placeholder="Buscar programa..."
+                      className="h-8 pl-8 pr-7 text-xs rounded-xl bg-background/50 border-border/70 focus-visible:ring-amber-500/30"
+                    />
+                    {programaSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setProgramaSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
+                        title="Limpiar búsqueda"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    )}
+                  </div>
                 )}
+              </div>
+
+              {/* Contenedor scrolleable con altura máxima y scroll suave para evitar desbordes */}
+              <div className="border border-border/60 rounded-2xl p-3 bg-muted/10 max-h-[180px] overflow-y-auto custom-scrollbar shadow-inner">
+                <div className="flex flex-wrap gap-2">
+                  {programas
+                    .filter(prog => prog.nombre.toLowerCase().includes(programaSearch.trim().toLowerCase()))
+                    .map(prog => {
+                      const isSelected = selectedProgramas.includes(prog.id);
+                      return (
+                        <button
+                          key={prog.id}
+                          type="button"
+                          onClick={() => togglePrograma(prog.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-200 flex items-center gap-2 cursor-pointer ${isSelected ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40 ring-1 ring-amber-500/30 shadow-xs" : "bg-background/80 text-muted-foreground border-border hover:bg-background hover:text-foreground"}`}
+                        >
+                          <ClipboardList className={`size-3.5 shrink-0 ${isSelected ? "text-amber-500" : "text-muted-foreground/50"}`} />
+                          <span>{prog.nombre}</span>
+                        </button>
+                      );
+                    })}
+
+                  {programas.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2">No hay programas disponibles para asignar.</p>
+                  )}
+
+                  {programas.length > 0 && programas.filter(prog => prog.nombre.toLowerCase().includes(programaSearch.trim().toLowerCase())).length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2">
+                      No se encontraron programas con el término "{programaSearch}".
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

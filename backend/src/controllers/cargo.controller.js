@@ -3,8 +3,9 @@ import bitacoraService from '../services/bitacora.service.js';
 export const getCargos = async (req, res) => {
     const tenantPrisma = req.db;
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 40;
-    const skip = (page - 1) * limit;
+    const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+    const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+    const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
     const { q, search } = req.query;
     const searchTerm = (q || search || '').trim();
 

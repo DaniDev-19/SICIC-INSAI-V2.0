@@ -4,8 +4,10 @@ import bitacoraService from '../services/bitacora.service.js';
 export const getAllStock = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+  const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+  const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+  const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
   const { oficina_id, q, search, low_stock } = req.query;
   const searchTerm = q || search;
 
@@ -146,8 +148,10 @@ export const registrarMovimientoManual = async (req, res) => {
 export const getMovimientos = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+  const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+  const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+  const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
   const { insumo_id, oficina_id, tipo_movimiento, search, q } = req.query;
   const searchTerm = search || q;
 

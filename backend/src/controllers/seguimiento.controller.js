@@ -1,4 +1,5 @@
 import bitacoraService from '../services/bitacora.service.js';
+import notificationService from '../services/notification.service.js';
 import storageService from '../services/storage.service.js';
 import inventoryService from '../services/inventory.service.js';
 import seguimientoReporteService from '../services/seguimiento-reporte.service.js';
@@ -162,8 +163,10 @@ async function buildSeguimientosWhere(req, tenantPrisma) {
 export const getSeguimientos = async (req, res) => {
   const tenantPrisma = req.db;
   const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // Si no se envia limit, devuelve todos los registros (para selects/catalogos sin paginacion)
+  const rawLimit = req.query.limit !== undefined ? Number(req.query.limit) : null;
+  const limit = (rawLimit && rawLimit > 0) ? rawLimit : 10000;
+  const skip = rawLimit && rawLimit > 0 ? (page - 1) * rawLimit : 0;
   const where = await buildSeguimientosWhere(req, tenantPrisma);
 
   const [seguimientos, totalCount] = await Promise.all([
@@ -277,6 +280,19 @@ export const createSeguimiento = async (req, res) => {
       accion: 'CREAR',
       modulo: 'Seguimientos',
       payload_nuevo: response
+    });
+
+    setImmediate(async () => {
+      try {
+        await notificationService.crearNotificacion({
+          db: tenantPrisma,
+          usuario_global_id: req.user.id,
+          mensaje: `Nuevo seguimiento registrado para la inspeccion ${response.inspeccion_id}.`,
+          tipo: 'INSPECCION',
+        });
+      } catch (err) {
+        console.error('[Notifications] Error al notificar creacion de seguimiento:', err.message);
+      }
     });
 
     res.status(201).json({ status: 'success', data: response });

@@ -89,7 +89,6 @@ const Empleados: React.FC = () => {
 
     const handleBulkDelete = async () => {
         try {
-            // Por ahora eliminamos uno a uno hasta implementar el endpoint masivo en empleados
             for (const id of selectedIds) {
                 await deleteEmpleado(id);
             }
