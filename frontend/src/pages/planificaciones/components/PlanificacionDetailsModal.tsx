@@ -119,9 +119,9 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50  top-0  backdrop-blur-md">
-          <div className="flex items-center justify-between">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 top-0 backdrop-blur-md">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-4">
               <div className="size-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-inner">
                 <ClipboardList className="size-6" />
@@ -159,7 +159,7 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
             <Button onClick={onClose} variant="ghost" className="mt-2" title="Cerrar">Cerrar</Button>
           </div>
         ) : (
-          <div className="p-8 space-y-6">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
             <div className="space-y-2 bg-indigo-500/2 border border-indigo-500/10 p-5 rounded-2xl">
               <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">Actividad Principal</span>
               <h2 className="text-xl font-bold text-foreground">{planificacion.actividad}</h2>
@@ -325,7 +325,7 @@ export const PlanificacionDetailsModal: React.FC<PlanificacionDetailsModalProps>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40 flex-wrap">
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 pt-4 border-t border-border/40">
               <Button onClick={onClose} variant="ghost" className="font-bold cursor-pointer">
                 Cerrar Ficha
               </Button>

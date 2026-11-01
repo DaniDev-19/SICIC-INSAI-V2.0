@@ -211,8 +211,8 @@ export function SolicitudModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[56rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,56rem)]">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-4xl border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,56rem)]">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
               <FileText className="size-6" />
@@ -229,7 +229,7 @@ export function SolicitudModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4 sm:py-6">
 
             {/* Seccion 1: Identificación */}
             <div className="space-y-5">
@@ -253,7 +253,7 @@ export function SolicitudModal({
                     "cursor-pointer w-full h-12 rounded-xl bg-muted/10 border-border focus:bg-background transition-all",
                     errors.solicitante_id && "border-rose-500/50"
                   )}>
-                    <SelectValue placeholder="Seleccionar Cliente" />
+                    <SelectValue className="truncate" placeholder="Seleccionar Cliente" />
                   </SelectTrigger>
                   <SelectContent className="glass-effect">
                     {clientes.map(c => (
@@ -382,13 +382,13 @@ export function SolicitudModal({
                     )}>
                       <SelectValue placeholder="Seleccionar Tipo" />
                     </SelectTrigger>
-                    <SelectContent className="glass-effect max-h-[15.625rem] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
+                    <SelectContent className="glass-effect max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                       {tipos.map(t => (
                         <div key={t.id} className="group relative flex items-center">
                           <SelectItem value={t.id.toString()} className="cursor-pointer flex-1 pr-20">
                             {t.nombre}
                           </SelectItem>
-                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                          <div className="absolute right-6 top-1/2 sm:-translate-y-1/2 sm:hidden group-hover:flex items-center gap-1 z-10">
                             <button
                               type="button"
                               disabled={deletingTipoId === t.id}
@@ -437,7 +437,7 @@ export function SolicitudModal({
 
             {/* Seccion 2: Detalles y Estado */}
             <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Prioridad</label>
                   <Select onValueChange={(val) => setValue('prioridad', val)} value={watch('prioridad')}>
@@ -517,7 +517,7 @@ export function SolicitudModal({
             </div>
           </div>
 
-          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
+          <DialogFooter className="px-4 sm:px-6 py-4 sm:py-5 border-t border-border/30 bg-muted/10 shrink-0 flex-col-reverse sm:flex-row gap-2 sm:gap-0">
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
               Cancelar
             </Button>

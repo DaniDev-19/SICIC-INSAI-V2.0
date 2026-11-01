@@ -149,9 +149,9 @@ export function ProgramaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[500px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)}>
-          <div className="bg-primary/5 p-6 border-b border-border/50">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-125 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="bg-primary/5 p-6 border-b border-border/50 shrink-0">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 {programa ? 'Editar Programa' : 'Nuevo Programa'}
@@ -162,7 +162,7 @@ export function ProgramaModal({
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-6">
+          <div className="p-6 sm:p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
             <div className="space-y-2">
               <Label htmlFor="nombre" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
                 Nombre del Programa
@@ -254,7 +254,7 @@ export function ProgramaModal({
                   <SelectTrigger className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm">
                     <SelectValue placeholder="Seleccione un tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-20">
@@ -318,12 +318,12 @@ export function ProgramaModal({
                 id="descripcion"
                 {...register('descripcion')}
                 placeholder="Detalla los objetivos y alcance del programa..."
-                className="min-h-[120px] rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
+                className="min-h-30 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0">
+          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0 shrink-0">
             <Button
               type="button"
               variant="ghost"

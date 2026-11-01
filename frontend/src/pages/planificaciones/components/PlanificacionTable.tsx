@@ -1,6 +1,14 @@
 import React from 'react';
 import type { Planificacion } from '@/types/planificaciones';
-import { Calendar, User, Users, MapPin, Car, FileText, UserPlus } from 'lucide-react';
+import {
+  Calendar,
+  User,
+  Users,
+  MapPin,
+  Car,
+  FileText,
+  UserPlus,
+} from 'lucide-react';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Button } from '@/components/ui/button';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -39,6 +47,38 @@ const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
   NO_ATENDIDA: { label: 'No Atendida', class: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
 };
 
+function formatDate(dateStr: string) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-4 px-4 py-16 sm:py-20 text-center">
+      <div className="size-16 sm:size-20 rounded-2xl bg-muted/30 flex items-center justify-center border border-dashed border-border">
+        <FileText className="size-8 sm:size-10 text-muted-foreground/50" />
+      </div>
+      <div className="space-y-1.5 max-w-sm">
+        <p className="font-bold text-foreground text-base sm:text-lg">
+          No se encontraron planificaciones
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Registra una nueva planificación o ajusta los filtros de búsqueda.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
   planificaciones,
   onView,
@@ -48,174 +88,306 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
 }) => {
   const { isAdmin } = usePermissions();
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
-    } catch {
-      return dateStr;
-    }
-  };
+  if (planificaciones.length === 0) {
+    return <EmptyState />;
+  }
 
   return (
-    <Table>
-      <TableHeader className="bg-muted/30 border-b">
-        <TableRow className="hover:bg-transparent">
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Código y Fecha</TableHead>
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Solicitante / Predio</TableHead>
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Actividad / Vehículo</TableHead>
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Equipo Técnico</TableHead>
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground">Estado / Prioridad</TableHead>
-          <TableHead className="px-6 py-5 font-bold text-sm uppercase tracking-wider text-muted-foreground text-right">Acciones</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody className="divide-y divide-border/50">
-        {planificaciones.length === 0 ? (
-          <TableRow className="hover:bg-transparent border-none">
-            <TableCell colSpan={6} className="px-6 py-20 text-center text-muted-foreground font-medium italic">
-              <div className="flex flex-col items-center gap-3">
-                <div className="size-16 rounded-full bg-muted/30 flex items-center justify-center">
-                  <FileText className="size-8 text-muted-foreground/50" />
+    <>
+      {/* ── Mobile / Tablet (< lg): tarjetas ── */}
+      <div className="lg:hidden p-3 sm:p-4 space-y-3">
+        {planificaciones.map((plan) => {
+          const prioridad = PRIORIDAD_CONFIG[plan.prioridad] || PRIORIDAD_CONFIG.MEDIA;
+          const status = STATUS_CONFIG[plan.status] || STATUS_CONFIG.PENDIENTE;
+          const inspectors = plan.planificacion_empleados || [];
+          const isFinalized = plan.status === 'FINALIZADA';
+          const canModify = !isFinalized || isAdmin;
+
+          return (
+            <article
+              key={plan.id}
+              className="rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5 shadow-sm space-y-3"
+            >
+              {/* Fila 1: icono + código + acciones */}
+              <div className="flex items-start justify-between gap-3 min-w-0">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="size-11 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <FileText className="size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-foreground truncate">
+                      {plan.codigo || `PLA-#${plan.id}`}
+                    </p>
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-semibold mt-0.5">
+                      <Calendar className="size-3 shrink-0" />
+                      {formatDate(plan.fecha_programada)}
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-foreground font-bold not-italic">No se encontraron planificaciones</p>
-                  <p className="text-xs">Intenta ajustar tus criterios de búsqueda o filtros.</p>
+
+                {/* Badge estado (arriba a la derecha) */}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black border',
+                    status.class
+                  )}>
+                    <span className="size-1.5 rounded-full bg-current" />
+                    {status.label}
+                  </span>
+                  <span className={cn(
+                    'inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest',
+                    prioridad.class
+                  )}>
+                    {prioridad.label}
+                  </span>
                 </div>
               </div>
-            </TableCell>
-          </TableRow>
-        ) : (
-          planificaciones.map((plan) => {
-            const prioridad = PRIORIDAD_CONFIG[plan.prioridad] || PRIORIDAD_CONFIG.MEDIA;
-            const status = STATUS_CONFIG[plan.status] || STATUS_CONFIG.PENDIENTE;
-            const inspectors = plan.planificacion_empleados || [];
-            const isFinalized = plan.status === 'FINALIZADA';
-            const canModify = !isFinalized || isAdmin;
 
-            return (
-              <TableRow key={plan.id} className="group hover:bg-primary/5 transition-all duration-300">
-                <TableCell className="px-6 py-5">
-                  <div className="flex items-center gap-4">
-                    <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                      <FileText className="size-5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-foreground block group-hover:translate-x-1 transition-transform">
-                        {plan.codigo || `PLA-#${plan.id}`}
-                      </span>
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium mt-0.5 whitespace-nowrap">
-                        <Calendar className="size-3" />
-                        {formatDate(plan.fecha_programada)}
+              {/* Fila 2: solicitante y predio */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-2 min-w-0 text-foreground font-medium">
+                  <User className="size-4 text-primary shrink-0" />
+                  <span className="truncate">
+                    {plan.solicitudes?.clientes?.nombre || 'Productor no especificado'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
+                  <MapPin className="size-4 shrink-0" />
+                  <span className="truncate">
+                    {plan.solicitudes?.propiedades?.nombre || 'Predio no especificado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fila 3: actividad + vehículo */}
+              <div className="space-y-1">
+                <div
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/5 text-primary border border-primary/10 max-w-full truncate"
+                  title={plan.actividad || 'Visita Técnica'}
+                >
+                  {plan.actividad || 'Visita Técnica'}
+                </div>
+                {plan.vehiculos ? (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                    <Car className="size-3.5 shrink-0" />
+                    <span className="truncate">
+                      {plan.vehiculos.marca} [{plan.vehiculos.placa}]
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                    <Car className="size-3 shrink-0" /> Sin vehículo asignado
+                  </p>
+                )}
+              </div>
+
+              {/* Fila 4: inspectores */}
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                  {inspectors.length > 0 ? (
+                    inspectors.map((pe) => (
+                      <div
+                        key={pe.id}
+                        className="inline-flex items-center gap-1 bg-muted/60 border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+                      >
+                        <User className="size-3 text-muted-foreground/80 shrink-0" />
+                        {pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.
                       </div>
-                    </div>
-                  </div>
-                </TableCell>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                      <Users className="size-3.5" /> Sin inspectores asignados
+                    </span>
+                  )}
+                </div>
+                {onEditEmpleados && canModify && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditEmpleados(plan)}
+                    className="size-7 rounded-lg text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer shrink-0"
+                    title="Editar inspectores asignados"
+                  >
+                    <UserPlus className="size-3.5" />
+                  </Button>
+                )}
+              </div>
 
-                <TableCell className="px-6 py-5">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <User className="size-3.5 text-primary" />
-                      <span className="text-sm font-bold text-foreground truncate max-w-45">
-                        {plan.solicitudes?.clientes?.nombre || 'Productor no especificado'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="size-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground font-medium truncate max-w-45">
-                        {plan.solicitudes?.propiedades?.nombre || 'Predio rural no especificado'}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
+              {/* Fila 5: acciones */}
+              <div className="flex items-center justify-end gap-1 pt-1 border-t border-border/40">
+                <CrudTableActions
+                  screen="planificacion"
+                  onView={() => onView(plan.id)}
+                  onEdit={canModify ? () => onEdit(plan) : undefined}
+                  onDelete={canModify ? () => onDelete(plan.id) : undefined}
+                />
+              </div>
+            </article>
+          );
+        })}
+      </div>
 
-                <TableCell className="px-6 py-5 max-w-70">
-                  <div className="space-y-1">
-                    <div
-                      className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/5 text-primary border border-primary/10 max-w-full wrap-break-words whitespace-normal leading-snug"
-                      title={plan.actividad || 'Visita Técnica'}
-                    >
-                      {plan.actividad || 'Visita Técnica'}
-                    </div>
-                    {plan.vehiculos ? (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium truncate max-w-45">
-                        <Car className="size-3.5 text-muted-foreground" />
-                        <span>{(plan.vehiculos.marca || 'Vehículo')} [{plan.vehiculos.placa}]</span>
+      {/* ── Desktop (lg+): tabla ── */}
+      <div className="hidden lg:block rounded-2xl border border-border/50 bg-background/50 overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/30 border-b">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Código y Fecha
+              </TableHead>
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Solicitante / Predio
+              </TableHead>
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Actividad / Vehículo
+              </TableHead>
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Equipo Técnico
+              </TableHead>
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Estado / Prioridad
+              </TableHead>
+              <TableHead className="px-6 py-5 font-bold text-xs uppercase tracking-wider text-muted-foreground text-right">
+                Acciones
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
+            {planificaciones.map((plan) => {
+              const prioridad = PRIORIDAD_CONFIG[plan.prioridad] || PRIORIDAD_CONFIG.MEDIA;
+              const status = STATUS_CONFIG[plan.status] || STATUS_CONFIG.PENDIENTE;
+              const inspectors = plan.planificacion_empleados || [];
+              const isFinalized = plan.status === 'FINALIZADA';
+              const canModify = !isFinalized || isAdmin;
+
+              return (
+                <TableRow key={plan.id} className="group hover:bg-primary/5 transition-all duration-300">
+                  <TableCell className="px-6 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shrink-0">
+                        <FileText className="size-5" />
                       </div>
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
-                        <Car className="size-3.5 text-muted-foreground" />
-                        Sin vehículo asignado
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-
-                <TableCell className="px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-wrap gap-1.5 max-w-45">
-                      {inspectors.length > 0 ? (
-                        inspectors.map((pe) => (
-                          <div
-                            key={pe.id}
-                            className="inline-flex items-center gap-1 bg-muted/60 text-foreground border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs hover:bg-muted transition-colors whitespace-nowrap"
-                          >
-                            <User className="size-3 text-muted-foreground/80 shrink-0" />
-                            {pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic flex items-center gap-1 whitespace-nowrap">
-                          <Users className="size-3.5" />
-                          Sin asignar
+                      <div>
+                        <span className="font-bold text-foreground block group-hover:translate-x-1 transition-transform">
+                          {plan.codigo || `PLA-#${plan.id}`}
                         </span>
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium mt-0.5 whitespace-nowrap">
+                          <Calendar className="size-3" />
+                          {formatDate(plan.fecha_programada)}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="px-6 py-5">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <User className="size-3.5 text-primary shrink-0" />
+                        <span className="text-sm font-bold text-foreground truncate max-w-45">
+                          {plan.solicitudes?.clientes?.nombre || 'Productor no especificado'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-xs text-muted-foreground font-medium truncate max-w-45">
+                          {plan.solicitudes?.propiedades?.nombre || 'Predio rural no especificado'}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="px-6 py-5 max-w-70">
+                    <div className="space-y-1">
+                      <div
+                        className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/5 text-primary border border-primary/10 max-w-full wrap-break-words whitespace-normal leading-snug"
+                        title={plan.actividad || 'Visita Técnica'}
+                      >
+                        {plan.actividad || 'Visita Técnica'}
+                      </div>
+                      {plan.vehiculos ? (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium truncate max-w-45">
+                          <Car className="size-3.5 text-muted-foreground shrink-0" />
+                          <span>{(plan.vehiculos.marca || 'Vehículo')} [{plan.vehiculos.placa}]</span>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                          <Car className="size-3.5 text-muted-foreground" />
+                          Sin vehículo asignado
+                        </p>
                       )}
                     </div>
-                    {onEditEmpleados && canModify && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEditEmpleados(plan)}
-                        className="size-7 rounded-lg text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 transition-colors cursor-pointer shrink-0"
-                        title="Editar inspectores asignados"
-                      >
-                        <UserPlus className="size-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                <TableCell className="px-6 py-5">
-                  <div className="flex flex-col gap-2">
-                    <div className={cn(
-                      "inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border w-fit whitespace-nowrap",
-                      status.class || 'bg-muted text-muted-foreground'
-                    )}>
-                      <span className="size-1.5 rounded-full bg-current" />
-                      {status.label}
-                    </div>
-                    <div className={cn(
-                      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest w-fit whitespace-nowrap",
-                      prioridad.class || 'bg-muted text-muted-foreground'
-                    )}>
-                      {prioridad.label}
-                    </div>
-                  </div>
-                </TableCell>
+                  <TableCell className="px-6 py-5">
+                    <div className="flex items-center gap-2 w-full min-w-0">
+                      <div className="flex flex-nowrap gap-1.5 max-w-45 overflow-hidden text-ellipsis items-center">
+                        {inspectors.length > 0 ? (
+                          inspectors.map((pe) => (
+                            <div
+                              key={pe.id}
+                              className="inline-flex items-center gap-1 bg-muted/60 text-foreground border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs hover:bg-muted transition-colors whitespace-nowrap"
+                            >
+                              <User className="size-3 text-muted-foreground/80 shrink-0" />
+                              {pe.empleados?.nombre || 'Inspector'}{' '}
+                              {pe.empleados?.apellido?.charAt(0) || ''}.
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic flex items-center gap-1 whitespace-nowrap">
+                            <Users className="size-3.5" /> Sin asignar
+                          </span>
+                        )}
+                      </div>
 
-                <TableCell className="px-6 py-5 text-right">
-                  <CrudTableActions
-                    screen="planificacion"
-                    onView={() => onView(plan.id)}
-                    onEdit={canModify ? () => onEdit(plan) : undefined}
-                    onDelete={canModify ? () => onDelete(plan.id) : undefined}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })
-        )}
-      </TableBody>
-    </Table>
+                      {onEditEmpleados && canModify && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEditEmpleados(plan)}
+                          className="size-7 rounded-lg text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 transition-colors cursor-pointer shrink-0"
+                          title="Editar inspectores asignados"
+                        >
+                          <UserPlus className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+
+
+                  <TableCell className="px-6 py-5">
+                    <div className="flex flex-col gap-2">
+                      <div className={cn(
+                        'inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border w-fit whitespace-nowrap',
+                        status.class || 'bg-muted text-muted-foreground'
+                      )}>
+                        <span className="size-1.5 rounded-full bg-current" />
+                        {status.label}
+                      </div>
+                      <div className={cn(
+                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest w-fit whitespace-nowrap',
+                        prioridad.class || 'bg-muted text-muted-foreground'
+                      )}>
+                        {prioridad.label}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="px-6 py-5 text-right">
+                    <CrudTableActions
+                      screen="planificacion"
+                      onView={() => onView(plan.id)}
+                      onEdit={canModify ? () => onEdit(plan) : undefined}
+                      onDelete={canModify ? () => onDelete(plan.id) : undefined}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 };

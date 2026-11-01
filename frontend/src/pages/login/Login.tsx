@@ -222,35 +222,91 @@ export default function Login() {
 
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden transition-colors duration-500"
-      style={{ backgroundImage: `url(${image.fondo})` }}
-    >
-      <div className="absolute inset-0 bg-emerald-950/40 dark:bg-black/60 backdrop-blur-[1px] transition-colors duration-500" />
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-slate-950 transition-colors duration-500">
+      <div
+        className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+        style={{ backgroundImage: `url(${image.fondo})` }}
+      />
+      <div className="hidden md:block absolute inset-0 bg-emerald-950/40 dark:bg-black/60 backdrop-blur-[1px] transition-colors duration-500" />
 
-      <div className="relative z-10 w-full max-w-[95%] sm:max-w-md p-2 sm:p-0">
-        <div className="backdrop-blur-2xl bg-white/10 dark:bg-emerald-950/20 border border-white/20 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-500 group hover:shadow-emerald-500/20">
-          <div className="p-6 sm:p-10">
-            <div className="flex flex-col items-center mb-6 sm:mb-10">
-              <div className="p-3 mb-4 animate-in fade-in zoom-in duration-1000">
+      <div className="md:hidden absolute inset-0 overflow-hidden pointer-events-none bg-linear-to-b from-[#02130c] via-[#041c12] to-[#010905]">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(52, 211, 153, 0.4) 1px, transparent 0)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-emerald-500/25 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute top-1/2 -right-24 w-80 h-80 bg-teal-400/20 rounded-full blur-[90px] animate-pulse duration-1000" />
+        <div className="absolute -bottom-20 left-10 w-64 h-64 bg-amber-500/15 rounded-full blur-[80px] animate-pulse duration-700" />
+
+        <svg
+          className="absolute inset-0 w-full h-full opacity-20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="agroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx="50%"
+            cy="36%"
+            r="160"
+            fill="none"
+            stroke="url(#agroGrad)"
+            strokeWidth="1.5"
+            strokeDasharray="4 6"
+            className="animate-[spin_45s_linear_infinite]"
+          />
+          <circle
+            cx="50%"
+            cy="36%"
+            r="220"
+            fill="none"
+            stroke="url(#agroGrad)"
+            strokeWidth="1"
+            strokeDasharray="8 8"
+            className="animate-[spin_70s_linear_infinite_reverse]"
+          />
+          <circle
+            cx="50%"
+            cy="36%"
+            r="280"
+            fill="none"
+            stroke="url(#agroGrad)"
+            strokeWidth="0.5"
+            strokeDasharray="6 12"
+          />
+        </svg>
+      </div>
+
+      <div className="relative z-10 w-full max-w-[88%] xs:max-w-sm sm:max-w-94.5 p-1 sm:p-0">
+        <div className="backdrop-blur-2xl bg-white/10 dark:bg-emerald-950/20 border border-white/20 dark:border-white/10 rounded-3xl sm:rounded-[2.2rem] shadow-2xl overflow-hidden transition-all duration-500 group hover:shadow-emerald-500/20">
+          <div className="p-5 sm:p-7">
+            <div className="flex flex-col items-center mb-4 sm:mb-6">
+              <div className="p-2 mb-2 animate-in fade-in zoom-in duration-1000">
                 <img
                   src={image.icon}
-                  alt="SICIC Logo"
-                  className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl"
+                  title='SICIC-INSAI-V2.0 LOGO'
+                  alt="SICIC-INSAI-v2.0 LOGO"
+                  className="w-25 h-25 sm:w-25 sm:h-25 object-contain drop-shadow-xl"
                 />
               </div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight text-center">SICIC-INSAI</h1>
-              <p className="text-emerald-50/60 dark:text-emerald-50/40 mt-1 sm:mt-2 text-xs sm:text-sm font-medium tracking-wide">Vigilancia y Control</p>
+              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight text-center">SICIC-INSAI</h1>
+              <p className="text-emerald-50/60 dark:text-emerald-50/40 mt-0.5 sm:mt-1 text-xs font-medium tracking-wide">Vigilancia y Control</p>
             </div>
 
             {mfaPendingToken ? (
               <form onSubmit={handleVerifyMfaSubmit} className="space-y-4 sm:space-y-6">
                 <div
-                  className={`flex flex-col items-center justify-center p-4 border rounded-2xl text-center space-y-2 ${
-                    isForceLogoutFlow
-                      ? 'bg-amber-500/10 border-amber-500/20'
-                      : 'bg-emerald-500/10 border-emerald-500/20'
-                  }`}
+                  className={`flex flex-col items-center justify-center p-4 border rounded-2xl text-center space-y-2 ${isForceLogoutFlow
+                    ? 'bg-amber-500/10 border-amber-500/20'
+                    : 'bg-emerald-500/10 border-emerald-500/20'
+                    }`}
                 >
                   <ShieldCheck
                     className={`w-8 h-8 ${isForceLogoutFlow ? 'text-amber-400' : 'text-emerald-400'}`}
@@ -261,9 +317,8 @@ export default function Login() {
                       : 'Verificación de Segundo Factor'}
                   </h3>
                   <p
-                    className={`text-xs leading-relaxed ${
-                      isForceLogoutFlow ? 'text-amber-100/80' : 'text-emerald-100/70'
-                    }`}
+                    className={`text-xs leading-relaxed ${isForceLogoutFlow ? 'text-amber-100/80' : 'text-emerald-100/70'
+                      }`}
                   >
                     {isForceLogoutFlow
                       ? 'Para desconectar la sesión previa de forma segura e ingresar aquí, introduce tu código de seguridad (TOTP o código de respaldo).'
@@ -292,11 +347,10 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={verifyMfaMutation.isPending || !mfaCode.trim()}
-                  className={`w-full h-12 sm:h-14 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl active:scale-[0.97] text-sm sm:text-base cursor-pointer ${
-                    isForceLogoutFlow
-                      ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-900/40'
-                      : 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/40'
-                  }`}
+                  className={`w-full h-12 sm:h-14 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl active:scale-[0.97] text-sm sm:text-base cursor-pointer ${isForceLogoutFlow
+                    ? 'bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-900/40'
+                    : 'bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/40'
+                    }`}
                 >
                   {verifyMfaMutation.isPending ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verificando...</>
@@ -321,58 +375,58 @@ export default function Login() {
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-6">
                 {lockoutSeconds !== null && lockoutSeconds > 0 && (
-                  <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-2xl text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-sm">
+                  <div className="p-3 bg-amber-500/15 border border-amber-500/30 rounded-2xl text-center space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-xs sm:text-sm">
                       <Lock className="w-4 h-4 animate-bounce" />
                       <span>Acceso Temporalmente Bloqueado</span>
                     </div>
-                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                    <p className="text-[11px] text-amber-200/90 leading-relaxed">
                       {lockoutMessage}
                     </p>
-                    <div className="text-2xl font-black text-amber-400 font-mono tracking-widest my-1">
+                    <div className="text-xl font-black text-amber-400 font-mono tracking-widest my-1">
                       {formatCountdown(lockoutSeconds)}
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsForgotModalOpen(true)}
-                      className="text-xs text-amber-300 underline font-semibold cursor-pointer hover:text-amber-100 transition-colors"
+                      className="text-[11px] text-amber-300 underline font-semibold cursor-pointer hover:text-amber-100 transition-colors"
                     >
                       ¿Olvidaste tu contraseña? Restablecer para desbloquear
                     </button>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Correo Electrónico</label>
+                <div className="space-y-1 sm:space-y-1.5">
+                  <label className="text-xs font-semibold text-emerald-50/90 ml-1">Correo Electrónico</label>
                   <div className="relative group/input">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
                     <Input
                       {...register('email')}
                       type="email"
                       placeholder="correo@ejemplo.com"
-                      className="pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
+                      className="pl-11 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-10.5 sm:h-11.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm transition-all"
                       disabled={isLoggingIn || (lockoutSeconds !== null && lockoutSeconds > 0)}
                     />
                   </div>
                   {errors.email && <p className="text-xs text-red-400 font-medium ml-2">{errors.email.message}</p>}
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-emerald-50/90 ml-1">Estado / Instancia</label>
+                <div className="space-y-1 sm:space-y-2">
+                  <label className="text-xs font-semibold text-emerald-50/90 ml-1">Estado / Instancia</label>
                   <Controller
                     name="instanceId"
                     control={control}
                     render={({ field }) => (
                       <div className="relative group/input">
-                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 z-10 pointer-events-none transition-colors group-focus-within/input:text-emerald-400" />
+                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-100/40 z-10 pointer-events-none transition-colors group-focus-within/input:text-emerald-400" />
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
                           disabled={isLoggingIn || !emailIsValid || instancesLoading || (lockoutSeconds !== null && lockoutSeconds > 0)}
                         >
-                          <SelectTrigger className="w-full pl-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-12 sm:h-14 rounded-2xl transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
+                          <SelectTrigger className="w-full pl-11 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white h-10.5 sm:h-11.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm transition-all focus:ring-emerald-500/30 hover:bg-white/10 shadow-none outline-none ring-0 focus:border-emerald-500/50">
                             <SelectValue
                               placeholder={
                                 !emailIsValid
@@ -391,9 +445,9 @@ export default function Login() {
                                 <SelectItem
                                   key={inst.id}
                                   value={inst.id.toString()}
-                                  className="hover:bg-white/20 focus:bg-white/20 cursor-pointer py-2.5 px-4 rounded-2xl transition-all outline-none border-none ring-0 focus:ring-0 mb-1 last:mb-0 group/item"
+                                  className="hover:bg-white/20 focus:bg-white/20 cursor-pointer py-2 px-3 rounded-xl transition-all outline-none border-none ring-0 focus:ring-0 mb-1 last:mb-0 group/item text-xs sm:text-sm"
                                 >
-                                  <span className="font-semibold text-sm text-white/90 group-hover/item:text-white transition-colors">{inst.nombre_mostrable}</span>
+                                  <span className="font-semibold text-white/90 group-hover/item:text-white transition-colors">{inst.nombre_mostrable}</span>
                                 </SelectItem>
                               ))}
                             </div>
@@ -405,24 +459,24 @@ export default function Login() {
                   {errors.instanceId && <p className="text-xs text-red-400 font-medium ml-2">{errors.instanceId.message}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1 sm:space-y-1.5">
                   <div className="flex justify-between items-center px-1">
-                    <label className="text-xs sm:text-sm font-semibold text-emerald-50/90">Contraseña</label>
+                    <label className="text-xs font-semibold text-emerald-50/90">Contraseña</label>
                     <button
                       type="button"
                       onClick={() => setIsForgotModalOpen(true)}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer transition-colors focus:outline-none"
+                      className="text-[11px] sm:text-xs text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer transition-colors focus:outline-none"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
                   </div>
                   <div className="relative group/input">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-100/40 group-focus-within/input:text-emerald-400 transition-all" />
                     <Input
                       {...register('password')}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="pl-12 pr-12 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-12 sm:h-14 rounded-2xl transition-all"
+                      className="pl-11 pr-11 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 text-white placeholder:text-white/20 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 h-10.5 sm:h-11.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm transition-all"
                       disabled={isLoggingIn || (lockoutSeconds !== null && lockoutSeconds > 0)}
                     />
                     <button
@@ -430,7 +484,7 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white cursor-pointer transition-colors focus:outline-none"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                   {errors.password && <p className="text-xs text-red-400 font-medium ml-2">{errors.password.message}</p>}
@@ -439,10 +493,10 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={isLoggingIn || instancesLoading || (lockoutSeconds !== null && lockoutSeconds > 0)}
-                  className="w-full h-12 sm:h-14 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-2 text-sm sm:text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-10.5 sm:h-11.5 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-bold rounded-xl sm:rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-900/40 active:scale-[0.97] mt-1 text-xs sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingIn ? (
-                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Iniciando...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Iniciando...</>
                   ) : lockoutSeconds !== null && lockoutSeconds > 0 ? (
                     `Bloqueado (${formatCountdown(lockoutSeconds)})`
                   ) : (
@@ -453,9 +507,9 @@ export default function Login() {
             )}
           </div>
 
-          <div className="p-4 sm:p-6 bg-white/5 dark:bg-black/20 border-t border-white/5 text-center">
-            <p className="text-xs text-emerald-100/30 font-medium">
-              © {new Date().getFullYear()} SICIC-INSAI - Sistema Integral de inspecciones de Campo
+          <div className="py-2.5 px-4 sm:py-3 sm:px-6 bg-white/5 dark:bg-black/20 border-t border-white/5 text-center">
+            <p className="text-[11px] text-emerald-100/30 font-medium">
+              © {new Date().getFullYear()} SICIC-INSAI - Sistema de Información para el Control de Inspecciones de Campo
             </p>
           </div>
         </div>

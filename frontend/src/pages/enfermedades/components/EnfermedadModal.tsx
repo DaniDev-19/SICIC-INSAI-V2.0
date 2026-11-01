@@ -172,7 +172,7 @@ export function EnfermedadModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
           <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
@@ -296,7 +296,7 @@ export function EnfermedadModal({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 pb-2">
+          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
               Cancelar
             </Button>

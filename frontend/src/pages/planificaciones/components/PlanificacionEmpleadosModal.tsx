@@ -71,8 +71,8 @@ export const PlanificacionEmpleadosModal: React.FC<PlanificacionEmpleadosModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isPatchingEmpleados && onClose()}>
-      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
-        <DialogHeader className="p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 sticky top-0 z-10 backdrop-blur-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border-none shadow-2xl glass-effect p-0 custom-scrollbar">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 sticky top-0 z-10 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl bg-indigo-500/20 text-indigo-500 flex items-center justify-center shadow-inner">
               <UserPlus className="size-5" />
@@ -88,7 +88,7 @@ export const PlanificacionEmpleadosModal: React.FC<PlanificacionEmpleadosModalPr
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <div className="relative">
             <Search className="size-4 absolute left-3 top-3 text-muted-foreground" />
             <Input
@@ -152,7 +152,7 @@ export const PlanificacionEmpleadosModal: React.FC<PlanificacionEmpleadosModalPr
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t border-border/50 bg-background/95 backdrop-blur-md sticky bottom-0">
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-6 pt-4 border-t border-border/50 bg-background/95 backdrop-blur-md sticky bottom-0">
           <Button
             type="button"
             variant="ghost"

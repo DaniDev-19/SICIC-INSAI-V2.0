@@ -104,8 +104,8 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
 
   // Existing hooks
   const { clientes, setSearch: setClientesSearch } = useClientes('', 50);
-  const { 
-    tipos: solicitudTipos, 
+  const {
+    tipos: solicitudTipos,
     createSolicitud,
     createTipo: createSolicitudTipo,
     updateTipo: updateSolicitudTipo,
@@ -292,35 +292,34 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
-      <DialogContent className="sm:max-w-3xl border-none shadow-2xl glass-effect p-0 overflow-hidden">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Activity className="size-6" />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl border-none shadow-2xl glass-effect p-0 overflow-y-auto overflow-x-hidden max-h-[92vh] sm:max-h-[90vh] custom-scrollbar">
+        <DialogHeader className="p-4 sm:p-6 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 min-w-0 max-w-full">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 max-w-full pr-6">
+            <div className="size-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shadow-inner shrink-0">
+              <Activity className="size-5" />
             </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold">Nueva Solicitud de Inspección</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground mt-1">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-lg sm:text-2xl font-bold truncate">Nueva Solicitud de Inspección</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
                 Genere requerimientos de inspección técnica y agende su planificación de forma integrada.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-8 pb-12">
-          {/* Stepper with dynamic slides depending on planning */}
-          <Stepper 
-            steps={programarInmediato ? STEPS : STEPS.slice(0, 3)} 
-            currentStep={currentStep} 
+        <div className="p-4 sm:p-6 pb-12 min-w-0 max-w-full overflow-x-hidden">
+          <Stepper
+            steps={programarInmediato ? STEPS : STEPS.slice(0, 3)}
+            currentStep={currentStep}
           />
 
-          <form onSubmit={(e) => e.preventDefault()} className="mt-8">
-            <div key={currentStep} className="min-h-[350px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
+          <form onSubmit={(e) => e.preventDefault()} className="mt-4 sm:mt-8 min-w-0 max-w-full">
+            <div key={currentStep} className="min-h-70 sm:min-h-87.5 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0 max-w-full">
+
               {/* PASO 1: PRODUCTOR */}
               {currentStep === 0 && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
+                <div className="space-y-6 min-w-0 max-w-full">
+                  <div className="space-y-2 min-w-0 max-w-full">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Productor / Solicitante <span className="text-rose-500">*</span></label>
                     <div className="flex gap-2">
                       <Input
@@ -330,13 +329,17 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                       />
                     </div>
                     <Select onValueChange={(val) => setValue('solicitante_id', val, { shouldValidate: true })} value={selectedClient}>
-                      <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background">
-                        <SelectValue placeholder="Seleccione productor..." />
+                      <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background w-full min-w-0 max-w-full overflow-hidden">
+                        <SelectValue placeholder="Seleccione productor..." className="truncate min-w-0 flex-1 text-left">
+                          {selectedClientObj ? `${selectedClientObj.nombre} (${selectedClientObj.cedula_rif})` : undefined}
+                        </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="glass-effect border-border max-h-[200px]" position="popper">
+                      <SelectContent className="glass-effect border-border max-h-60 w-var(--radix-select-trigger-width) max-w-[calc(100vw-2.5rem)]" position="popper" align="start">
                         {clientes.map(c => (
-                          <SelectItem key={c.id} value={c.id.toString()} className="cursor-pointer">
-                            {c.nombre} ({c.cedula_rif})
+                          <SelectItem key={c.id} value={c.id.toString()} className="cursor-pointer whitespace-normal py-2.5 text-left">
+                            <span className="block wrap-break-words whitespace-normal text-left text-xs sm:text-sm leading-snug">
+                              {c.nombre} ({c.cedula_rif})
+                            </span>
                           </SelectItem>
                         ))}
                         {clientes.length === 0 && (
@@ -349,35 +352,35 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
 
                   {/* Tarjeta de detalles del Productor seleccionado */}
                   {selectedClientObj && (
-                    <div className="p-5 rounded-2xl border border-primary/10 bg-primary/5 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
-                      <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
-                        <User className="size-5 text-primary shrink-0" />
+                    <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm space-y-3 min-w-0 max-w-full">
+                      <div className="flex items-center gap-3 border-b border-border/50 pb-2">
+                        <User className="size-4 text-primary shrink-0" />
                         <span className="text-xs font-black uppercase text-primary tracking-widest">Información del Productor Seleccionado</span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                        <div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs min-w-0">
+                        <div className="min-w-0">
                           <span className="font-semibold text-muted-foreground block">Nombre Completo:</span>
-                          <span className="text-foreground font-bold text-sm">{selectedClientObj.nombre}</span>
+                          <span className="text-foreground font-bold text-sm block wrap-break-words">{selectedClientObj.nombre}</span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="font-semibold text-muted-foreground block">Cédula / RIF:</span>
-                          <span className="text-foreground font-bold text-sm">{selectedClientObj.cedula_rif}</span>
+                          <span className="text-foreground font-bold text-sm block wrap-break-words">{selectedClientObj.cedula_rif}</span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="font-semibold text-muted-foreground block">Código RUNSAI:</span>
-                          <span className="text-foreground font-bold">{selectedClientObj.codigo_runsai || '—'}</span>
+                          <span className="text-foreground font-bold block wrap-break-words">{selectedClientObj.codigo_runsai || '—'}</span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="font-semibold text-muted-foreground block">Teléfono / Contacto:</span>
-                          <span className="text-foreground font-bold">{selectedClientObj.telefono || '—'}</span>
+                          <span className="text-foreground font-bold block wrap-break-words">{selectedClientObj.telefono || '—'}</span>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-2 min-w-0">
                           <span className="font-semibold text-muted-foreground block">Correo Electrónico:</span>
-                          <span className="text-foreground font-bold">{selectedClientObj.email || '—'}</span>
+                          <span className="text-foreground font-bold block wrap-break-words">{selectedClientObj.email || '—'}</span>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-2 min-w-0">
                           <span className="font-semibold text-muted-foreground block">Dirección Fiscal:</span>
-                          <span className="text-foreground font-medium leading-relaxed">{selectedClientObj.direccion_fiscal || '—'}</span>
+                          <span className="text-foreground font-medium leading-relaxed block wrap-break-words">{selectedClientObj.direccion_fiscal || '—'}</span>
                         </div>
                       </div>
                     </div>
@@ -390,18 +393,23 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Predio Rural / Propiedad Asociada <span className="text-rose-500">*</span></label>
-                    <Select 
-                      onValueChange={(val) => setValue('propiedad_id', val, { shouldValidate: true })} 
+                    <Select
+                      onValueChange={(val) => setValue('propiedad_id', val, { shouldValidate: true })}
                       value={watch('propiedad_id')}
                       disabled={!selectedClient}
                     >
-                      <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background disabled:opacity-50">
-                        <SelectValue placeholder={selectedClient ? "Seleccione propiedad..." : "Primero seleccione un productor"} />
+                      <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background disabled:opacity-50 w-full min-w-0 max-w-full overflow-hidden">
+                        <SelectValue placeholder={selectedClient ? "Seleccione propiedad..." : "Primero seleccione un productor"} className="truncate min-w-0 flex-1 text-left">
+                          {(() => {
+                            const p = clientProperties.find((cp: any) => cp.id.toString() === watch('propiedad_id'));
+                            return p ? `${p.nombre} ${p.rif ? `(${p.rif})` : ''}` : undefined;
+                          })()}
+                        </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="glass-effect border-border" position="popper">
+                      <SelectContent className="glass-effect border-border max-h-60 w-var(--radix-select-trigger-width) max-w-[calc(100vw-2.5rem)]" position="popper" align="start">
                         {clientProperties.map((p: any) => (
-                          <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">
-                            {p.nombre} {p.rif ? `(${p.rif})` : ''}
+                          <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer whitespace-normal py-2.5 text-left">
+                            <span className="block wrap-break-words whitespace-normal text-left text-xs sm:text-sm leading-snug">{p.nombre} {p.rif ? `(${p.rif})` : ''}</span>
                           </SelectItem>
                         ))}
                         {selectedClient && clientProperties.length === 0 && (
@@ -418,15 +426,15 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                     const selectedPropertyObj = clientProperties.find((p: any) => p.id.toString() === selectedPropId);
                     if (!selectedPropertyObj) return null;
                     return (
-                      <div className="p-5 rounded-2xl border border-primary/10 bg-primary/5 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
-                        <div className="flex items-center gap-3 border-b border-primary/10 pb-2">
-                          <MapPin className="size-5 text-primary shrink-0" />
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm space-y-3 min-w-0 max-w-full">
+                        <div className="flex items-center gap-3 border-b border-border/50 pb-2">
+                          <MapPin className="size-4 text-primary shrink-0" />
                           <span className="text-xs font-black uppercase text-primary tracking-widest">Detalles del Predio Rural Seleccionado</span>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                          <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs min-w-0">
+                          <div className="min-w-0">
                             <span className="font-semibold text-muted-foreground block">Nombre del Predio:</span>
-                            <span className="text-foreground font-bold text-sm">{selectedPropertyObj.nombre}</span>
+                            <span className="text-foreground font-bold text-sm block wrap-break-words">{selectedPropertyObj.nombre}</span>
                           </div>
                           <div>
                             <span className="font-semibold text-muted-foreground block">RIF / Registro:</span>
@@ -486,7 +494,7 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Tipo de Requerimiento <span className="text-rose-500">*</span></label>
-                      
+
                       {showNewSolicitudTipo && (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
                           <Input
@@ -531,18 +539,18 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                       <div className="flex items-center gap-2">
                         <Select onValueChange={(val) => setValue('tipo_solicitud_id', val, { shouldValidate: true })} value={watch('tipo_solicitud_id') || ''}>
                           <SelectTrigger className={cn(
-                            "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                            "w-full min-w-0 max-w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
                             errors.tipo_solicitud_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
                           )}>
-                            <SelectValue placeholder="Seleccione..." />
+                            <SelectValue placeholder="Seleccione..." className="truncate" />
                           </SelectTrigger>
-                          <SelectContent className="glass-effect border-border max-h-[250px]" position="popper">
+                          <SelectContent className="glass-effect border-border max-h-62.5 w-var(--radix-select-trigger-width) max-w-[calc(100vw-2.5rem)]" position="popper" align="start">
                             {solicitudTipos.map((tipo) => (
                               <div key={tipo.id} className="group relative flex items-center">
                                 <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
-                                  {tipo.nombre}
+                                  <span className="truncate block max-w-full">{tipo.nombre}</span>
                                 </SelectItem>
-                                <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                                <div className="absolute right-6 top-1/2 sm:-translate-y-1/2 sm:hidden group-hover:flex items-center gap-1 z-10">
                                   <button type="button" disabled={deletingSolicitudTipoId === tipo.id} onClick={(e) => { e.stopPropagation(); setEditingSolicitudTipoId(tipo.id); setEditingSolicitudTipoNombre(tipo.nombre); setShowNewSolicitudTipo(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar tipo">
                                     <Pencil className="size-3" />
                                   </button>
@@ -654,13 +662,13 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Asignar Vehículo Institucional</label>
                       <Select onValueChange={(val) => setValue('vehiculo_id', val)} value={watch('vehiculo_id')}>
-                        <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background">
-                          <SelectValue placeholder="Seleccione vehículo..." />
+                        <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 focus:bg-background w-full min-w-0 max-w-full">
+                          <SelectValue placeholder="Seleccione vehículo..." className="truncate" />
                         </SelectTrigger>
-                        <SelectContent className="glass-effect border-border" position="popper">
+                        <SelectContent className="glass-effect border-border max-h-60 w-var(--radix-select-trigger-width) max-w-[calc(100vw-2.5rem)]" position="popper" align="start">
                           {vehiculos.map((v: any) => (
                             <SelectItem key={v.id} value={v.id.toString()} className="cursor-pointer">
-                              {v.marca} {v.modelo} [{v.placa}] - ({v.status})
+                              <span className="truncate block max-w-full">{v.marca} {v.modelo} [{v.placa}] - ({v.status})</span>
                             </SelectItem>
                           ))}
                           {vehiculos.length === 0 && (
@@ -673,10 +681,10 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Objetivos y Alcance de la Visita</label>
-                    <Textarea 
-                      {...register('objetivo')} 
-                      placeholder="Describa el objetivo principal que los técnicos deben alcanzar en esta comisión..." 
-                      className="min-h-20 rounded-xl bg-muted/10 border-border focus:bg-background resize-none" 
+                    <Textarea
+                      {...register('objetivo')}
+                      placeholder="Describa el objetivo principal que los técnicos deben alcanzar en esta comisión..."
+                      className="min-h-20 rounded-xl bg-muted/10 border-border focus:bg-background resize-none"
                     />
                   </div>
                 </div>
@@ -687,43 +695,42 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                 <div className="space-y-6">
                   <div className="flex items-center justify-between pb-2 border-b border-border">
                     <div>
-                      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <h3 className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-2">
                         <Users className="size-4 text-primary" /> Asignación de Inspectores y Médicos Veterinarios
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-1 font-semibold uppercase tracking-wider">Seleccione los técnicos encargados de ejecutar esta planificación</p>
+                      <p className="text-[8.5px] sm:text-xs text-center text-muted-foreground mt-1 font-semibold uppercase tracking-wider">Seleccione los técnicos encargados de ejecutar esta planificación</p>
                     </div>
-                    <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                    <span className="items-center text-[9px] sm:text-xs font-bold bg-primary/10 text-primary px-2 sm:p-2 rounded-full">
                       {selectedEmpleados.length} Asignados
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                    {empleados.map((emp: any) => {
-                      const isSelected = selectedEmpleados.includes(emp.id);
-                      return (
-                        <div
-                          key={emp.id}
-                          onClick={() => toggleEmpleado(emp.id)}
-                          className={cn(
-                            "p-4 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between",
-                            isSelected 
-                              ? "border-primary bg-primary/5 shadow-md shadow-primary/5" 
-                              : "border-border hover:border-primary/30 hover:bg-muted/10"
-                          )}
-                        >
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold text-foreground">{emp.nombre} {emp.apellido}</p>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{emp.cargos?.nombre || 'Técnico Inspector'}</p>
-                          </div>
-                          <div className={cn(
-                            "size-5 rounded-full border flex items-center justify-center transition-all",
-                            isSelected ? "bg-primary border-primary text-white" : "border-border bg-background"
-                          )}>
-                            {isSelected && <Check className="size-3 text-white" />}
-                          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-75 overflow-y-auto custom-scrollbar pr-2"> {empleados.map((emp: any) => {
+                    const isSelected = selectedEmpleados.includes(emp.id);
+                    return (
+                      <div
+                        key={emp.id}
+                        onClick={() => toggleEmpleado(emp.id)}
+                        className={cn(
+                          "p-4 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between",
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-md shadow-primary/5"
+                            : "border-border hover:border-primary/30 hover:bg-muted/10"
+                        )}
+                      >
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-foreground">{emp.nombre} {emp.apellido}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{emp.cargos?.nombre || 'Técnico Inspector'}</p>
                         </div>
-                      );
-                    })}
+                        <div className={cn(
+                          "size-5 rounded-full border flex items-center justify-center transition-all",
+                          isSelected ? "bg-primary border-primary text-white" : "border-border bg-background"
+                        )}>
+                          {isSelected && <Check className="size-3 text-white" />}
+                        </div>
+                      </div>
+                    );
+                  })}
                     {empleados.length === 0 && (
                       <div className="col-span-2 py-12 text-center text-sm text-muted-foreground font-bold italic">
                         No hay personal registrado en el sistema.
@@ -737,11 +744,11 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
             </div>
 
             {/* BOTONES DE NAVEGACIÓN */}
-            <div className="flex items-center justify-between mt-12 pt-6 border-t border-border/50">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={currentStep === 0 ? onClose : handleBack} 
+            <div className="flex items-center justify-between mt-6 sm:mt-12 pt-4 sm:pt-6 border-t border-border/50">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={currentStep === 0 ? onClose : handleBack}
                 className="h-12 px-6 rounded-xl font-bold cursor-pointer"
               >
                 {currentStep === 0 ? 'Cancelar' : <><ChevronLeft className="mr-2 size-4" /> Anterior</>}
@@ -754,7 +761,7 @@ export function SolicitudWizard({ isOpen, onClose, initialFechaProgramada }: Sol
                 className={cn(
                   "h-12 px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-white bg-primary",
                   currentStep === (programarInmediato ? STEPS.length - 1 : 2)
-                    ? "px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:bg-primary/95" 
+                    ? "px-5 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:bg-primary/95"
                     : "shadow-primary/20"
                 )}
               >

@@ -219,3 +219,11 @@
     font-size: 20px;
   }
 }
+
+.wrap-break-word,
+.wrap-break-words {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
