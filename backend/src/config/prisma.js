@@ -22,6 +22,7 @@ export const getTenantPrisma = (dbName) => {
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (isProduction) {
+    const directHost = DB_HOST ? DB_HOST.replace('-pooler', '') : DB_HOST;
     dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?sslmode=require&channel_binding=require&schema=public`;
   } else {
     dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
