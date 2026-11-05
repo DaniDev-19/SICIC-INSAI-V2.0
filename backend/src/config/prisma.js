@@ -17,14 +17,19 @@ export const getTenantPrisma = (dbName) => {
     return tenantClients[dbName];
   }
 
-  const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
   let dynamicUrl;
-  const isProduction = process.env.NODE_ENV === 'production';
 
-  if (isProduction) {
-    const cleanHost = DB_HOST.includes('-pooler') ? DB_HOST : `${DB_HOST}-pooler`;
-    dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${cleanHost}:${DB_PORT}/${dbName}?sslmode=require&channel_binding=require`;
+  const useStaticUrl = process.env.NODE_ENV === 'production' && process.env.USE_STATIC_DB === 'true';
+
+  if (useStaticUrl) {
+    const urlMap = {
+      'db_insai_operativa': process.env.DATABASE_URL,
+      'db_sicic_insai_master': process.env.MASTER_DATABASE_URL
+    };
+
+    dynamicUrl = urlMap[dbName] || process.env.DATABASE_URL;
   } else {
+    const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
     dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
   }
 
