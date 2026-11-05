@@ -17,6 +17,11 @@ export const getTenantPrisma = (dbName) => {
     return tenantClients[dbName];
   }
 
+  console.log("🔍 [DEBUG RENDER]: NODE_ENV =", process.env.NODE_ENV);
+  console.log("🔍 [DEBUG RENDER]: USE_STATIC_DB =", process.env.USE_STATIC_DB);
+  console.log("🔍 [DEBUG RENDER]: MASTER_DATABASE_URL =", process.env.MASTER_DATABASE_URL ? "CONFIGURADA (oculta)" : "NO DEFINIDA");
+  console.log("🔍 [DEBUG RENDER]: DATABASE_URL actual =", process.env.DATABASE_URL ? "CONFIGURADA (oculta)" : "NO DEFINIDA");
+
   let dynamicUrl;
 
   const useStaticUrl = process.env.NODE_ENV === 'production' && String(process.env.USE_STATIC_DB).trim() === 'true';
