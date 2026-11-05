@@ -19,7 +19,7 @@ export const getTenantPrisma = (dbName) => {
 
   let dynamicUrl;
 
-  const useStaticUrl = process.env.NODE_ENV === 'production' && process.env.USE_STATIC_DB === 'true';
+  const useStaticUrl = process.env.NODE_ENV === 'production' && String(process.env.USE_STATIC_DB).trim() === 'true';
 
   if (useStaticUrl) {
     const urlMap = {
