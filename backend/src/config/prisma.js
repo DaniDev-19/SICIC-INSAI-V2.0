@@ -27,12 +27,15 @@ export const getTenantPrisma = (dbName) => {
       'db_sicic_insai_master': process.env.MASTER_DATABASE_URL
     };
 
-    dynamicUrl = urlMap[dbName] || process.env.DATABASE_URL;
+    dynamicUrl = urlMap[dbName];
+
+    if (!dynamicUrl) {
+      throw new Error(`[CRITICAL] No se encontró URL estánea configurada en el entorno para la base de datos: "${dbName}"`);
+    }
   } else {
     const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
     dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
   }
-
 
   const prisma = new OperativeClient({
     datasources: {
