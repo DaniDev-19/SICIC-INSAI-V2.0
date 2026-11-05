@@ -18,8 +18,15 @@ export const getTenantPrisma = (dbName) => {
   }
 
   const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
+  let dynamicUrl;
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  const dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
+  if (isProduction) {
+    dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?sslmode=require&channel_binding=require&schema=public`;
+  } else {
+    dynamicUrl = `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${dbName}?schema=public`;
+  }
+
 
   const prisma = new OperativeClient({
     datasources: {
