@@ -29,6 +29,7 @@ import { ubicacionService, type UbicacionBase } from '@/services/ubicacion.servi
 import { usersService } from '@/services/users.service';
 import { cn } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media-url';
+import { toast } from 'sonner';
 
 const empleadoSchema = z.object({
   cedula: z.string().min(5, 'Cédula muy corta').max(20),
@@ -122,6 +123,25 @@ export function EmpleadoModal({
 
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Estados para creación en línea de Ubicación
+  const [showNewMun, setShowNewMun] = useState(false);
+  const [newMunNombre, setNewMunNombre] = useState('');
+  const [editingMunId, setEditingMunId] = useState<number | null>(null);
+  const [editingMunNombre, setEditingMunNombre] = useState('');
+
+  const [showNewPar, setShowNewPar] = useState(false);
+  const [newParNombre, setNewParNombre] = useState('');
+  const [editingParId, setEditingParId] = useState<number | null>(null);
+  const [editingParNombre, setEditingParNombre] = useState('');
+
+  const [showNewSec, setShowNewSec] = useState(false);
+  const [newSecNombre, setNewSecNombre] = useState('');
+  const [editingSecId, setEditingSecId] = useState<number | null>(null);
+  const [editingSecNombre, setEditingSecNombre] = useState('');
+
+  const [locProcessingId, setLocProcessingId] = useState<number | null>(null);
+  const [locDeletingId, setLocDeletingId] = useState<number | null>(null);
 
   const {
     register,
@@ -366,6 +386,184 @@ export function EmpleadoModal({
     try { await deleteContrato(id); } finally { setDeletingId(null); }
   };
 
+  // Handlers para Ubicación en línea
+  const handleCreateMunicipio = async () => {
+    if (!newMunNombre.trim() || !selectedEstadoId) return;
+    setLocProcessingId(0);
+    try {
+      const res = await ubicacionService.createMunicipio({
+        nombre: newMunNombre.trim(),
+        estado_id: parseInt(selectedEstadoId),
+      });
+      toast.success('Municipio creado exitosamente');
+      setNewMunNombre('');
+      setShowNewMun(false);
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstadoId));
+      setMunicipios(updated.data || []);
+      if (res.data?.id) {
+        handleMunicipioChange(res.data.id.toString());
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear el municipio');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleUpdateMunicipio = async (id: number) => {
+    if (!editingMunNombre.trim()) return;
+    setLocProcessingId(id);
+    try {
+      await ubicacionService.updateMunicipio(id, { nombre: editingMunNombre.trim() });
+      toast.success('Municipio actualizado');
+      setEditingMunId(null);
+      setEditingMunNombre('');
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstadoId));
+      setMunicipios(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar el municipio');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleDeleteMunicipio = async (id: number) => {
+    setLocDeletingId(id);
+    try {
+      await ubicacionService.deleteMunicipio(id);
+      toast.success('Municipio eliminado');
+      if (selectedMunicipioId === id.toString()) {
+        setSelectedMunicipioId('');
+        setSelectedParroquiaId('');
+        setParroquias([]);
+        setSectores([]);
+        setValue('residencia.sector_id', '');
+      }
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstadoId));
+      setMunicipios(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar el municipio');
+    } finally {
+      setLocDeletingId(null);
+    }
+  };
+
+  const handleCreateParroquia = async () => {
+    if (!newParNombre.trim() || !selectedMunicipioId) return;
+    setLocProcessingId(0);
+    try {
+      const res = await ubicacionService.createParroquia({
+        nombre: newParNombre.trim(),
+        municipio_id: parseInt(selectedMunicipioId),
+      });
+      toast.success('Parroquia creada exitosamente');
+      setNewParNombre('');
+      setShowNewPar(false);
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipioId));
+      setParroquias(updated.data || []);
+      if (res.data?.id) {
+        handleParroquiaChange(res.data.id.toString());
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear la parroquia');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleUpdateParroquia = async (id: number) => {
+    if (!editingParNombre.trim()) return;
+    setLocProcessingId(id);
+    try {
+      await ubicacionService.updateParroquia(id, { nombre: editingParNombre.trim() });
+      toast.success('Parroquia actualizada');
+      setEditingParId(null);
+      setEditingParNombre('');
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipioId));
+      setParroquias(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar la parroquia');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleDeleteParroquia = async (id: number) => {
+    setLocDeletingId(id);
+    try {
+      await ubicacionService.deleteParroquia(id);
+      toast.success('Parroquia eliminada');
+      if (selectedParroquiaId === id.toString()) {
+        setSelectedParroquiaId('');
+        setSectores([]);
+        setValue('residencia.sector_id', '');
+      }
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipioId));
+      setParroquias(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar la parroquia');
+    } finally {
+      setLocDeletingId(null);
+    }
+  };
+
+  const handleCreateSector = async () => {
+    if (!newSecNombre.trim() || !selectedParroquiaId) return;
+    setLocProcessingId(0);
+    try {
+      const res = await ubicacionService.createSector({
+        nombre: newSecNombre.trim(),
+        parroquia_id: parseInt(selectedParroquiaId),
+      });
+      toast.success('Sector creado exitosamente');
+      setNewSecNombre('');
+      setShowNewSec(false);
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquiaId));
+      setSectores(updated.data || []);
+      if (res.data?.id) {
+        setValue('residencia.sector_id', res.data.id.toString(), { shouldValidate: true });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear el sector');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleUpdateSector = async (id: number) => {
+    if (!editingSecNombre.trim()) return;
+    setLocProcessingId(id);
+    try {
+      await ubicacionService.updateSector(id, { nombre: editingSecNombre.trim() });
+      toast.success('Sector actualizado');
+      setEditingSecId(null);
+      setEditingSecNombre('');
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquiaId));
+      setSectores(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar el sector');
+    } finally {
+      setLocProcessingId(null);
+    }
+  };
+
+  const handleDeleteSector = async (id: number) => {
+    setLocDeletingId(id);
+    try {
+      await ubicacionService.deleteSector(id);
+      toast.success('Sector eliminado');
+      if (watch('residencia.sector_id') === id.toString()) {
+        setValue('residencia.sector_id', '');
+      }
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquiaId));
+      setSectores(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar el sector');
+    } finally {
+      setLocDeletingId(null);
+    }
+  };
+
   const onFormSubmit = async (values: z.infer<typeof empleadoSchema>) => {
     const formData = new FormData();
 
@@ -415,7 +613,7 @@ export function EmpleadoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[960px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[92vh] max-h-[92vh] flex flex-col">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-240 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 h-[92vh] max-h-[92vh] flex flex-col">
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="bg-primary/5 p-6 border-b border-border/50 shrink-0">
             <DialogHeader>
@@ -573,7 +771,7 @@ export function EmpleadoModal({
                         {catalogos.departamentos.map(d => (
                           <div key={d.id} className="group relative flex items-center">
                             <SelectItem value={d.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{d.nombre}</SelectItem>
-                            <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                               <button type="button" onClick={(e) => { e.stopPropagation(); setEditingDeptoId(d.id); setEditingDeptoNombre(d.nombre); setShowNewDepto(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer"><Pencil className="size-3" /></button>
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteDepto(d.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer">{deletingId === d.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
                             </div>
@@ -635,7 +833,7 @@ export function EmpleadoModal({
                         {catalogos.cargos.map(c => (
                           <div key={c.id} className="group relative flex items-center">
                             <SelectItem value={c.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{c.nombre}</SelectItem>
-                            <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                               <button type="button" onClick={(e) => { e.stopPropagation(); setEditingCargoId(c.id); setEditingCargoNombre(c.nombre); setShowNewCargo(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer"><Pencil className="size-3" /></button>
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteCargo(c.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer">{deletingId === c.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
                             </div>
@@ -710,7 +908,7 @@ export function EmpleadoModal({
                         {catalogos.contratos.map(c => (
                           <div key={c.id} className="group relative flex items-center">
                             <SelectItem value={c.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{c.nombre}</SelectItem>
-                            <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                               <button type="button" onClick={(e) => { e.stopPropagation(); setEditingContratoId(c.id); setEditingContratoNombre(c.nombre); setShowNewContrato(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer"><Pencil className="size-3" /></button>
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteContrato(c.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer">{deletingId === c.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
                             </div>
@@ -772,7 +970,7 @@ export function EmpleadoModal({
                         {catalogos.profesiones.map(p => (
                           <div key={p.id} className="group relative flex items-center">
                             <SelectItem value={p.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{p.nombre}</SelectItem>
-                            <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                               <button type="button" onClick={(e) => { e.stopPropagation(); setEditingProfId(p.id); setEditingProfNombre(p.nombre); setShowNewProf(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer"><Pencil className="size-3" /></button>
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteProf(p.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer">{deletingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
                             </div>
@@ -836,46 +1034,190 @@ export function EmpleadoModal({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                {/* Municipio */}
+                <div className="min-w-0 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Municipio</Label>
-                  <Select value={selectedMunicipioId} onValueChange={handleMunicipioChange} disabled={!selectedEstadoId}>
-                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
-                      <SelectValue placeholder="Seleccione Municipio..." />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
-                      {municipios.map(m => (
-                        <SelectItem key={m.id} value={m.id.toString()} className="cursor-pointer">{m.nombre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {showNewMun && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={newMunNombre}
+                        onChange={(e) => setNewMunNombre(e.target.value)}
+                        placeholder="Nuevo municipio..."
+                        className="h-9 rounded-lg text-xs border-primary/30 focus:border-primary"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateMunicipio())}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === 0 || !newMunNombre.trim()} onClick={handleCreateMunicipio} className="size-9 shrink-0 rounded-lg bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                        {locProcessingId === 0 ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewMun(false); setNewMunNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {editingMunId !== null && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={editingMunNombre}
+                        onChange={(e) => setEditingMunNombre(e.target.value)}
+                        placeholder="Editar nombre..."
+                        className="h-9 rounded-lg text-xs border-blue-500/30 focus:border-blue-500"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateMunicipio(editingMunId))}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === editingMunId || !editingMunNombre.trim()} onClick={() => handleUpdateMunicipio(editingMunId)} className="size-9 shrink-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                        {locProcessingId === editingMunId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingMunId(null); setEditingMunNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Select value={selectedMunicipioId} onValueChange={handleMunicipioChange} disabled={!selectedEstadoId}>
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50 disabled:opacity-50">
+                        <SelectValue placeholder="Seleccione Municipio..." />
+                      </SelectTrigger>
+                      <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                        {municipios.map(m => (
+                          <div key={m.id} className="group relative flex items-center">
+                            <SelectItem value={m.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{m.nombre}</SelectItem>
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                              <button type="button" onClick={(e) => { e.stopPropagation(); setEditingMunId(m.id); setEditingMunNombre(m.nombre); setShowNewMun(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer" title="Editar"><Pencil className="size-3" /></button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteMunicipio(m.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer" title="Eliminar">{locDeletingId === m.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
+                            </div>
+                          </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="ghost" size="icon" disabled={!selectedEstadoId} onClick={() => { setShowNewMun(!showNewMun); setEditingMunId(null); }} className="size-10 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Agregar Municipio">
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* Parroquia */}
+                <div className="min-w-0 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Parroquia</Label>
-                  <Select value={selectedParroquiaId} onValueChange={handleParroquiaChange} disabled={!selectedMunicipioId}>
-                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
-                      <SelectValue placeholder="Seleccione Parroquia..." />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
-                      {parroquias.map(p => (
-                        <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">{p.nombre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {showNewPar && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={newParNombre}
+                        onChange={(e) => setNewParNombre(e.target.value)}
+                        placeholder="Nueva parroquia..."
+                        className="h-9 rounded-lg text-xs border-primary/30 focus:border-primary"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateParroquia())}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === 0 || !newParNombre.trim()} onClick={handleCreateParroquia} className="size-9 shrink-0 rounded-lg bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                        {locProcessingId === 0 ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewPar(false); setNewParNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {editingParId !== null && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={editingParNombre}
+                        onChange={(e) => setEditingParNombre(e.target.value)}
+                        placeholder="Editar nombre..."
+                        className="h-9 rounded-lg text-xs border-blue-500/30 focus:border-blue-500"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateParroquia(editingParId))}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === editingParId || !editingParNombre.trim()} onClick={() => handleUpdateParroquia(editingParId)} className="size-9 shrink-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                        {locProcessingId === editingParId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingParId(null); setEditingParNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Select value={selectedParroquiaId} onValueChange={handleParroquiaChange} disabled={!selectedMunicipioId}>
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50 disabled:opacity-50">
+                        <SelectValue placeholder="Seleccione Parroquia..." />
+                      </SelectTrigger>
+                      <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                        {parroquias.map(p => (
+                          <div key={p.id} className="group relative flex items-center">
+                            <SelectItem value={p.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{p.nombre}</SelectItem>
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                              <button type="button" onClick={(e) => { e.stopPropagation(); setEditingParId(p.id); setEditingParNombre(p.nombre); setShowNewPar(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer" title="Editar"><Pencil className="size-3" /></button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteParroquia(p.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer" title="Eliminar">{locDeletingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
+                            </div>
+                          </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="ghost" size="icon" disabled={!selectedMunicipioId} onClick={() => { setShowNewPar(!showNewPar); setEditingParId(null); }} className="size-10 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Agregar Parroquia">
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* Sector */}
+                <div className="min-w-0 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Sector</Label>
-                  <Select value={watch('residencia.sector_id') || ''} onValueChange={(val) => setValue('residencia.sector_id', val)} disabled={!selectedParroquiaId}>
-                    <SelectTrigger className="h-10 rounded-xl bg-background/50 disabled:opacity-50">
-                      <SelectValue placeholder="Seleccione Sector..." />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect rounded-xl border-border max-h-48">
-                      {sectores.map(s => (
-                        <SelectItem key={s.id} value={s.id.toString()} className="cursor-pointer">{s.nombre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {showNewSec && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={newSecNombre}
+                        onChange={(e) => setNewSecNombre(e.target.value)}
+                        placeholder="Nuevo sector..."
+                        className="h-9 rounded-lg text-xs border-primary/30 focus:border-primary"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateSector())}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === 0 || !newSecNombre.trim()} onClick={handleCreateSector} className="size-9 shrink-0 rounded-lg bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                        {locProcessingId === 0 ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewSec(false); setNewSecNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {editingSecId !== null && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                      <Input
+                        value={editingSecNombre}
+                        onChange={(e) => setEditingSecNombre(e.target.value)}
+                        placeholder="Editar nombre..."
+                        className="h-9 rounded-lg text-xs border-blue-500/30 focus:border-blue-500"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateSector(editingSecId))}
+                        autoFocus
+                      />
+                      <Button type="button" size="icon" disabled={locProcessingId === editingSecId || !editingSecNombre.trim()} onClick={() => handleUpdateSector(editingSecId)} className="size-9 shrink-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                        {locProcessingId === editingSecId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingSecId(null); setEditingSecNombre(''); }} className="size-9 shrink-0 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Select value={watch('residencia.sector_id') || ''} onValueChange={(val) => setValue('residencia.sector_id', val)} disabled={!selectedParroquiaId}>
+                      <SelectTrigger className="h-10 min-w-0 flex-1 rounded-xl bg-background/50 disabled:opacity-50">
+                        <SelectValue placeholder="Seleccione Sector..." />
+                      </SelectTrigger>
+                      <SelectContent className="glass-effect rounded-xl border-border max-h-48">
+                        {sectores.map(s => (
+                          <div key={s.id} className="group relative flex items-center">
+                            <SelectItem value={s.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-16">{s.nombre}</SelectItem>
+                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                              <button type="button" onClick={(e) => { e.stopPropagation(); setEditingSecId(s.id); setEditingSecNombre(s.nombre); setShowNewSec(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer" title="Editar"><Pencil className="size-3" /></button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteSector(s.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer" title="Eliminar">{locDeletingId === s.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
+                            </div>
+                          </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="ghost" size="icon" disabled={!selectedParroquiaId} onClick={() => { setShowNewSec(!showNewSec); setEditingSecId(null); }} className="size-10 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Agregar Sector">
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -940,7 +1282,7 @@ export function EmpleadoModal({
               </div>
 
               {/* Contenedor scrolleable con altura máxima y scroll suave para evitar desbordes */}
-              <div className="border border-border/60 rounded-2xl p-3 bg-muted/10 max-h-[180px] overflow-y-auto custom-scrollbar shadow-inner">
+              <div className="border border-border/60 rounded-2xl p-3 bg-muted/10 max-h-45 overflow-y-auto custom-scrollbar shadow-inner">
                 <div className="flex flex-wrap gap-2">
                   {programas
                     .filter(prog => prog.nombre.toLowerCase().includes(programaSearch.trim().toLowerCase()))

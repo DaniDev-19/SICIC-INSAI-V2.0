@@ -27,8 +27,8 @@ export function ModuleToolbarActions({
   exportAction = 'export',
 }: ModuleToolbarActionsProps) {
   return (
-    <>
-      <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial justify-between sm:justify-start min-w-0">
+      <div className="flex items-center gap-1 shrink-0">
         {onExport && (
           <Can screen={screen} action={exportAction}>
             <Button
@@ -36,7 +36,7 @@ export function ModuleToolbarActions({
               variant="ghost"
               size="icon"
               onClick={onExport}
-              className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer"
+              className="h-10 w-10 rounded-xl hover:bg-indigo-500/10 hover:text-indigo-600 transition-all cursor-pointer shrink-0"
             >
               <Download className="size-5" />
             </Button>
@@ -49,7 +49,7 @@ export function ModuleToolbarActions({
               variant="ghost"
               size="icon"
               onClick={onExportPdf}
-              className="h-10 w-10 rounded-xl hover:bg-rose-500/10 hover:text-rose-600 transition-all cursor-pointer"
+              className="h-10 w-10 rounded-xl hover:bg-rose-500/10 hover:text-rose-600 transition-all cursor-pointer shrink-0"
             >
               <FileText className="size-5" />
             </Button>
@@ -58,12 +58,17 @@ export function ModuleToolbarActions({
       </div>
       {onCreate && (
         <Can screen={screen} action="create">
-          <Button onClick={onCreate} title={createTitle ?? createLabel} variant="primary">
-            <Plus className="size-5 text-white" />
-            <span className="text-white">{createLabel}</span>
+          <Button
+            onClick={onCreate}
+            title={createTitle ?? createLabel}
+            variant="primary"
+            className="h-10 px-3 sm:px-4 text-xs sm:text-sm shrink min-w-0 flex-1 sm:flex-initial"
+          >
+            <Plus className="size-4 sm:size-5 text-white shrink-0" />
+            <span className="text-white truncate">{createLabel}</span>
           </Button>
         </Can>
       )}
-    </>
+    </div>
   );
 }

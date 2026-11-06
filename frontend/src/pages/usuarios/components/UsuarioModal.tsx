@@ -157,22 +157,23 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
         <form
           key={user?.id ?? 'new'}
           onSubmit={isEditing ? handleSubmit((values) => onFormSubmit(values)) : (e) => e.preventDefault()}
+          className="flex flex-col flex-1 overflow-hidden min-h-0"
         >
-          <div className="bg-primary/5 p-6 border-b border-border/50">
+          <div className="bg-primary/5 p-4 sm:p-6 pr-12 pb-4 border-b border-border/50 shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <User className="size-6 text-primary" />
-                {isEditing ? 'Editar usuario' : 'Nuevo usuario'}
+              <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2 truncate">
+                <User className="size-5 sm:size-6 text-primary shrink-0" />
+                <span className="truncate">{isEditing ? 'Editar usuario' : 'Nuevo usuario'}</span>
               </DialogTitle>
             </DialogHeader>
             {!isEditing && (
-              <div className="mt-6 px-2">
+              <div className="mt-4 sm:mt-6 px-1 sm:px-2">
                 <Stepper steps={WIZARD_STEPS} currentStep={step} className="mb-0" />
               </div>
             )}
           </div>
 
-          <div className="p-8 space-y-5">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1">
             {(isEditing || step === 0) && (
               <>
                 <div className="space-y-2">
@@ -223,8 +224,8 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between rounded-xl border border-border p-4">
-                  <Label htmlFor="status">Usuario activo</Label>
+                <div className="flex items-center justify-between rounded-xl border border-border p-3 sm:p-4 bg-muted/10">
+                  <Label htmlFor="status" className="cursor-pointer">Usuario activo</Label>
                   <Switch
                     id="status"
                     checked={status}
@@ -236,16 +237,16 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
 
             {!isEditing && step === 1 && (
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Asigne una sede y rol para que el usuario pueda iniciar sesión. Puede omitir este paso y configurarlo después.
                 </p>
                 <div className="space-y-2">
                   <Label>Instancia</Label>
                   <Select value={instanciaId} onValueChange={setInstanciaId}>
-                    <SelectTrigger className="rounded-xl">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Seleccionar sede" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                       {instances.map((inst) => (
                         <SelectItem key={inst.id} value={String(inst.id)}>
                           {inst.nombre_mostrable}
@@ -257,10 +258,10 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
                 <div className="space-y-2">
                   <Label>Rol</Label>
                   <Select value={rolId} onValueChange={setRolId}>
-                    <SelectTrigger className="rounded-xl">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Seleccionar rol" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                       {roles.map((rol) => (
                         <SelectItem key={rol.id} value={String(rol.id)}>
                           {rol.nombre}
@@ -273,50 +274,52 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
             )}
           </div>
 
-          <DialogFooter className="p-6 border-t border-border/50 gap-2 flex-wrap sm:justify-end">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             {isEditing ? (
               <>
-                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
+                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer">
                   Cancelar
                 </Button>
-                <Button type="submit" variant="primary" disabled={isLoading} className="rounded-xl">
+                <Button type="submit" variant="primary" disabled={isLoading} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer">
                   {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
                   Guardar
                 </Button>
               </>
             ) : step === 0 ? (
               <>
-                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
+                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer">
                   Cancelar
                 </Button>
-                <Button type="button" variant="primary" onClick={handleNextStep} className="rounded-xl">
+                <Button type="button" variant="primary" onClick={handleNextStep} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer">
                   Siguiente
                 </Button>
               </>
             ) : (
               <>
-                <Button type="button" variant="ghost" onClick={() => setStep(0)} className="rounded-xl">
+                <Button type="button" variant="ghost" onClick={() => setStep(0)} className="rounded-xl h-10 sm:h-11 px-3 sm:px-4 cursor-pointer">
                   Anterior
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isLoading}
-                  className="rounded-xl"
-                  onClick={handleSubmit((values) => onFormSubmit(values, false))}
-                >
-                  Omitir
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  disabled={isLoading || !canSubmitCreate}
-                  className="rounded-xl"
-                  onClick={handleSubmit((values) => onFormSubmit(values, true))}
-                >
-                  {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
-                  Crear usuario
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={isLoading}
+                    className="rounded-xl h-10 sm:h-11 px-3 sm:px-4 cursor-pointer"
+                    onClick={handleSubmit((values) => onFormSubmit(values, false))}
+                  >
+                    Omitir
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={isLoading || !canSubmitCreate}
+                    className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer"
+                    onClick={handleSubmit((values) => onFormSubmit(values, true))}
+                  >
+                    {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
+                    Crear usuario
+                  </Button>
+                </div>
               </>
             )}
           </DialogFooter>

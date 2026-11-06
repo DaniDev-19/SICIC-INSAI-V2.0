@@ -60,51 +60,53 @@ const Clientes: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
-              Productores
-            </h1>
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
+      <div className="flex flex-col gap-5 md:gap-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+          <div className="space-y-1.5 sm:space-y-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/home')}
+                className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+              >
+                <ChevronLeft className="size-5" />
+              </Button>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Productores
+              </h1>
+            </div>
+            <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
+              Base de datos nacional de productores y clientes institucionales.
+            </p>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
-            Base de datos nacional de productores y clientes institucionales.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
-            <div className="w-full sm:w-[18rem] lg:w-[22rem]">
-              <SearchInput
-                placeholder="Nombre, Cédula o RIF..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onClear={() => setSearch('')}
-                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                <SearchInput
+                  placeholder="Nombre, Cédula o RIF..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onClear={() => setSearch('')}
+                  className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                />
+              </div>
+
+              <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
+
+              <ModuleToolbarActions
+                screen="clientes"
+                onExport={exportClientes}
+                onExportPdf={exportClientesPdf}
+                exportTitle="Exportar en excel"
+                exportPdfTitle="Exportar en PDF"
+                onCreate={() => setIsWizardOpen(true)}
+                createLabel="Inscribir Productor"
+                createTitle="Inscribir nuevo productor"
               />
             </div>
-
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
-
-            <ModuleToolbarActions
-              screen="clientes"
-              onExport={exportClientes}
-              onExportPdf={exportClientesPdf}
-              exportTitle="Exportar en excel"
-              exportPdfTitle="Exportar en PDF"
-              onCreate={() => setIsWizardOpen(true)}
-              createLabel="Inscribir Productor"
-              createTitle="Inscribir nuevo productor"
-            />
           </div>
         </div>
       </div>

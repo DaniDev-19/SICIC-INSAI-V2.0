@@ -155,17 +155,17 @@ export function EnfermedadModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Stethoscope className="size-6" />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
+        <DialogHeader className="p-4 sm:p-6 pr-12 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="size-10 sm:size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner shrink-0">
+              <Stethoscope className="size-5 sm:size-6" />
             </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold">
+            <div className="min-w-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold truncate">
                 {enfermedad ? 'Editar Enfermedad' : 'Nueva Enfermedad'}
               </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
                 {enfermedad ? 'Modifica la información de la enfermedad' : 'Registra una nueva enfermedad en el sistema'}
               </p>
             </div>
@@ -173,7 +173,7 @@ export function EnfermedadModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
+          <div className="space-y-4 sm:space-y-5 flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
                 Nombre de la Enfermedad <span className="text-rose-500">*</span>
@@ -261,13 +261,13 @@ export function EnfermedadModal({
                   )}>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-[15.625rem] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
                           {tipo.nombre}
                         </SelectItem>
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                           <button type="button" disabled={deletingTipoId === tipo.id} onClick={(e) => { e.stopPropagation(); setEditingTipoId(tipo.id); setEditingTipoNombre(tipo.nombre); setShowNewTipo(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar tipo">
                             <Pencil className="size-3" />
                           </button>
@@ -296,11 +296,11 @@ export function EnfermedadModal({
             </div>
           </div>
 
-          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
-            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/30 bg-muted/10 shrink-0 flex flex-row items-center justify-between w-full gap-2">
+            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-10 sm:h-12 px-4 sm:px-6 cursor-pointer">
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
+            <Button type="submit" disabled={isLoading} className="rounded-xl h-10 sm:h-12 px-4 sm:px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
               {isLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Procesando...</>
               ) : (
@@ -313,3 +313,4 @@ export function EnfermedadModal({
     </Dialog>
   );
 }
+

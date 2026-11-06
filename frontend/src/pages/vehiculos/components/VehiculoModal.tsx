@@ -115,23 +115,23 @@ export function VehiculoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[550px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)}>
-          <div className="bg-primary/5 p-6 border-b border-border/50">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl glass-effect border-border shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="bg-primary/5 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-2">
-                <Car className="size-6 text-primary" />
-                {vehiculo ? 'Editar Vehículo' : 'Registrar Vehículo'}
+              <DialogTitle className="text-xl sm:text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-2 truncate">
+                <Car className="size-5 sm:size-6 text-primary shrink-0" />
+                <span className="truncate">{vehiculo ? 'Editar Vehículo' : 'Registrar Vehículo'}</span>
               </DialogTitle>
-              <p className="text-muted-foreground text-sm font-medium">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mt-0.5 truncate">
                 {vehiculo ? 'Actualiza los datos técnicos o estado del vehículo.' : 'Registra un nuevo vehículo para la logística e inspecciones de campo.'}
               </p>
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
+          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 min-w-0 space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="placa" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Placa / Matrícula <span className="text-rose-500">*</span>
                 </Label>
@@ -144,7 +144,7 @@ export function VehiculoModal({
                     {...register('placa')}
                     placeholder="AB123CD"
                     className={cn(
-                      "h-12 pl-10 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-mono font-bold tracking-widest uppercase",
+                      "h-12 pl-10 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-mono font-bold tracking-widest uppercase w-full",
                       errors.placa && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
                     )}
                   />
@@ -153,7 +153,7 @@ export function VehiculoModal({
               </div>
 
               {/* Tipo */}
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="tipo" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Tipo de Vehículo <span className="text-rose-500">*</span>
                 </Label>
@@ -165,7 +165,7 @@ export function VehiculoModal({
                       <SelectTrigger
                         id="tipo"
                         className={cn(
-                          "w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer",
+                          "w-full min-w-0 max-w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer [&>span]:truncate [&>span]:block [&>span]:text-left",
                           errors.tipo && "border-rose-500/50"
                         )}
                       >
@@ -184,8 +184,8 @@ export function VehiculoModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="marca" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Marca
                 </Label>
@@ -195,13 +195,13 @@ export function VehiculoModal({
                     id="marca"
                     {...register('marca')}
                     placeholder="Ej: Toyota, Chevrolet"
-                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium"
+                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium w-full"
                   />
                 </div>
                 {errors.marca && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1">{errors.marca.message as string}</p>}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="modelo" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Modelo
                 </Label>
@@ -211,15 +211,15 @@ export function VehiculoModal({
                     id="modelo"
                     {...register('modelo')}
                     placeholder="Ej: Hilux, Aveo"
-                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium"
+                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium w-full"
                   />
                 </div>
                 {errors.modelo && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1">{errors.modelo.message as string}</p>}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="color" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Color
                 </Label>
@@ -229,13 +229,13 @@ export function VehiculoModal({
                     id="color"
                     {...register('color')}
                     placeholder="Ej: Blanco, Rojo"
-                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium"
+                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-medium w-full"
                   />
                 </div>
                 {errors.color && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1">{errors.color.message as string}</p>}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="status" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Estatus de Operación
                 </Label>
@@ -246,7 +246,7 @@ export function VehiculoModal({
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger
                         id="status"
-                        className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer"
+                        className="w-full min-w-0 max-w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm font-bold cursor-pointer [&>span]:truncate [&>span]:block [&>span]:text-left"
                       >
                         <SelectValue placeholder="Seleccione un estatus" />
                       </SelectTrigger>
@@ -262,7 +262,7 @@ export function VehiculoModal({
               </div>
             </div>
 
-            <div className="flex gap-3 p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5 items-start">
+            <div className="flex gap-3 p-3.5 sm:p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5 items-start min-w-0">
               <Info className="size-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
                 Los vehículos registrados aquí estarán disponibles en el módulo de <strong>Planificación de Inspecciones</strong> para ser asignados a las rutas de campo oficiales.
@@ -270,20 +270,20 @@ export function VehiculoModal({
             </div>
           </div>
 
-          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0">
+          <DialogFooter className="bg-muted/30 p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isLoading}
-              className="rounded-2xl h-12 px-6 font-bold hover:bg-background transition-all cursor-pointer"
+              className="rounded-2xl h-11 px-4 sm:px-6 font-bold hover:bg-background transition-all cursor-pointer text-xs sm:text-sm"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="rounded-2xl h-12 px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="rounded-2xl h-11 px-5 sm:px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer text-xs sm:text-sm"
             >
               {isLoading ? (
                 <>

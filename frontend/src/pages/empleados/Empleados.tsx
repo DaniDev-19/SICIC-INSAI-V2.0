@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
     ChevronLeft,
     Loader2,
@@ -102,94 +103,102 @@ const Empleados: React.FC = () => {
 
 
     return (
-        <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate('/home')}
-                            className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-                        >
-                            <ChevronLeft className="size-5" />
-                        </Button>
-                        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                            Nómina de Empleados
-                        </h1>
+        <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
+            <div className="flex flex-col gap-5 md:gap-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+                    <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate('/home')}
+                                className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                            >
+                                <ChevronLeft className="size-5" />
+                            </Button>
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                Nómina de Empleados
+                            </h1>
+                        </div>
+                        <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
+                            Gestión centralizada del talento humano y personal operativo del INSAI.
+                        </p>
                     </div>
-                    <p className="text-muted-foreground font-medium pl-12">
-                        Gestión centralizada del talento humano y personal operativo del INSAI.
-                    </p>
-                </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
-                        {/* Filtro por Departamento */}
-                        <Select value={departamentoId} onValueChange={setDepartamentoId}>
-                            <SelectTrigger
-                                title="Filtrar por Departamento"
-                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
-                            >
-                                <Filter className={`size-4 ${departamentoId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                <span className="sr-only">
-                                    <SelectValue placeholder="Depto" />
-                                </span>
-                            </SelectTrigger>
-                            <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
-                                <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS DEPTOS</SelectItem>
-                                {catalogos.departamentos.map(d => (
-                                    <SelectItem key={d.id} value={d.id.toString()} className="cursor-pointer">
-                                        {d.nombre}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+                        <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
+                            {/* Filtro por Departamento */}
+                            <Select value={departamentoId} onValueChange={setDepartamentoId}>
+                                <SelectTrigger
+                                    title="Filtrar por Departamento"
+                                    className={cn(
+                                        "h-10 w-10 shrink-0 p-0 rounded-xl bg-background/80 border-border hover:bg-background cursor-pointer justify-center [&>svg:last-child]:hidden",
+                                        departamentoId !== 'all' && 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                                    )}
+                                >
+                                    <Filter className={cn('size-4 shrink-0', departamentoId !== 'all' ? 'text-primary' : 'text-muted-foreground')} />
+                                    <span className="sr-only">
+                                        <SelectValue placeholder="Depto" />
+                                    </span>
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border rounded-xl max-h-72 max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                                    <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS DEPTOS</SelectItem>
+                                    {catalogos.departamentos.map(d => (
+                                        <SelectItem key={d.id} value={d.id.toString()} className="cursor-pointer">
+                                            {d.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
-                        {/* Filtro por Estatus */}
-                        <Select value={statusLaboral} onValueChange={setStatusLaboral}>
-                            <SelectTrigger
-                                title="Filtrar por Estatus"
-                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
-                            >
-                                <Users className={`size-4 ${statusLaboral !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                <span className="sr-only">
-                                    <SelectValue placeholder="Estatus" />
-                                </span>
-                            </SelectTrigger>
-                            <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
-                                <SelectItem value="all" className="cursor-pointer font-bold">CUALQUIER ESTATUS</SelectItem>
-                                <SelectItem value="ACTIVO" className="cursor-pointer text-emerald-600 font-bold">ACTIVO</SelectItem>
-                                <SelectItem value="VACACIONES" className="cursor-pointer">VACACIONES</SelectItem>
-                                <SelectItem value="REPOSO" className="cursor-pointer">REPOSO</SelectItem>
-                                <SelectItem value="RETIRADO" className="cursor-pointer text-rose-600 font-bold">RETIRADO</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            {/* Filtro por Estatus */}
+                            <Select value={statusLaboral} onValueChange={setStatusLaboral}>
+                                <SelectTrigger
+                                    title="Filtrar por Estatus"
+                                    className={cn(
+                                        "h-10 w-10 shrink-0 p-0 rounded-xl bg-background/80 border-border hover:bg-background cursor-pointer justify-center [&>svg:last-child]:hidden",
+                                        statusLaboral !== 'all' && 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                                    )}
+                                >
+                                    <Users className={cn('size-4 shrink-0', statusLaboral !== 'all' ? 'text-primary' : 'text-muted-foreground')} />
+                                    <span className="sr-only">
+                                        <SelectValue placeholder="Estatus" />
+                                    </span>
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border rounded-xl max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                                    <SelectItem value="all" className="cursor-pointer font-bold">CUALQUIER ESTATUS</SelectItem>
+                                    <SelectItem value="ACTIVO" className="cursor-pointer text-emerald-600 font-bold">ACTIVO</SelectItem>
+                                    <SelectItem value="VACACIONES" className="cursor-pointer">VACACIONES</SelectItem>
+                                    <SelectItem value="REPOSO" className="cursor-pointer">REPOSO</SelectItem>
+                                    <SelectItem value="RETIRADO" className="cursor-pointer text-rose-600 font-bold">RETIRADO</SelectItem>
+                                </SelectContent>
+                            </Select>
 
-                        <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+                            <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
 
-                        <div className="w-48 lg:w-64">
-                            <SearchInput
-                                placeholder="Buscar empleado..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                onClear={() => setSearch('')}
-                                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                            <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                                <SearchInput
+                                    placeholder="Buscar empleado..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onClear={() => setSearch('')}
+                                    className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                                />
+                            </div>
+
+                            <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
+
+                            <ModuleToolbarActions
+                                screen="empleados"
+                                onExport={exportEmpleados}
+                                onExportPdf={exportEmpleadosPdf}
+                                exportTitle="Exportar en excel"
+                                exportPdfTitle="Exportar en PDF"
+                                onCreate={handleOpenCreate}
+                                createLabel="Nuevo Registro"
+                                createTitle="Inscribir nuevo empleado"
                             />
                         </div>
-
-                        <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
-
-                        <ModuleToolbarActions
-                            screen="empleados"
-                            onExport={exportEmpleados}
-                            onExportPdf={exportEmpleadosPdf}
-                            exportTitle="Exportar en excel"
-                            exportPdfTitle="Exportar en PDF"
-                            onCreate={handleOpenCreate}
-                            createLabel="Nuevo Registro"
-                            createTitle="Inscribir nuevo empleado"
-                        />
                     </div>
                 </div>
             </div>
@@ -243,31 +252,35 @@ const Empleados: React.FC = () => {
                 empleado={selectedEmpleado}
             />
 
-            {/* Floating bulk delete bar - igual que en Roles */}
+            {/* Floating bulk delete bar - Mobile-First */}
             {selectedIds.length > 0 && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-                    <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
-                        <div className="flex items-center gap-3 pr-8 border-r border-border">
-                            <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+                <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500 max-w-[calc(100vw-1.5rem)] sm:max-w-fit w-auto">
+                    <div className="bg-card text-card-foreground px-3 sm:px-6 py-2.5 sm:py-4 rounded-2xl shadow-2xl border border-border flex items-center justify-between gap-3 sm:gap-8 glass-effect">
+                        <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-8 border-r border-border shrink-0">
+                            <div className="size-7 sm:size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-primary/20 shrink-0">
                                 {selectedIds.length}
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
+                            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-widest opacity-80 whitespace-nowrap">
+                                Seleccionados
+                            </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 title="Eliminar seleccionados"
-                                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                 onClick={() => setIsBulkDeleteOpen(true)}
                             >
-                                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
+                                <Trash2 className="size-4 mr-1 sm:mr-2 text-rose-500 sm:text-inherit" />
+                                <span className="hidden xs:inline sm:inline">Eliminar Masivo</span>
+                                <span className="xs:hidden sm:hidden">Eliminar</span>
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 title="Limpiar selección"
-                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit size-8 sm:size-9 shrink-0"
                                 onClick={() => setSelectedIds([])}
                             >
                                 <X className="size-4" />

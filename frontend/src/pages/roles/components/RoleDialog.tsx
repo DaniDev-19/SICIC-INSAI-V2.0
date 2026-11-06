@@ -136,28 +136,28 @@ export function RoleDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl glass-effect">
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col h-full overflow-hidden">
-          <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="size-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                {role ? <Settings2 className="size-6 text-white" /> : <Plus className="size-6 text-white" />}
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[min(92vh,52rem)] overflow-hidden flex flex-col p-0 border-none shadow-2xl glass-effect">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <DialogHeader className="p-4 sm:p-6 pr-12 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 shrink-0">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="size-10 sm:size-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                {role ? <Settings2 className="size-5 sm:size-6 text-white" /> : <Plus className="size-5 sm:size-6 text-white" />}
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tight italic uppercase">
+              <div className="min-w-0">
+                <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight italic uppercase truncate">
                   {role ? 'Configurar Rol Existente' : 'Arquitectar Nuevo Rol'}
                 </DialogTitle>
-                <DialogDescription className="text-muted-foreground font-medium">
+                <DialogDescription className="text-xs sm:text-sm text-muted-foreground font-medium truncate">
                   Gestiona la identidad y el alcance de este nivel de acceso.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-border/50">
-              <div className="space-y-4">
-                <div className="space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-border/50">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-1.5 sm:space-y-2">
                   <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Nombre de Identidad <span className="text-rose-500">*</span>
                   </label>
@@ -165,23 +165,23 @@ export function RoleDialog({
                     placeholder="Ej: MODERADOR, AUDITOR_EXTERNO..."
                     {...register('nombre')}
                     className={cn(
-                      "bg-muted/30 border-none h-12 text-base font-bold focus-visible:ring-primary/30 mt-1 transition-all",
+                      "bg-muted/30 border border-border h-11 sm:h-12 text-sm sm:text-base font-bold focus-visible:ring-primary/30 rounded-xl transition-all",
                       errors.nombre && "bg-rose-500/10 ring-1 ring-rose-500/50"
                     )}
                   />
                   {errors.nombre && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.nombre.message}</p>}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Descripción Operativa</label>
                   <Input
                     placeholder="Breve explicación de las facultades de este rol"
                     {...register('descripcion')}
-                    className="bg-muted/50 dark:bg-muted/20 border-border/30 h-12 focus-visible:ring-primary/30 font-medium mt-1 transition-all"
+                    className="bg-muted/30 border border-border h-11 sm:h-12 focus-visible:ring-primary/30 rounded-xl font-medium transition-all"
                   />
                 </div>
               </div>
 
-              <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 flex flex-col justify-center items-center gap-4 border border-primary/20">
+              <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 sm:p-6 flex flex-col justify-center items-center gap-3 sm:gap-4 border border-primary/20">
                 <div className="text-center">
                   <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Estado del Rol</p>
                   <p className="text-[10px] text-muted-foreground font-medium">Activa o desactiva este rol globalmente</p>
@@ -206,27 +206,27 @@ export function RoleDialog({
             />
           </div>
 
-          <DialogFooter className="p-6 bg-muted/20 border-t flex items-center justify-between sm:justify-between">
+          <DialogFooter className="p-3 sm:p-4 bg-muted/20 border-t shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isCreating || isUpdating}
-              className="font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+              className="font-bold text-muted-foreground hover:text-foreground cursor-pointer h-10 sm:h-11 px-4 sm:px-6 rounded-xl"
             >
-              Cerrar sin guardar
+              Cerrar
             </Button>
             <Button
               type="submit"
               disabled={isCreating || isUpdating}
-              className="bg-primary cursor-pointer hover:bg-primary/90 text-white font-black px-8 h-11 shadow-lg shadow-primary/20"
+              className="bg-primary cursor-pointer hover:bg-primary/90 text-white font-black px-5 sm:px-8 h-10 sm:h-11 shadow-lg shadow-primary/20 rounded-xl"
             >
               {(isCreating || isUpdating) ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <ShieldCheck className="mr-2 h-4 w-4" />
               )}
-              {role ? 'Sincronizar Cambios' : 'Inicializar Rol'}
+              {role ? 'Sincronizar' : 'Inicializar Rol'}
             </Button>
           </DialogFooter>
         </form>

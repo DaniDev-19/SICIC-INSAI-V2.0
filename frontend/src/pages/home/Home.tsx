@@ -263,7 +263,7 @@ export default function Home() {
                                 <ShieldCheck className="size-7" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-foreground">Sistema SICIC-INSAI</h4>
+                                <h4 className="font-bold text-foreground">Sistema SICIZ-INSAI</h4>
                                 <p className="text-xs text-muted-foreground mt-1">Conexion cifrada y monitoreada.</p>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold border border-emerald-500/20">

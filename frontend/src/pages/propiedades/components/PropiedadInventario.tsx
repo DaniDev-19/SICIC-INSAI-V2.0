@@ -165,80 +165,80 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
   }
 
   return (
-    <div className="bg-card border-x border-b border-border/50 shadow-inner rounded-b-xl overflow-hidden animate-in slide-in-from-top-2">
+    <div className="bg-card border-x border-b border-border/50 shadow-inner rounded-b-xl overflow-hidden animate-in slide-in-from-top-2 min-w-0 max-w-full">
       {/* Tabs Header */}
-      <div className="flex items-center gap-1 p-2 bg-muted/20 border-b border-border/50">
+      <div className="flex items-center gap-1.5 p-2 bg-muted/20 border-b border-border/50 overflow-x-auto custom-scrollbar no-scrollbar min-w-0 max-w-full">
         <button
           title="Cultivos de la propiedad"
           onClick={() => setActiveTab('cultivos')}
-          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'cultivos'
+          className={`flex cursor-pointer items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all ${activeTab === 'cultivos'
             ? 'bg-emerald-500/10 text-emerald-600 shadow-sm'
             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             }`}
         >
-          <Leaf className="size-4" />
+          <Leaf className="size-4 shrink-0" />
           Cultivos ({inventario.cultivos?.length || 0})
         </button>
         <button
           title="Animales de la propiedad"
           onClick={() => setActiveTab('animales')}
-          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'animales'
+          className={`flex cursor-pointer items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all ${activeTab === 'animales'
             ? 'bg-amber-500/10 text-amber-600 shadow-sm'
             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             }`}
         >
-          <PawPrint className="size-4" />
+          <PawPrint className="size-4 shrink-0" />
           Animales ({inventario.animales?.length || 0})
         </button>
         <button
           title="Hierros de la propiedad"
           onClick={() => setActiveTab('hierros')}
-          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'hierros'
+          className={`flex cursor-pointer items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all ${activeTab === 'hierros'
             ? 'bg-blue-500/10 text-blue-600 shadow-sm'
             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             }`}
         >
-          <Shield className="size-4" />
+          <Shield className="size-4 shrink-0" />
           Hierros ({inventario.hierros?.length || 0})
         </button>
         <button
           title="Trámites y solicitudes de la propiedad"
           onClick={() => setActiveTab('solicitudes')}
-          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'solicitudes'
+          className={`flex cursor-pointer items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all ${activeTab === 'solicitudes'
             ? 'bg-indigo-500/10 text-indigo-600 shadow-sm'
             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             }`}
         >
-          <FileText className="size-4" />
+          <FileText className="size-4 shrink-0" />
           Solicitudes
         </button>
         <button
           title="Historial de Inspecciones y Seguimientos de la propiedad"
           onClick={() => setActiveTab('historial')}
-          className={`flex cursor-pointer items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'historial'
+          className={`flex cursor-pointer items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all ${activeTab === 'historial'
             ? 'bg-rose-500/10 text-rose-600 shadow-sm'
             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             }`}
         >
-          <Activity className="size-4" />
+          <Activity className="size-4 shrink-0" />
           Inspecciones y Seguimientos
         </button>
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-3 sm:p-6 min-w-0 max-w-full overflow-hidden">
 
         {/* ── CULTIVOS ── */}
         {activeTab === 'cultivos' && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="bg-muted/10 border border-border/50 rounded-xl p-4 flex items-end gap-4">
-              <div className="flex-1 space-y-1.5">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div className="bg-muted/10 border border-border/50 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-end gap-3 sm:gap-4">
+              <div className="w-full md:flex-1 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Especie Vegetal</label>
                 <Select value={selectedCultivo} onValueChange={setSelectedCultivo}>
                   <SelectTrigger className="w-full bg-background rounded-xl border-border focus:bg-background transition-all cursor-pointer">
                     <SelectValue placeholder="Seleccione cultivo..." />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px]" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-62.5" position="popper" sideOffset={2}>
                     {cultivos.map(c => (
                       <SelectItem key={c.id} value={c.id.toString()} className="rounded-xl cursor-pointer">
                         {c.nombre}
@@ -247,11 +247,11 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-60 space-y-1.5">
+              <div className="w-full md:w-48 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Superficie</label>
                 <Input type="number" step="0.01" placeholder="Ej: 10" value={superficie} onChange={e => setSuperficie(e.target.value)} className="bg-background w-full" />
               </div>
-              <div className="w-48 space-y-1.5">
+              <div className="w-full md:w-40 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Unidad</label>
                 <Select value={superficieUnidad} onValueChange={setSuperficieUnidad}>
                   <SelectTrigger className="bg-background w-full cursor-pointer">
@@ -264,21 +264,21 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <Button disabled={!selectedCultivo || isAddingCultivo} onClick={handleAddCultivo} className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2 cursor-pointer">
+              <Button disabled={!selectedCultivo || isAddingCultivo} onClick={handleAddCultivo} className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white gap-2 cursor-pointer h-10">
                 {isAddingCultivo ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                 Añadir
               </Button>
             </div>
 
-            <div className="border border-border/50 rounded-xl overflow-hidden bg-background">
-              <div className="max-h-[300px] overflow-y-auto">
-                <Table>
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-background max-w-full">
+              <div className="max-h-75 overflow-y-auto overflow-x-auto custom-scrollbar">
+                <Table className="min-w-120 sm:min-w-full">
                   <TableHeader className="bg-muted/30 sticky top-0 z-10">
                     <TableRow>
                       <TableHead className="font-bold">Cultivo</TableHead>
                       <TableHead className="font-bold">Familia / Tipo</TableHead>
                       <TableHead className="font-bold text-right">Superficie Sembrada</TableHead>
-                      <TableHead className="w-[80px]"></TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -313,15 +313,15 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
 
         {/* ── ANIMALES ── */}
         {activeTab === 'animales' && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="bg-muted/10 border border-border/50 rounded-xl p-4 flex items-end gap-4">
-              <div className="w-1/4 space-y-1.5">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div className="bg-muted/10 border border-border/50 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-end gap-3 sm:gap-4">
+              <div className="w-full md:w-1/4 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Especie / Tipo Animal</label>
                 <Select value={selectedAnimal} onValueChange={setSelectedAnimal}>
                   <SelectTrigger className="bg-background w-full rounded-xl border-border focus:bg-background transition-all cursor-pointer">
                     <SelectValue placeholder="Seleccione animal..." />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-[250px]" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-62.5" position="popper" sideOffset={2}>
                     {animales.map(a => (
                       <SelectItem key={a.id} value={a.id.toString()} className="rounded-xl cursor-pointer">
                         {a.nombre}
@@ -330,11 +330,11 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-32 space-y-1.5">
+              <div className="w-full md:w-28 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Cantidad</label>
                 <Input type="number" placeholder="Ej: 50" value={cantidadAnimal} onChange={e => setCantidadAnimal(e.target.value)} className="bg-background w-full" />
               </div>
-              <div className="w-48 space-y-1.5">
+              <div className="w-full md:w-36 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Unidad</label>
                 <Select value={animalUnidad} onValueChange={setAnimalUnidad}>
                   <SelectTrigger className="bg-background w-full cursor-pointer">
@@ -347,26 +347,26 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex-1 space-y-1.5">
+              <div className="w-full md:flex-1 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Observaciones</label>
                 <Input placeholder="Lote, estado de salud..." value={observacionesAnimal} onChange={e => setObservacionesAnimal(e.target.value)} className="bg-background w-full" />
               </div>
-              <Button disabled={!selectedAnimal || !cantidadAnimal || isAddingAnimal} onClick={handleAddAnimal} className="bg-amber-600 hover:bg-amber-500 text-white gap-2">
+              <Button disabled={!selectedAnimal || !cantidadAnimal || isAddingAnimal} onClick={handleAddAnimal} className="w-full md:w-auto bg-amber-600 hover:bg-amber-500 text-white gap-2 h-10">
                 {isAddingAnimal ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                 Añadir
               </Button>
             </div>
 
-            <div className="border border-border/50 rounded-xl overflow-hidden bg-background">
-              <div className="max-h-[300px] overflow-y-auto">
-                <Table>
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-background max-w-full">
+              <div className="max-h-75 overflow-y-auto overflow-x-auto custom-scrollbar">
+                <Table className="min-w-130 sm:min-w-full">
                   <TableHeader className="bg-muted/30 sticky top-0 z-10">
                     <TableRow>
                       <TableHead className="font-bold">Especie Animal</TableHead>
                       <TableHead className="font-bold">Propósito / Dieta</TableHead>
                       <TableHead className="font-bold">Observaciones</TableHead>
                       <TableHead className="font-bold text-right">Cantidad</TableHead>
-                      <TableHead className="w-[80px]"></TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -402,17 +402,17 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
 
         {/* ── HIERROS ── */}
         {activeTab === 'hierros' && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="bg-muted/10 border border-border/50 rounded-xl p-4 flex items-end gap-4">
-              <div className="flex-1 space-y-1.5">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in">
+            <div className="bg-muted/10 border border-border/50 rounded-xl p-3 sm:p-4 flex flex-col md:flex-row md:items-end gap-3 sm:gap-4">
+              <div className="w-full md:flex-1 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">N° Registro Hierro</label>
                 <Input placeholder="Ej: HR-12345" value={numRegHierro} onChange={e => setNumRegHierro(e.target.value)} className="bg-background w-full" />
               </div>
-              <div className="flex-1 space-y-1.5">
+              <div className="w-full md:flex-1 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">N° Registro Ganadero</label>
                 <Input placeholder="Ej: RG-98765" value={numRegGanadero} onChange={e => setNumRegGanadero(e.target.value)} className="bg-background w-full" />
               </div>
-              <div className="flex-1 space-y-1.5">
+              <div className="w-full md:flex-1 space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase">Imagen del Hierro</label>
                 <Input
                   key={fileInputKey}
@@ -425,22 +425,22 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
               <Button
                 disabled={(!numRegHierro && !numRegGanadero && !hierroImgFile) || isAddingHierro}
                 onClick={handleAddHierro}
-                className="bg-blue-600 hover:bg-blue-500 text-white gap-2"
+                className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white gap-2 h-10"
               >
                 {isAddingHierro ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                 Añadir
               </Button>
             </div>
 
-            <div className="border border-border/50 rounded-xl overflow-hidden bg-background">
-              <div className="max-h-[300px] overflow-y-auto">
-                <Table>
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-background max-w-full">
+              <div className="max-h-75 overflow-y-auto overflow-x-auto custom-scrollbar">
+                <Table className="min-w-110 sm:min-w-full">
                   <TableHeader className="bg-muted/30 sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="font-bold w-[80px]">Imagen</TableHead>
+                      <TableHead className="font-bold w-20">Imagen</TableHead>
                       <TableHead className="font-bold">N° Reg. Hierro</TableHead>
                       <TableHead className="font-bold">N° Reg. Ganadero</TableHead>
-                      <TableHead className="w-[80px]"></TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -493,8 +493,8 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   <p className="text-xs text-muted-foreground">Cargando solicitudes...</p>
                 </div>
               ) : (
-                <div className="max-h-[300px] overflow-y-auto">
-                  <Table>
+                <div className="max-h-75 overflow-y-auto overflow-x-auto custom-scrollbar">
+                  <Table className="min-w-120 sm:min-w-full">
                     <TableHeader className="bg-muted/30 sticky top-0 z-10">
                       <TableRow>
                         <TableHead className="font-bold">Código</TableHead>
@@ -521,17 +521,17 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                             </TableCell>
                             <TableCell className="text-xs">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${item.prioridad === 'URGENTE' ? 'bg-rose-100 text-rose-700' :
-                                  item.prioridad === 'ALTA' ? 'bg-amber-100 text-amber-700' :
-                                    item.prioridad === 'MEDIA' ? 'bg-blue-100 text-blue-700' :
-                                      'bg-slate-100 text-slate-700'
+                                item.prioridad === 'ALTA' ? 'bg-amber-100 text-amber-700' :
+                                  item.prioridad === 'MEDIA' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-slate-100 text-slate-700'
                                 }`}>
                                 {item.prioridad}
                               </span>
                             </TableCell>
                             <TableCell className="text-xs">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${['FINALIZADA', 'APROBADA'].includes(item.estatus) ? 'bg-emerald-100 text-emerald-700' :
-                                  ['NO_APROBADA', 'RECHAZADA', 'CANCELADA'].includes(item.estatus) ? 'bg-rose-100 text-rose-700' :
-                                    'bg-amber-100 text-amber-700'
+                                ['NO_APROBADA', 'RECHAZADA', 'CANCELADA'].includes(item.estatus) ? 'bg-rose-100 text-rose-700' :
+                                  'bg-amber-100 text-amber-700'
                                 }`}>
                                 {item.estatus?.replace(/_/g, ' ')}
                               </span>
@@ -557,8 +557,8 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                   <p className="text-xs text-muted-foreground">Cargando historial sanitario de la propiedad...</p>
                 </div>
               ) : (
-                <div className="max-h-87.5 overflow-y-auto custom-scrollbar">
-                  <Table>
+                <div className="max-h-87.5 overflow-y-auto overflow-x-auto custom-scrollbar">
+                  <Table className="min-w-160 sm:min-w-full">
                     <TableHeader className="bg-muted/30 sticky top-0 z-10">
                       <TableRow>
                         <TableHead className="w-10"></TableHead>
@@ -606,8 +606,7 @@ export function PropiedadInventario({ propiedadId }: PropiedadInventarioProps) {
                                     : insp.areas_inspeccion || 'General'}
                                 </TableCell>
                                 <TableCell className="text-xs">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                    insp.status === 'FINALIZADA' ? 'bg-emerald-100 text-emerald-700' :
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${insp.status === 'FINALIZADA' ? 'bg-emerald-100 text-emerald-700' :
                                       insp.status === 'CUARENTENA' ? 'bg-rose-100 text-rose-700 font-black' :
                                         insp.status === 'SEGUIMIENTO' ? 'bg-indigo-100 text-indigo-700' :
                                           'bg-amber-100 text-amber-700'

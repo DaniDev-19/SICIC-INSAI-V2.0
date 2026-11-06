@@ -75,19 +75,43 @@ export const createMunicipio = async (req, res) => {
         });
     }
 
-    const duplicateCodigo = await tenantPrisma.municipios.findFirst({
-        where: { estado_id, codigo },
+    const cleanNombre = nombre ? nombre.trim() : '';
+    const duplicateNombre = await tenantPrisma.municipios.findFirst({
+        where: {
+            estado_id,
+            nombre: { equals: cleanNombre, mode: 'insensitive' }
+        },
     });
 
-    if (duplicateCodigo) {
+    if (duplicateNombre) {
         return res.status(400).json({
             status: 'error',
-            message: 'Ya existe un municipio con este código en el estado seleccionado',
+            message: 'Ya existe un municipio con este nombre en el estado seleccionado',
         });
     }
 
+    let finalCodigo = codigo ? codigo.trim() : null;
+    if (!finalCodigo) {
+        const last = await tenantPrisma.municipios.findFirst({
+            where: { estado_id },
+            orderBy: { id: 'desc' },
+            select: { id: true, codigo: true }
+        });
+        const nextNum = (last?.id || 0) + 1;
+        finalCodigo = String(nextNum).padStart(2, '0');
+    }
+
+    const duplicateCodigo = await tenantPrisma.municipios.findFirst({
+        where: { estado_id, codigo: finalCodigo },
+    });
+
+    if (duplicateCodigo) {
+        // Si el código autogenerado coincide, usar timestamp o sufijo libre
+        finalCodigo = `M${Date.now().toString().slice(-4)}`;
+    }
+
     const municipio = await tenantPrisma.municipios.create({
-        data: { codigo, nombre, area_km2, estado_id },
+        data: { codigo: finalCodigo, nombre: cleanNombre, area_km2, estado_id },
     });
 
     bitacoraService.registrar({

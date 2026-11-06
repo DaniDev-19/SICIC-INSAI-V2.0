@@ -75,19 +75,42 @@ export const createSector = async (req, res) => {
         });
     }
 
-    const duplicateCodigo = await tenantPrisma.sectores.findFirst({
-        where: { parroquia_id, codigo },
+    const cleanNombre = nombre ? nombre.trim() : '';
+    const duplicateNombre = await tenantPrisma.sectores.findFirst({
+        where: {
+            parroquia_id,
+            nombre: { equals: cleanNombre, mode: 'insensitive' }
+        },
     });
 
-    if (duplicateCodigo) {
+    if (duplicateNombre) {
         return res.status(400).json({
             status: 'error',
-            message: 'Ya existe un sector con este código en la parroquia seleccionada',
+            message: 'Ya existe un sector con este nombre en la parroquia seleccionada',
         });
     }
 
+    let finalCodigo = codigo ? codigo.trim() : null;
+    if (!finalCodigo) {
+        const last = await tenantPrisma.sectores.findFirst({
+            where: { parroquia_id },
+            orderBy: { id: 'desc' },
+            select: { id: true, codigo: true }
+        });
+        const nextNum = (last?.id || 0) + 1;
+        finalCodigo = String(nextNum).padStart(3, '0');
+    }
+
+    const duplicateCodigo = await tenantPrisma.sectores.findFirst({
+        where: { parroquia_id, codigo: finalCodigo },
+    });
+
+    if (duplicateCodigo) {
+        finalCodigo = `S${Date.now().toString().slice(-4)}`;
+    }
+
     const sector = await tenantPrisma.sectores.create({
-        data: { codigo, nombre, parroquia_id },
+        data: { codigo: finalCodigo, nombre: cleanNombre, parroquia_id },
     });
 
     bitacoraService.registrar({
@@ -184,6 +207,20 @@ export const deleteSector = async (req, res) => {
         return res.status(404).json({
             status: 'error',
             message: 'Sector no encontrado',
+        });
+    }
+
+    const inUseResidencia = await tenantPrisma.empleado_residencia.findFirst({
+        where: { sector_id: Number(id) },
+    });
+    const inUsePropiedad = await tenantPrisma.propiedad_ubicacion.findFirst({
+        where: { sector_id: Number(id) },
+    });
+
+    if (inUseResidencia || inUsePropiedad) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'No se puede eliminar el sector porque está asignado a empleados o predios',
         });
     }
 

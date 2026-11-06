@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
   Loader2,
   AlertTriangle,
   Filter,
+  UserPlus,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,6 +33,7 @@ import { ModuleToolbarActions } from '@/components/auth/ModuleToolbarActions';
 import { PropertyTable } from './components/PropertyTable';
 import { PropertyModal } from './components/PropertyModal';
 import { PropertyDetallesModal } from './components/PropertyDetallesModal';
+import { CrearPropiedadModal } from './components/CrearPropiedadModal';
 import type { Propiedad } from '@/types/propiedades';
 
 const Propiedades: React.FC = () => {
@@ -51,6 +54,7 @@ const Propiedades: React.FC = () => {
     exportPropiedadesPdf,
   } = usePropiedades();
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingPropiedad, setEditingPropiedad] = useState<Propiedad | null>(null);
   const [viewingPropertyId, setViewingPropertyId] = useState<number | null>(null);
@@ -63,69 +67,85 @@ const Propiedades: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
-              Predios y Propiedades
-            </h1>
-          </div>
-          <p className="text-muted-foreground font-medium pl-12">
-            Inventario nacional de unidades de producción y predios rurales.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
-            <Select value={tipoPropiedadId} onValueChange={setTipoPropiedadId}>
-              <SelectTrigger
-                title="Filtrar por Tipo"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
+      <div className="flex flex-col gap-5 md:gap-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+          <div className="space-y-1.5 sm:space-y-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/home')}
+                className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
               >
-                <Filter className={`size-4 ${tipoPropiedadId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className="sr-only">
-                  <SelectValue placeholder="Tipo" />
-                </span>
-              </SelectTrigger>
-              <SelectContent className="glass-effect border-border top-9 right-15">
-                <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
-                {tipos.map(t => <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">{t.nombre}</SelectItem>)}
-              </SelectContent>
-            </Select>
+                <ChevronLeft className="size-5" />
+              </Button>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Predios y Propiedades
+              </h1>
+            </div>
+            <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
+              Inventario nacional de unidades de producción y predios rurales.
+            </p>
+          </div>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
+              <Select value={tipoPropiedadId} onValueChange={setTipoPropiedadId}>
+                <SelectTrigger
+                  title="Filtrar por Tipo"
+                  className={cn(
+                    'h-10 w-10 shrink-0 p-0 rounded-xl bg-background/80 border-border hover:bg-background cursor-pointer justify-center [&>svg:last-child]:hidden',
+                    tipoPropiedadId !== 'all' && 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                  )}
+                >
+                  <Filter className={cn('size-4 shrink-0', tipoPropiedadId !== 'all' ? 'text-primary' : 'text-muted-foreground')} />
+                  <span className="sr-only">
+                    <SelectValue placeholder="Tipo" />
+                  </span>
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-h-72 max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                  <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
+                  {tipos.map(t => <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">{t.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-            <div className="w-full sm:w-[18rem] lg:w-[22rem]">
-              <SearchInput
-                placeholder="Nombre o Código INSAI..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onClear={() => setSearch('')}
-                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+              <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
+
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                <SearchInput
+                  placeholder="Nombre o Código INSAI..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onClear={() => setSearch('')}
+                  className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                />
+              </div>
+
+              <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
+
+              <Button
+                variant="outline"
+                onClick={() => navigate('/home/clientes')}
+                className="rounded-xl border-dashed border-border hover:bg-muted/50 cursor-pointer flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground h-10 px-2.5 sm:px-3 shrink-0"
+                title="Inscribir productor y predio mediante el asistente guiado"
+              >
+                <UserPlus className="size-4 text-primary shrink-0" />
+                <span className="hidden sm:inline">Inscribir con Productor</span>
+                <span className="sm:hidden text-[11px] font-semibold">Productor</span>
+              </Button>
+
+              <ModuleToolbarActions
+                screen="propiedades"
+                onExport={exportPropiedades}
+                onExportPdf={exportPropiedadesPdf}
+                exportTitle="Exportar en excel"
+                exportPdfTitle="Exportar en PDF"
+                onCreate={() => setIsCreateModalOpen(true)}
+                createLabel="Nueva Propiedad"
+                createTitle="Registrar nueva propiedad para un productor"
               />
             </div>
-
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
-
-            <ModuleToolbarActions
-              screen="propiedades"
-              onExport={exportPropiedades}
-              onExportPdf={exportPropiedadesPdf}
-              exportTitle="Exportar en excel"
-              exportPdfTitle="Exportar en PDF"
-              onCreate={() => navigate('/home/clientes')}
-              createLabel="Registrar en Productor"
-              createTitle="Registrar nuevo predio"
-            />
           </div>
         </div>
       </div>
@@ -193,6 +213,11 @@ const Propiedades: React.FC = () => {
         isOpen={!!viewingPropertyId}
         onClose={() => setViewingPropertyId(null)}
         propertyId={viewingPropertyId}
+      />
+
+      <CrearPropiedadModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

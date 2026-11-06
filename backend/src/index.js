@@ -1,13 +1,15 @@
 import app from './app.js';
 import dotenv from 'dotenv';
 import { masterPrisma, getTenantPrisma } from './config/prisma.js';
-import { ensureAreasInspeccionColumn } from './utils/tenant-schema.js';
+import { ensureAreasInspeccionColumn, ensureClientesNullableFields } from './utils/tenant-schema.js';
+import backupService from './services/backup.service.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.listen(PORT, HOST, () => {
+  backupService.iniciarScheduler();
   console.log(`
      Servidor SICIC-INSAI V2.0 en funcionamiento
      Puerto: ${PORT}
@@ -37,6 +39,7 @@ app.listen(PORT, HOST, () => {
             const tenantPrisma = getTenantPrisma(inst.db_name.trim());
             await tenantPrisma.$connect();
             await ensureAreasInspeccionColumn(tenantPrisma);
+            await ensureClientesNullableFields(tenantPrisma);
             console.table(`[OK] ENHORABUENA -> ${inst.nombre_mostrable} (${inst.db_name})`);
           } catch (tenantError) {
             console.error(

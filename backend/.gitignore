@@ -4,5 +4,7 @@ node_modules
 dist/
 .DS_Store
 /uploads
+/respaldos
+backup-config.json
 
 /src/generated/prisma

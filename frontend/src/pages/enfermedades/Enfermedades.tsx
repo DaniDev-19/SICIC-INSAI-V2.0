@@ -79,8 +79,8 @@ const Enfermedades: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Button
@@ -91,28 +91,28 @@ const Enfermedades: React.FC = () => {
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
               Catálogo de Enfermedades
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium pl-9 sm:pl-12">
             Administra las enfermedades disponibles para las inspecciones y programas.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10 justify-center md:justify-normal">
             <Select value={tipoId} onValueChange={setTipoId}>
               <SelectTrigger
                 title="Filtrar por Tipo"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden shrink-0"
               >
                 <Database className={`size-4 ${tipoId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="sr-only">
                   <SelectValue placeholder="Tipo" />
                 </span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border top-9 right-15">
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                 <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
                 {tipos.map(t => (
                   <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">
@@ -122,7 +122,7 @@ const Enfermedades: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
 
             <div className="w-full sm:w-[18rem] lg:w-[22rem]">
               <SearchInput
@@ -136,10 +136,10 @@ const Enfermedades: React.FC = () => {
           </div>
 
           <Can screen="enfermedades" action="create">
-                        <Button onClick={handleOpenCreate} title="crea una nueva enfermedad" variant={"primary"}>
-            <Plus className="size-5 text-white" /> <span className="text-white">Nueva enfermedad</span>
-          </Button>
-                    </Can>
+            <Button onClick={handleOpenCreate} title="crea una nueva enfermedad" variant={"primary"} className="w-full sm:w-auto shrink-0 justify-center">
+              <Plus className="size-5 text-white" /> <span className="text-white">Nueva enfermedad</span>
+            </Button>
+          </Can>
         </div>
       </div>
 
@@ -163,7 +163,7 @@ const Enfermedades: React.FC = () => {
               />
             </div>
 
-            <div className="px-6 py-4 border-t border-border bg-muted/20">
+            <div className="p-4 sm:px-6 sm:py-4 border-t border-border bg-muted/20">
               <Pagination
                 pagination={pagination}
                 onPageChange={setPage}
@@ -191,7 +191,7 @@ const Enfermedades: React.FC = () => {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
+        <AlertDialogContent className="glass-effect border-rose-500/20 w-[calc(100vw-2rem)] sm:max-w-md">
           <AlertDialogHeader>
             <div className="size-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
               <AlertTriangle className="size-8 text-rose-500" />

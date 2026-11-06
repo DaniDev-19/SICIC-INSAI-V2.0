@@ -75,19 +75,42 @@ export const createParroquia = async (req, res) => {
         });
     }
 
-    const duplicateCodigo = await tenantPrisma.parroquias.findFirst({
-        where: { municipio_id, codigo },
+    const cleanNombre = nombre ? nombre.trim() : '';
+    const duplicateNombre = await tenantPrisma.parroquias.findFirst({
+        where: {
+            municipio_id,
+            nombre: { equals: cleanNombre, mode: 'insensitive' }
+        },
     });
 
-    if (duplicateCodigo) {
+    if (duplicateNombre) {
         return res.status(400).json({
             status: 'error',
-            message: 'Ya existe una parroquia con este código en el municipio seleccionado',
+            message: 'Ya existe una parroquia con este nombre en el municipio seleccionado',
         });
     }
 
+    let finalCodigo = codigo ? codigo.trim() : null;
+    if (!finalCodigo) {
+        const last = await tenantPrisma.parroquias.findFirst({
+            where: { municipio_id },
+            orderBy: { id: 'desc' },
+            select: { id: true, codigo: true }
+        });
+        const nextNum = (last?.id || 0) + 1;
+        finalCodigo = String(nextNum).padStart(2, '0');
+    }
+
+    const duplicateCodigo = await tenantPrisma.parroquias.findFirst({
+        where: { municipio_id, codigo: finalCodigo },
+    });
+
+    if (duplicateCodigo) {
+        finalCodigo = `P${Date.now().toString().slice(-4)}`;
+    }
+
     const parroquia = await tenantPrisma.parroquias.create({
-        data: { codigo, nombre, area_km2, municipio_id },
+        data: { codigo: finalCodigo, nombre: cleanNombre, area_km2, municipio_id },
     });
 
     bitacoraService.registrar({

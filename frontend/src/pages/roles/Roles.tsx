@@ -100,63 +100,63 @@ function Roles() {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               title='volver'
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer shrink-0"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text break-words">
               Gestión de Roles
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12 md:pl-12">
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium pl-9 sm:pl-12">
             Administra los niveles de acceso y permisos del sistema de forma granular.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto min-w-0">
+          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10 w-full sm:w-auto min-w-0">
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger
                 title="Filtrar por Estado"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden shrink-0"
               >
                 <ShieldCheck className={`size-4 ${status !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="sr-only">
                   <SelectValue placeholder="Estado" />
                 </span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border top-9 right-15">
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                 <SelectItem value="all" className="cursor-pointer">Todos</SelectItem>
                 <SelectItem value="true" className="cursor-pointer">Activos</SelectItem>
                 <SelectItem value="false" className="cursor-pointer">Inactivos</SelectItem>
               </SelectContent>
             </Select>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
 
-            <div className="w-[200px] lg:w-[280px]">
+            <div className="flex-1 min-w-0 w-full sm:w-64 lg:w-80">
               <SearchInput
                 placeholder="Buscar roles..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onClear={() => setSearch('')}
-                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background w-full"
               />
             </div>
           </div>
 
           <Can screen="roles" action="create">
-            <Button onClick={handleOpenCreate} title='crea un nuevo rol' variant={'primary'}>
-              <Plus className="size-4" /> <span className="hidden sm:inline">Nuevo Rol</span>
+            <Button onClick={handleOpenCreate} title='crea un nuevo rol' variant={'primary'} className="w-full sm:w-auto shrink-0 justify-center">
+              <Plus className="size-4" /> <span>Nuevo Rol</span>
             </Button>
           </Can>
         </div>
@@ -204,33 +204,38 @@ function Roles() {
         )}
       </div>
 
+      {/* Floating bulk delete bar - Mobile-First */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
-            <div className="flex items-center gap-3 pr-8 border-r border-border">
-              <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+        <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500 max-w-[calc(100vw-1.5rem)] sm:max-w-fit w-auto">
+          <div className="bg-card text-card-foreground px-3 sm:px-6 py-2.5 sm:py-4 rounded-2xl shadow-2xl border border-border flex items-center justify-between gap-3 sm:gap-8 glass-effect">
+            <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-8 border-r border-border shrink-0">
+              <div className="size-7 sm:size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-primary/20 shrink-0">
                 {selectedIds.length}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-widest opacity-80 whitespace-nowrap">
+                Seleccionados
+              </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Can screen="roles" action="delete">
               <Button
                 variant="ghost"
                 size="sm"
                 title='Eliminar seleccionados'
-                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                 onClick={() => setIsBulkDeleteOpen(true)}
               >
-                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
+                <Trash2 className="size-4 mr-1 sm:mr-2 text-rose-500 sm:text-inherit" />
+                <span className="hidden xs:inline sm:inline">Eliminar Masivo</span>
+                <span className="xs:hidden sm:hidden">Eliminar</span>
               </Button>
             </Can>
               <Button
                 variant="ghost"
                 size="icon"
                 title='Limpiar selección'
-                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit size-8 sm:size-9 shrink-0"
                 onClick={() => setSelectedIds([])}
               >
                 <X className="size-4" />
