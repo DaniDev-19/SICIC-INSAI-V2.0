@@ -33,6 +33,12 @@ Interfaz de usuario moderna y de alto rendimiento para el Sistema Integral de Co
 *   `/src/services`: Conexión directa con la API del backend.
 *   `/src/store`: Gestión del estado global.
 *   `/src/types`: Interfaces y tipos de TypeScript.
+*   `/android`: Proyecto nativo de Android (Capacitor & Gradle).
+*   `/docs`: Documentación técnica de la interfaz y módulos.
+
+## 📱 Guía de Compilación Móvil (APK & PWA)
+Para aprender a compilar el APK para Android con Capacitor y configurar la PWA, consulta:
+👉 **[Guía Oficial de Capacitor y PWA (docs/CAPACITOR_PWA_GUIA.md)](./docs/CAPACITOR_PWA_GUIA.md)**
 
 ## Despliegue
 Este proyecto está configurado para desplegarse automáticamente en **Vercel** mediante el archivo `vercel.json`.

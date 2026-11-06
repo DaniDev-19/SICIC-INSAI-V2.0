@@ -44,7 +44,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useNavigate, useLocation } from "react-router-dom"
 
-const navigationGroups = [
+export const navigationGroups = [
   {
     label: "Panel Principal",
     items: [
@@ -124,7 +124,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border/50">
+    <Sidebar className="hidden md:flex border-r border-sidebar-border/50">
       <SidebarHeader>
         <div className="flex items-center gap-3 px-4 py-6">
           <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">

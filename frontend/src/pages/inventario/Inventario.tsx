@@ -177,21 +177,21 @@ const Inventario: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
         <div className="space-y-1.5 sm:space-y-2 min-w-0">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/home')}
-              className="shrink-0 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 transition-all cursor-pointer"
+              className="shrink-0 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 transition-all cursor-pointer mt-0.5 sm:mt-0"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex flex-wrap items-center gap-2 min-w-0 flex-1">
               <Package className="size-6 sm:size-8 text-emerald-500 shrink-0" />
-              <span className="break-words">Inventario de Insumos & Kardex</span>
+              <span className="break-words [overflow-wrap:anywhere] min-w-0">Inventario de Insumos & Kardex</span>
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
+          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12 break-words whitespace-normal">
             Control de productos, vacunas, insumos fitosanitarios y auditoría de movimientos por sede.
           </p>
         </div>

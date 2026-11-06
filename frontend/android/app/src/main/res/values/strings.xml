@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SICIC INSAI</string>
+    <string name="title_activity_main">SICIC INSAI</string>
+    <string name="package_name">ve.gob.insai.sicic</string>
+    <string name="custom_url_scheme">ve.gob.insai.sicic</string>
+</resources>

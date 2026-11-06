@@ -36,9 +36,18 @@ El sistema se divide en una arquitectura desacoplada para máxima eficiencia:
 - **Validación:** Esquemas estrictos con Zod.
 
 ### **Frontend (Interface)**
-- **Framework:**  React.js + typeScript.
-- **Estilos:** Vanilla CSS / Tailwind.
-- **Gestión de Estado:** Hooks personalizados y Context API.
+- **Framework:** React.js + TypeScript.
+- **Móvil / PWA:** Capacitor 8 (Android) + Progressive Web App (Service Worker y Web Manifest).
+- **Estilos:** Tailwind CSS 4 con arquitectura Mobile-First.
+- **Gestión de Estado:** TanStack Query v5, Context API y Hooks personalizados.
+
+---
+
+## 📱 Aplicación Móvil y PWA (Capacitor / APK)
+
+El sistema cuenta con soporte para dispositivos móviles mediante **Progressive Web App (PWA)** y compilación nativa en **APK para Android** con **Capacitor**:
+* **Guía de Compilación de APK y PWA:** [Consulta la Guía Completa de Capacitor y APK en docs/CAPACITOR_PWA_GUIA.md](docs/CAPACITOR_PWA_GUIA.md)
+* **Descarga de APK en el Sistema:** Disponible en la Landing Page (`/`), en la pantalla de Login (`/login`) y en el Centro de Ayuda (`/home/help`).
 
 ---
 
@@ -47,7 +56,9 @@ El sistema se divide en una arquitectura desacoplada para máxima eficiencia:
 ```bash
 SICIC-INSAI-V2.0/
 ├── backend/        # API REST, Lógica de Negocio y Conexión Multi-Tenant
-├── frontend/       # Interfaz de Usuario, Dashboard y Componentes React
+├── frontend/       # Interfaz de Usuario, Dashboard, PWA y Capacitor
+│   └── android/    # Proyecto Nativo Android (Gradle / APK)
+├── docs/           # Documentación Técnica, Diagramas y Guías
 ```
 
 ---

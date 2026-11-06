@@ -9,9 +9,9 @@ export function getApiBaseUrl(): string {
     window.location.hostname !== 'localhost' &&
     window.location.hostname !== '127.0.0.1'
   ) {
-    return `http://${window.location.hostname}:4000`;
+    return `${window.location.protocol}//${window.location.hostname}:4000`;
   }
-  return (envUrl || 'http://localhost:4000/api').replace(/\/api\/?$/, '');
+  return (envUrl || 'http://192.168.31.46:4000/api').replace(/\/api\/?$/, '');
 }
 
 export function resolveMediaUrl(url: string | null | undefined): string {

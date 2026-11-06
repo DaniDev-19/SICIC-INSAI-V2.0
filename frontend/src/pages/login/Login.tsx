@@ -285,6 +285,24 @@ export default function Login() {
       </div>
 
       <div className="relative z-10 w-full max-w-[88%] xs:max-w-sm sm:max-w-94.5 p-1 sm:p-0">
+        <div className="flex items-center justify-between px-2 mb-2">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-200/70 hover:text-white transition-colors cursor-pointer py-1"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Volver al Portal</span>
+          </button>
+          <a
+            href="/app-release.apk"
+            download="SICIC-INSAI-v2.0.apk"
+            type="application/vnd.android.package-archive"
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors py-1 cursor-pointer"
+          >
+            <span>Descargar APK</span>
+          </a>
+        </div>
         <div className="backdrop-blur-2xl bg-white/10 dark:bg-emerald-950/20 border border-white/20 dark:border-white/10 rounded-3xl sm:rounded-[2.2rem] shadow-2xl overflow-hidden transition-all duration-500 group hover:shadow-emerald-500/20">
           <div className="p-5 sm:p-7">
             <div className="flex flex-col items-center mb-4 sm:mb-6">
