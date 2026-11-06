@@ -90,22 +90,22 @@ export function OficinaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-125 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)}>
-          <div className="bg-primary/5 p-6 border-b border-border/50">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl glass-effect border-border shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="bg-primary/5 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-2">
-                <Building2 className="size-6 text-primary" />
-                {oficina ? 'Editar Oficina' : 'Nueva Oficina'}
+              <DialogTitle className="text-xl sm:text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-2 truncate">
+                <Building2 className="size-5 sm:size-6 text-primary shrink-0" />
+                <span className="truncate">{oficina ? 'Editar Oficina' : 'Nueva Oficina'}</span>
               </DialogTitle>
-              <p className="text-muted-foreground text-sm font-medium">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mt-0.5 truncate">
                 {oficina ? 'Actualiza los datos de la oficina o sede.' : 'Registra una nueva sede administrativa o operativa.'}
               </p>
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
+          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 min-w-0 space-y-4 sm:space-y-5">
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="nombre" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                 Nombre de la Oficina <span className="text-rose-500">*</span>
               </Label>
@@ -116,7 +116,7 @@ export function OficinaModal({
                   {...register('nombre')}
                   placeholder="Ej: Sede Principal Caracas"
                   className={cn(
-                    "h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm",
+                    "h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm w-full",
                     errors.nombre && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
                   )}
                 />
@@ -124,8 +124,8 @@ export function OficinaModal({
               {errors.nombre && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.nombre.message as string}</p>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 max-w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="ubicacion_gms" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                   Ubicación GMS
                 </Label>
@@ -135,26 +135,27 @@ export function OficinaModal({
                     id="ubicacion_gms"
                     {...register('ubicacion_gms')}
                     placeholder="Coordenadas..."
-                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm"
+                    className="h-12 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm w-full"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col justify-center gap-2 p-3 rounded-2xl border border-border bg-background/30">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="es_centro" className="text-[10px] font-bold uppercase text-muted-foreground">
+              <div className="flex flex-col justify-center gap-2 p-3.5 rounded-2xl border border-border bg-background/30 min-w-0">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <Label htmlFor="es_centro" className="text-[11px] font-bold uppercase text-muted-foreground truncate">
                     Centro de Validación
                   </Label>
                   <Switch
                     id="es_centro"
                     checked={isCentroVal}
                     onCheckedChange={(v) => setValue('es_centro_validacion', v)}
+                    className="shrink-0"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="direccion" className="text-xs font-bold uppercase text-muted-foreground ml-1">
                 Dirección Física
               </Label>
@@ -164,26 +165,26 @@ export function OficinaModal({
                   id="direccion"
                   {...register('direccion')}
                   placeholder="Indique la dirección detallada..."
-                  className="min-h-25 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
+                  className="min-h-25 pl-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none w-full"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0">
+          <DialogFooter className="bg-muted/30 p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isLoading}
-              className="rounded-2xl h-12 px-6 font-bold hover:bg-background transition-all cursor-pointer"
+              className="rounded-2xl h-11 px-4 sm:px-6 font-bold hover:bg-background transition-all cursor-pointer text-xs sm:text-sm"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="rounded-2xl h-12 px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="rounded-2xl h-11 px-5 sm:px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer text-xs sm:text-sm"
             >
               {isLoading ? (
                 <>

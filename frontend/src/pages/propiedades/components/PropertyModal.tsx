@@ -292,7 +292,7 @@ export function PropertyModal({ isOpen, onClose, propiedad }: PropertyModalProps
                           <SelectItem value={t.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-20">
                             {t.nombre}
                           </SelectItem>
-                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                             <button
                               type="button"
                               disabled={deletingTipoId === t.id}

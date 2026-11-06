@@ -34,6 +34,7 @@ import {
 import { useVehiculos } from '@/hooks/use-vehiculos';
 import { VehiculoTable } from './components/VehiculoTable';
 import { VehiculoModal } from './components/VehiculoModal';
+import { VehiculoDetailsModal } from './components/VehiculoDetailsModal';
 import type { Vehiculo } from '@/types/vehiculos';
 
 const Vehiculos: React.FC = () => {
@@ -52,6 +53,7 @@ const Vehiculos: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVehiculo, setSelectedVehiculo] = useState<Vehiculo | null>(null);
+  const [viewVehiculo, setViewVehiculo] = useState<Vehiculo | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
@@ -77,6 +79,10 @@ const Vehiculos: React.FC = () => {
   const handleOpenEdit = (vehiculo: Vehiculo) => {
     setSelectedVehiculo(vehiculo);
     setIsModalOpen(true);
+  };
+
+  const handleOpenView = (vehiculo: Vehiculo) => {
+    setViewVehiculo(vehiculo);
   };
 
   const handleStatusChange = (val: string) => {
@@ -130,39 +136,39 @@ const Vehiculos: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+              className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
-              <Car className="size-8 text-primary" />
-              Gestión de Vehículos
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+              <Car className="size-6 sm:size-8 text-primary shrink-0" />
+              <span className="truncate">Gestión de Vehículos</span>
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
+          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
             Administra la flota de vehículos oficiales asignados a las planificaciones e inspecciones.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+          <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
             <Select value={typeSelect} onValueChange={handleTipoChange}>
               <SelectTrigger
                 title="Filtrar por tipo"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center shrink-0 [&>svg:last-child]:hidden"
               >
                 <Filter className={`size-4 ${typeSelect !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="sr-only"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border rounded-xl max-w-[calc(100vw-2rem)] sm:max-w-xs">
                 <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS TIPOS</SelectItem>
                 <SelectItem value="CARRO" className="cursor-pointer font-medium">CARROS</SelectItem>
                 <SelectItem value="MOTO" className="cursor-pointer font-medium">MOTOS</SelectItem>
@@ -175,12 +181,12 @@ const Vehiculos: React.FC = () => {
             <Select value={statusSelect} onValueChange={handleStatusChange}>
               <SelectTrigger
                 title="Filtrar por estatus"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center shrink-0 [&>svg:last-child]:hidden"
               >
                 <div className={`size-2.5 rounded-full ${statusSelect === 'all' ? 'bg-muted-foreground/60' : statusSelect === 'OPERATIVO' ? 'bg-emerald-500' : statusSelect === 'MANTENIMIENTO' ? 'bg-amber-500' : 'bg-rose-500'}`} />
                 <span className="sr-only"><SelectValue /></span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border rounded-xl max-w-[calc(100vw-2rem)] sm:max-w-xs">
                 <SelectItem value="all" className="cursor-pointer font-bold">TODOS LOS ESTATUS</SelectItem>
                 <SelectItem value="OPERATIVO" className="cursor-pointer text-emerald-600 font-bold">OPERATIVO</SelectItem>
                 <SelectItem value="MANTENIMIENTO" className="cursor-pointer text-amber-600 font-bold">MANTENIMIENTO</SelectItem>
@@ -188,51 +194,56 @@ const Vehiculos: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
 
-            <div className="w-[200px] lg:w-[280px]">
+            <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-[16rem]">
               <SearchInput
                 placeholder="Buscar por placa, marca..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onClear={() => setSearchTerm('')}
-                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
               />
             </div>
           </div>
 
           <Can screen="vehiculos" action="create">
-                        <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
-            <Plus className="size-5 text-white" /> <span className="text-white">Nuevo Vehículo</span>
-          </Button>
-                    </Can>
+            <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20 shrink-0 h-10 sm:h-11 w-full sm:w-auto justify-center">
+              <Plus className="size-5 text-white" /> <span className="text-white">Nuevo Vehículo</span>
+            </Button>
+          </Can>
         </div>
       </div>
 
+      {/* Floating bulk delete bar - Mobile-First */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
-            <div className="flex items-center gap-3 pr-8 border-r border-border">
-              <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+        <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500 max-w-[calc(100vw-1.5rem)] sm:max-w-fit w-auto">
+          <div className="bg-card text-card-foreground px-3 sm:px-6 py-2.5 sm:py-4 rounded-2xl shadow-2xl border border-border flex items-center justify-between gap-3 sm:gap-8 glass-effect">
+            <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-8 border-r border-border shrink-0">
+              <div className="size-7 sm:size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-primary/20 shrink-0">
                 {selectedIds.length}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-widest opacity-80 whitespace-nowrap">
+                Seleccionados
+              </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 title="Eliminar seleccionados"
-                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                 onClick={() => setIsBulkDeleteOpen(true)}
               >
-                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
+                <Trash2 className="size-4 mr-1 sm:mr-2 text-rose-500 sm:text-inherit" />
+                <span className="hidden xs:inline sm:inline">Eliminar Masivo</span>
+                <span className="xs:hidden sm:hidden">Eliminar</span>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 title="Limpiar selección"
-                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit size-8 sm:size-9 shrink-0"
                 onClick={() => setSelectedIds([])}
               >
                 <X className="size-4" />
@@ -242,7 +253,7 @@ const Vehiculos: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+      <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect min-w-0">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed m-4">
             <div className="relative">
@@ -256,6 +267,7 @@ const Vehiculos: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <VehiculoTable
                 vehiculos={filteredVehiculos}
+                onView={handleOpenView}
                 onEdit={handleOpenEdit}
                 onDelete={setDeleteId}
                 selectedIds={selectedIds}
@@ -279,6 +291,12 @@ const Vehiculos: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         vehiculo={selectedVehiculo}
+      />
+
+      <VehiculoDetailsModal
+        isOpen={!!viewVehiculo}
+        onClose={() => setViewVehiculo(null)}
+        vehiculo={viewVehiculo}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

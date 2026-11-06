@@ -125,7 +125,7 @@ export default function InspeccionesSilos() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
       <div className="flex flex-col gap-5 md:gap-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
           <div className="space-y-1.5 sm:space-y-2 min-w-0">
@@ -139,17 +139,17 @@ export default function InspeccionesSilos() {
                 <ChevronLeft className="size-5" />
               </Button>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-2">
-                <Warehouse className="size-7 text-primary" />
-                Inspecciones y Registro de Silos
+                <Warehouse className="size-6 sm:size-7 text-primary shrink-0" />
+                <span className="truncate">Inspecciones de Silos</span>
               </h1>
             </div>
-            <p className="text-muted-foreground font-medium text-sm sm:text-base pl-0 sm:pl-12">
+            <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
               Control de inventario, capacidades, afectaciones y resguardo fitosanitario de silos y galpones de almacenamiento.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0">
-            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
               <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-[16rem]">
                 <SearchInput
                   placeholder="Buscar acta, silos, productor..."
@@ -159,18 +159,20 @@ export default function InspeccionesSilos() {
                   className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
                 />
               </div>
-            </div>
 
-            <Can screen="acta_silos" action="create">
-              <Button
-                onClick={handleOpenCreate}
-                variant="primary"
-                className="w-full sm:w-auto shrink-0 text-white shadow-md shadow-primary/10 hover:shadow-lg transition-all cursor-pointer rounded-xl h-11 px-5 font-bold"
-              >
-                <Plus className="size-5 text-white" />
-                <span className="text-white">Nueva Acta de Silo</span>
-              </Button>
-            </Can>
+              <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
+
+              <Can screen="acta_silos" action="create">
+                <Button
+                  onClick={handleOpenCreate}
+                  variant="primary"
+                  className="w-full sm:w-auto shrink min-w-0 text-white shadow-md shadow-primary/10 hover:shadow-lg transition-all cursor-pointer rounded-xl h-10 px-4 font-bold flex-1 sm:flex-initial justify-center"
+                >
+                  <Plus className="size-4 sm:size-5 text-white shrink-0" />
+                  <span className="text-white truncate">Nueva Acta Silo</span>
+                </Button>
+              </Can>
+            </div>
           </div>
         </div>
       </div>

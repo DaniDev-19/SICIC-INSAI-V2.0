@@ -157,39 +157,41 @@ export default function MailPage() {
   });
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-300">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-300 pb-28 sm:pb-32">
       {/* Dynamic Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-border/60">
-        <div className="flex items-center gap-4">
-          <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/5">
-            <Mail className="size-7" />
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-border/60">
+        <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0">
+          <div className="size-12 sm:size-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/5 shrink-0">
+            <Mail className="size-6 sm:size-7" />
           </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-                Comunicados y Notificaciones por Correo
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                Comunicados y Correos
               </h1>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider text-[10px]">
-                Módulo Oficial INSAI
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider text-[10px] shrink-0">
+                Oficial INSAI
               </Badge>
             </div>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-muted-foreground text-xs sm:text-sm mt-1">
               Envía comunicados institucionales masivos o personalizados a los funcionarios y técnicos registrados.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full md:w-auto shrink-0">
           <Button
             variant={selectedEmpleadoIds.length === empleados.length && empleados.length > 0 ? "default" : "outline"}
             size="sm"
             onClick={handleSelectAllEmpleados}
-            className="rounded-xl gap-2 font-bold text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 cursor-pointer"
+            className="flex-1 sm:flex-none rounded-xl gap-2 font-bold text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 cursor-pointer h-10 px-3"
           >
             <Users className="size-4 text-emerald-600" />
-            {selectedEmpleadoIds.length === empleados.length && empleados.length > 0
-              ? `Todos Seleccionados (${empleados.length})`
-              : `Seleccionar Todos (${empleados.length} Empleados)`}
+            <span className="truncate">
+              {selectedEmpleadoIds.length === empleados.length && empleados.length > 0
+                ? `Todos (${empleados.length})`
+                : `Todos (${empleados.length})`}
+            </span>
           </Button>
 
           <Button
@@ -197,26 +199,26 @@ export default function MailPage() {
             size="sm"
             onClick={loadInitialData}
             disabled={isLoadingData}
-            className="rounded-xl gap-2 font-medium"
+            className="rounded-xl gap-2 font-medium h-10 px-3 text-xs shrink-0 cursor-pointer"
           >
             <RefreshCw className={`size-4 ${isLoadingData ? 'animate-spin' : ''}`} />
-            Actualizar Lista
+            <span className="hidden sm:inline">Actualizar</span>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Panel Izquierdo: Destinatarios y Plantillas */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-4 sm:space-y-6">
           <Tabs defaultValue="plantillas" className="w-full">
             <TabsList className="grid grid-cols-2 w-full h-12 bg-muted/30 p-1 rounded-xl">
-              <TabsTrigger value="plantillas" className="rounded-lg font-bold gap-2 text-xs">
-                <Sparkles className="size-4 text-amber-500" />
-                Plantillas Predefinidas
+              <TabsTrigger value="plantillas" className="rounded-lg font-bold gap-1.5 sm:gap-2 text-xs">
+                <Sparkles className="size-3.5 sm:size-4 text-amber-500" />
+                <span>Plantillas</span>
               </TabsTrigger>
-              <TabsTrigger value="destinatarios" className="rounded-lg font-bold gap-2 text-xs">
-                <Users className="size-4 text-emerald-500" />
-                Destinatarios ({selectedEmpleadoIds.length})
+              <TabsTrigger value="destinatarios" className="rounded-lg font-bold gap-1.5 sm:gap-2 text-xs">
+                <Users className="size-3.5 sm:size-4 text-emerald-500" />
+                <span>Destinatarios ({selectedEmpleadoIds.length})</span>
               </TabsTrigger>
             </TabsList>
 
@@ -225,7 +227,7 @@ export default function MailPage() {
               <p className="text-xs text-muted-foreground font-medium px-1">
                 Selecciona una plantilla oficial para cargar automáticamente la estructura del mensaje:
               </p>
-              <div className="space-y-3 max-h-[35rem] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-3 max-h-[30rem] sm:max-h-[35rem] overflow-y-auto custom-scrollbar pr-1">
                 {plantillas.map(plantilla => {
                   const IconComp = ICON_MAP[plantilla.icono] || FileText;
                   const isSelected = selectedPlantillaId === plantilla.id;
@@ -243,14 +245,14 @@ export default function MailPage() {
                       <CardHeader className="p-4 pb-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`size-9 rounded-xl flex items-center justify-center ${
+                            <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${
                               isSelected ? 'bg-emerald-500 text-white' : 'bg-primary/10 text-primary'
                             }`}>
                               <IconComp className="size-4" />
                             </div>
                             <CardTitle className="text-sm font-bold">{plantilla.nombre}</CardTitle>
                           </div>
-                          {isSelected && <Check className="size-4 text-emerald-500" />}
+                          {isSelected && <Check className="size-4 text-emerald-500 shrink-0" />}
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
@@ -267,27 +269,27 @@ export default function MailPage() {
             {/* TAB: DESTINATARIOS */}
             <TabsContent value="destinatarios" className="space-y-4 mt-4">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar por nombre, cédula, cargo..."
                       value={searchEmpleado}
                       onChange={e => setSearchEmpleado(e.target.value)}
-                      className="pl-9 h-10 rounded-xl"
+                      className="pl-9 h-10 rounded-xl text-xs"
                     />
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAllEmpleados}
-                    className="rounded-xl h-10 px-3 text-xs font-bold shrink-0"
+                    className="rounded-xl h-10 px-3 text-xs font-bold shrink-0 cursor-pointer"
                   >
-                    {selectedEmpleadoIds.length === empleados.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+                    {selectedEmpleadoIds.length === empleados.length ? 'Deseleccionar' : 'Seleccionar Todos'}
                   </Button>
                 </div>
 
-                <div className="border border-border/60 rounded-xl p-2 bg-card/60 max-h-[30rem] overflow-y-auto custom-scrollbar divide-y divide-border/40">
+                <div className="border border-border/60 rounded-xl p-2 bg-card/60 max-h-[26rem] sm:max-h-[30rem] overflow-y-auto custom-scrollbar divide-y divide-border/40">
                   {filteredEmpleados.length === 0 ? (
                     <div className="py-8 text-center text-xs text-muted-foreground italic">
                       No se encontraron empleados.
@@ -299,26 +301,31 @@ export default function MailPage() {
                         <div
                           key={emp.id}
                           onClick={() => handleToggleEmpleado(emp.id)}
-                          className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors cursor-pointer rounded-lg"
+                          className="flex items-center justify-between p-2.5 sm:p-3 hover:bg-muted/30 transition-colors cursor-pointer rounded-lg gap-2"
                         >
-                          <div className="flex items-center gap-3">
-                            <Checkbox checked={isChecked} onCheckedChange={() => handleToggleEmpleado(emp.id)} />
-                            <div>
-                              <p className="text-xs font-bold text-foreground">
+                          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => handleToggleEmpleado(emp.id)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-foreground truncate">
                                 {emp.nombre} {emp.apellido}
                               </p>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                                <span className="flex items-center gap-1">
-                                  <Briefcase className="size-3" /> {emp.cargos?.nombre || 'General'}
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                                <span className="flex items-center gap-1 truncate max-w-[120px]">
+                                  <Briefcase className="size-3 shrink-0" /> {emp.cargos?.nombre || 'General'}
                                 </span>
-                                •
-                                <span className="flex items-center gap-1">
-                                  <Building2 className="size-3" /> {emp.oficinas?.nombre || 'Sede'}
+                                <span>•</span>
+                                <span className="flex items-center gap-1 truncate max-w-[120px]">
+                                  <Building2 className="size-3 shrink-0" /> {emp.oficinas?.nombre || 'Sede'}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <Badge variant="secondary" className="text-[10px] font-mono">
+
+                          <Badge variant="secondary" className="text-[10px] font-mono shrink-0 truncate max-w-[130px]">
                             {emp.email || 'Con cuenta'}
                           </Badge>
                         </div>
@@ -332,23 +339,23 @@ export default function MailPage() {
         </div>
 
         {/* Panel Derecho: Redacción del Mensaje y Envío */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-4 sm:space-y-6">
           <Card className="border-border/60 shadow-lg">
-            <CardHeader className="p-6 pb-4 border-b border-border/50 bg-muted/20">
-              <div className="flex items-center justify-between">
+            <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 bg-muted/20">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="text-lg font-bold">Redacción del Comunicado</CardTitle>
+                  <CardTitle className="text-base sm:text-lg font-bold">Redacción del Comunicado</CardTitle>
                   <CardDescription className="text-xs">
                     Puedes editar manualmente el asunto y cuerpo del mensaje antes de realizar el envío.
                   </CardDescription>
                 </div>
-                <Badge className="bg-primary/10 text-primary border-primary/20 font-bold uppercase text-[10px]">
+                <Badge className="bg-primary/10 text-primary border-primary/20 font-bold uppercase text-[10px] shrink-0">
                   Modo: {motivo}
                 </Badge>
               </div>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
               {/* Asunto */}
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
@@ -358,19 +365,19 @@ export default function MailPage() {
                   value={asunto}
                   onChange={e => setAsunto(e.target.value)}
                   placeholder="Ej. [CONVOCATORIA] Reunión de Trabajo..."
-                  className="h-12 rounded-xl text-sm font-semibold border-border bg-muted/10 focus:bg-background transition-all"
+                  className="h-11 sm:h-12 rounded-xl text-sm font-semibold border-border bg-muted/10 focus:bg-background transition-all"
                 />
               </div>
 
               {/* Inserción de Variables Dinámicas */}
               <div className="space-y-2 bg-muted/20 p-3 rounded-xl border border-border/50">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <Info className="size-3.5 text-blue-500" /> Insertar Variables Dinámicas
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Haz clic para agregar al cuerpo</span>
+                  <span className="text-[10px] text-muted-foreground hidden sm:inline">Haz clic para agregar al cuerpo</span>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1">
                   {[
                     { label: 'Nombre del Empleado', value: '{nombre}' },
                     { label: 'Cargo', value: '{cargo}' },
@@ -384,7 +391,7 @@ export default function MailPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => insertVariable(v.value)}
-                      className="h-7 text-xs font-mono rounded-lg bg-background hover:bg-primary/10 hover:text-primary border-border cursor-pointer"
+                      className="h-7 text-xs font-mono rounded-lg bg-background hover:bg-primary/10 hover:text-primary border-border cursor-pointer px-2"
                     >
                       + {v.value}
                     </Button>
@@ -401,14 +408,14 @@ export default function MailPage() {
                   value={mensaje}
                   onChange={e => setMensaje(e.target.value)}
                   placeholder="Escribe aquí el contenido del mensaje o selecciona una plantilla..."
-                  className="min-h-[220px] rounded-xl text-sm leading-relaxed border-border bg-muted/10 focus:bg-background transition-all resize-y custom-scrollbar"
+                  className="min-h-[180px] sm:min-h-[220px] rounded-xl text-sm leading-relaxed border-border bg-muted/10 focus:bg-background transition-all resize-y custom-scrollbar"
                 />
               </div>
 
               {/* Botón Acción Envío */}
-              <div className="pt-2 flex items-center justify-between border-t border-border/50">
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-t border-border/50 gap-3">
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>Destinatarios seleccionados: <strong className="text-foreground">{selectedEmpleadoIds.length}</strong></span>
+                  <span>Destinatarios: <strong className="text-foreground">{selectedEmpleadoIds.length}</strong></span>
                   {selectedEmpleadoIds.length === 0 && (
                     <button
                       type="button"
@@ -423,7 +430,7 @@ export default function MailPage() {
                 <Button
                   onClick={handleSendMail}
                   disabled={isSending || selectedEmpleadoIds.length === 0}
-                  className="rounded-xl h-12 px-8 font-bold shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-all gap-2"
+                  className="w-full sm:w-auto rounded-xl h-11 sm:h-12 px-6 sm:px-8 font-bold shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-all gap-2"
                 >
                   {isSending ? (
                     <>
@@ -456,7 +463,7 @@ export default function MailPage() {
                 )}
               </CardHeader>
               <CardContent className="p-4 pt-1 space-y-3">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 rounded-lg bg-background border border-border/50">
                     <p className="text-muted-foreground font-semibold">Total Procesados</p>
                     <p className="text-lg font-bold text-foreground">{resultadoEnvio.total}</p>

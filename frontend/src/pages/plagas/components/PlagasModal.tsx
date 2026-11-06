@@ -155,17 +155,17 @@ export function PlagasModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              {isViewOnly ? <Eye className="size-6 text-emerald-500" /> : <Bug className="size-6" />}
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)] rounded-2xl sm:rounded-3xl">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 shrink-0 pr-12 min-w-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="size-10 sm:size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner shrink-0">
+              {isViewOnly ? <Eye className="size-5 sm:size-6 text-emerald-500" /> : <Bug className="size-5 sm:size-6" />}
             </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold">
+            <div className="min-w-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold truncate">
                 {isViewOnly ? 'Detalles de la Plaga' : plaga ? 'Editar Plaga' : 'Nueva Plaga'}
               </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
                 {isViewOnly
                   ? 'Consulta la información detallada de la plaga'
                   : plaga
@@ -176,8 +176,8 @@ export function PlagasModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0 min-w-0 max-w-full">
+          <div className="space-y-4 sm:space-y-5 flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
                 Nombre de la Plaga {!isViewOnly && <span className="text-rose-500">*</span>}
@@ -274,26 +274,26 @@ export function PlagasModal({
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <Select
                   disabled={isViewOnly}
                   onValueChange={(val) => setValue('tipo_plaga_id', val, { shouldValidate: true })}
                   value={watch('tipo_plaga_id')}
                 >
                   <SelectTrigger className={cn(
-                    "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                    "w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left h-11 sm:h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
                     errors.tipo_plaga_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500"
                   )}>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border max-h-62.5 max-w-[calc(100vw-2rem)] sm:max-w-md" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
                           {tipo.nombre}
                         </SelectItem>
                         {!isViewOnly && (
-                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                             <button
                               type="button"
                               disabled={deletingTipoId === tipo.id}
@@ -332,7 +332,7 @@ export function PlagasModal({
                     variant="ghost"
                     size="icon"
                     onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
-                    className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                    className="size-11 sm:size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
                     title="Crear nuevo tipo"
                   >
                     <Plus className="size-5" />
@@ -342,28 +342,28 @@ export function PlagasModal({
               {errors.tipo_plaga_id && <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">{errors.tipo_plaga_id.message}</p>}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">Descripción (Opcional)</label>
               <Textarea
                 {...register('descripcion')}
                 disabled={isViewOnly}
                 placeholder="Breve descripción..."
-                className="min-h-25 rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none"
+                className="min-h-24 sm:min-h-25 rounded-xl border-border bg-muted/10 focus:bg-background transition-all resize-none text-xs sm:text-sm"
               />
             </div>
           </div>
 
-          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             {isViewOnly ? (
-              <Button type="button" onClick={onClose} className="rounded-xl h-12 px-8 font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer w-full">
+              <Button type="button" onClick={onClose} className="rounded-xl h-10 px-6 font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer w-full text-xs">
                 Cerrar
               </Button>
             ) : (
               <>
-                <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 cursor-pointer">
+                <Button type="button" variant="outline" onClick={onClose} className="rounded-xl h-10 px-4 text-xs font-bold cursor-pointer shrink-0">
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isLoading} className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer">
+                <Button type="submit" disabled={isLoading} className="rounded-xl h-10 px-5 text-xs shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer shrink-0">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

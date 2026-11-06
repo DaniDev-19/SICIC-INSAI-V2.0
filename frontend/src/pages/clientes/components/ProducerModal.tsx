@@ -81,16 +81,16 @@ export function ProducerModal({ isOpen, onClose, producer }: ProducerModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[42rem] border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <User className="size-6" />
+        <DialogHeader className="p-5 sm:p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="size-11 sm:size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner shrink-0">
+              <User className="size-5 sm:size-6" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-xl sm:text-2xl font-bold">
                 Editar Productor
               </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 font-medium">
                 Actualiza los datos de contacto y fiscales del productor seleccionado
               </p>
             </div>
@@ -98,17 +98,25 @@ export function ProducerModal({ isOpen, onClose, producer }: ProducerModalProps)
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-8 py-6 pr-6">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-5 flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-5 sm:py-6 pr-4 sm:pr-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
                   Cédula / RIF <span className="text-rose-500">*</span>
                 </label>
                 <Input
                   {...form.register('cedula_rif')}
-                  readOnly
-                  className="h-12 rounded-xl border-border bg-muted/20 focus:bg-background transition-all font-bold text-foreground/50 cursor-not-allowed shadow-inner"
+                  placeholder="Ej: V-12345678-0 o J-12345678-0"
+                  className={cn(
+                    "h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all font-bold",
+                    form.formState.errors.cedula_rif && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500 ring-rose-500/20"
+                  )}
                 />
+                {form.formState.errors.cedula_rif && (
+                  <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider pl-1 animate-in fade-in slide-in-from-left-1">
+                    {form.formState.errors.cedula_rif.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
@@ -140,7 +148,7 @@ export function ProducerModal({ isOpen, onClose, producer }: ProducerModalProps)
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1 block">
                   Teléfono
@@ -173,19 +181,19 @@ export function ProducerModal({ isOpen, onClose, producer }: ProducerModalProps)
             </div>
           </div>
 
-          <DialogFooter className="px-8 py-5 border-t border-border/30 bg-muted/10 shrink-0">
+          <DialogFooter className="px-5 sm:px-8 py-4 sm:py-5 border-t border-border/30 bg-muted/10 shrink-0">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="rounded-xl h-12 px-6 cursor-pointer font-bold"
+              className="rounded-xl h-11 sm:h-12 px-5 sm:px-6 cursor-pointer font-bold"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-xl h-12 px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer"
+              className="rounded-xl h-11 sm:h-12 px-6 sm:px-8 shadow-lg shadow-primary/20 bg-primary hover:shadow-primary/40 transition-all font-bold cursor-pointer"
             >
               {isSubmitting ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Procesando...</>

@@ -68,24 +68,24 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[560px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0">
-        <div className="bg-primary/5 p-6 border-b border-border/50">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[560px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+        <div className="bg-primary/5 p-4 sm:p-6 pr-12 pb-4 border-b border-border/50 shrink-0">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Server className="size-6 text-primary" />
-              Instancias — {user?.username}
+            <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2 truncate">
+              <Server className="size-5 sm:size-6 text-primary shrink-0" />
+              <span className="truncate">Instancias — {user?.username}</span>
             </DialogTitle>
           </DialogHeader>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto custom-scrollbar flex-1">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="size-8 animate-spin text-primary" />
             </div>
           ) : (
             <>
-              <div className="space-y-3 rounded-xl border border-border p-4 bg-muted/20">
+              <div className="space-y-3 rounded-2xl border border-border p-3.5 sm:p-4 bg-muted/20">
                 <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
                   Nueva asignación
                 </p>
@@ -93,10 +93,10 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                   <div className="space-y-2">
                     <Label>Instancia</Label>
                     <Select value={instanciaId} onValueChange={setInstanciaId}>
-                      <SelectTrigger className="rounded-xl">
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue placeholder="Seleccionar sede" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                         {availableInstances.map((inst) => (
                           <SelectItem key={inst.id} value={String(inst.id)}>
                             {inst.nombre_mostrable}
@@ -108,10 +108,10 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                   <div className="space-y-2">
                     <Label>Rol</Label>
                     <Select value={rolId} onValueChange={setRolId}>
-                      <SelectTrigger className="rounded-xl">
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue placeholder="Seleccionar rol" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                         {roles.map((rol) => (
                           <SelectItem key={rol.id} value={String(rol.id)}>
                             {rol.nombre}
@@ -124,7 +124,7 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                 <Button
                   type="button"
                   variant="primary"
-                  className="w-full rounded-xl"
+                  className="w-full h-11 rounded-xl font-bold cursor-pointer"
                   disabled={!instanciaId || !rolId || isAssigning}
                   onClick={handleAssign}
                 >
@@ -138,7 +138,7 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                   Accesos actuales ({assignments.length})
                 </p>
                 {assignments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic py-4 text-center">
+                  <p className="text-xs sm:text-sm text-muted-foreground italic py-4 text-center">
                     Este usuario no tiene instancias asignadas.
                   </p>
                 ) : (
@@ -146,13 +146,13 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                     {assignments.map((a) => (
                       <li
                         key={a.instancia_id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 sm:px-4 sm:py-3"
                       >
-                        <div>
-                          <p className="font-semibold text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm break-words">
                             {a.instancias?.nombre_mostrable ?? `Instancia #${a.instancia_id}`}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground break-words">
                             Rol: {a.roles?.nombre ?? a.rol_id}
                             {a.instancias?.db_name ? ` · ${a.instancias.db_name}` : ''}
                           </p>
@@ -161,7 +161,7 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="text-rose-500 hover:bg-rose-500/10 shrink-0"
+                          className="text-rose-500 hover:bg-rose-500/10 shrink-0 cursor-pointer"
                           disabled={isAssigning}
                           onClick={() => handleRemove(a.instancia_id)}
                         >
@@ -176,8 +176,8 @@ export function UsuarioInstanciasDialog({ isOpen, onClose, user }: UsuarioInstan
           )}
         </div>
 
-        <DialogFooter className="p-4 border-t border-border/50">
-          <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
+        <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex items-center justify-end w-full">
+          <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-10 sm:h-11 px-6 cursor-pointer w-full sm:w-auto">
             Cerrar
           </Button>
         </DialogFooter>

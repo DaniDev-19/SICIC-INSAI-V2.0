@@ -96,11 +96,11 @@ export function MovimientoStockModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
-        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl lg:max-w-2xl bg-background/95 backdrop-blur-xl border-border rounded-2xl sm:rounded-3xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,52rem)]">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12 min-w-0">
           <div className="flex items-center gap-3">
             <div
-              className={`p-2.5 rounded-xl border ${
+              className={`p-2.5 rounded-xl border shrink-0 ${
                 isPositiveEffect
                   ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                   : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
@@ -108,22 +108,22 @@ export function MovimientoStockModal({
             >
               {isPositiveEffect ? <ArrowDownLeft className="size-5" /> : <ArrowUpRight className="size-5" />}
             </div>
-            <div>
-              <DialogTitle className="text-lg font-bold">
+            <div className="min-w-0">
+              <DialogTitle className="text-base sm:text-lg font-bold truncate">
                 Movimiento Manual de Kardex
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground truncate">
                 Registre entradas, salidas o ajustes de inventario para una oficina específica.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="space-y-4 sm:space-y-5 flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Tipo de Movimiento */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                   <ArrowLeftRight className="size-3.5" />
                   Tipo de Operación <span className="text-rose-500">*</span>
@@ -132,10 +132,10 @@ export function MovimientoStockModal({
                   value={tipoMovimiento}
                   onValueChange={(val) => setTipoMovimiento(val as TipoMovimiento)}
                 >
-                  <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
+                  <SelectTrigger className="h-10 sm:h-11 bg-background/80 rounded-xl font-medium w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect">
+                  <SelectContent className="glass-effect max-w-[calc(100vw-2rem)] sm:max-w-md">
                     <SelectItem value="ENTRADA" className="text-emerald-500 font-semibold cursor-pointer">
                       + ENTRADA (Reabastecimiento)
                     </SelectItem>
@@ -153,16 +153,16 @@ export function MovimientoStockModal({
               </div>
 
               {/* Oficina */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                   <Building2 className="size-3.5" />
                   Oficina / Sede <span className="text-rose-500">*</span>
                 </label>
                 <Select value={oficinaId} onValueChange={setOficinaId}>
-                  <SelectTrigger className="h-11 bg-background/80 rounded-xl">
+                  <SelectTrigger className="h-10 sm:h-11 bg-background/80 rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Seleccionar sede..." />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect max-h-52">
+                  <SelectContent className="glass-effect max-h-52 max-w-[calc(100vw-2rem)] sm:max-w-md">
                     {oficinas.map((of) => (
                       <SelectItem key={of.id} value={String(of.id)}>
                         {of.nombre}
@@ -174,16 +174,16 @@ export function MovimientoStockModal({
             </div>
 
             {/* Insumo */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                 <Package className="size-3.5" />
                 Insumo <span className="text-rose-500">*</span>
               </label>
               <Select value={insumoId} onValueChange={setInsumoId}>
-                <SelectTrigger className="h-11 bg-background/80 rounded-xl font-medium">
+                <SelectTrigger className="h-10 sm:h-11 bg-background/80 rounded-xl font-medium w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                   <SelectValue placeholder="Seleccionar producto del catálogo..." />
                 </SelectTrigger>
-                <SelectContent className="glass-effect max-h-60">
+                <SelectContent className="glass-effect max-h-60 max-w-[calc(100vw-2rem)] sm:max-w-md">
                   {insumos.map((i) => (
                     <SelectItem key={i.id} value={String(i.id)}>
                       {i.codigo ? `[${i.codigo}] ` : ''}{i.nombre} {i.marca ? `(${i.marca})` : ''}
@@ -193,7 +193,7 @@ export function MovimientoStockModal({
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {/* Cantidad */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground">
@@ -250,20 +250,20 @@ export function MovimientoStockModal({
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
+              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold shrink-0"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !insumoId || !oficinaId || Number(cantidad) <= 0}
-              className={`rounded-xl h-10 px-5 text-xs text-white font-bold cursor-pointer shadow-lg ${
+              className={`rounded-xl h-10 px-5 text-xs text-white font-bold cursor-pointer shadow-lg shrink-0 ${
                 isPositiveEffect
                   ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                   : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'

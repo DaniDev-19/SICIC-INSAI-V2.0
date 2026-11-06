@@ -113,6 +113,33 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
   const [editingTipoNombre, setEditingTipoNombre] = useState('');
   const [updatingTipoId, setUpdatingTipoId] = useState<number | null>(null);
   const [deletingTipoId, setDeletingTipoId] = useState<number | null>(null);
+
+  // Mini CRUD Municipio
+  const [showNewMun, setShowNewMun] = useState(false);
+  const [newMunNombre, setNewMunNombre] = useState('');
+  const [creatingMun, setCreatingMun] = useState(false);
+  const [editingMunId, setEditingMunId] = useState<number | null>(null);
+  const [editingMunNombre, setEditingMunNombre] = useState('');
+  const [updatingMunId, setUpdatingMunId] = useState<number | null>(null);
+  const [deletingMunId, setDeletingMunId] = useState<number | null>(null);
+
+  // Mini CRUD Parroquia
+  const [showNewPar, setShowNewPar] = useState(false);
+  const [newParNombre, setNewParNombre] = useState('');
+  const [creatingPar, setCreatingPar] = useState(false);
+  const [editingParId, setEditingParId] = useState<number | null>(null);
+  const [editingParNombre, setEditingParNombre] = useState('');
+  const [updatingParId, setUpdatingParId] = useState<number | null>(null);
+  const [deletingParId, setDeletingParId] = useState<number | null>(null);
+
+  // Mini CRUD Sector
+  const [showNewSec, setShowNewSec] = useState(false);
+  const [newSecNombre, setNewSecNombre] = useState('');
+  const [creatingSec, setCreatingSec] = useState(false);
+  const [editingSecId, setEditingSecId] = useState<number | null>(null);
+  const [editingSecNombre, setEditingSecNombre] = useState('');
+  const [updatingSecId, setUpdatingSecId] = useState<number | null>(null);
+  const [deletingSecId, setDeletingSecId] = useState<number | null>(null);
   const [existingProducer, setExistingProducer] = useState<any>(null);
   const [runsaiConflict, setRunsaiConflict] = useState<any>(null);
   const [emailConflict, setEmailConflict] = useState<any>(null);
@@ -221,10 +248,11 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
             setExistingProducer(null);
           }
 
-          // 2. Verificar Código RUNSAI (debe ser único)
-          if (runsai) {
-            const { data: resRunsai } = await clientesService.getAll({ q: runsai });
-            const foundRunsai = resRunsai.find((c: any) => c.codigo_runsai === runsai);
+          // 2. Verificar Código RUNSAI (debe ser único si se proporciona)
+          const cleanRunsai = runsai ? runsai.trim() : '';
+          if (cleanRunsai) {
+            const { data: resRunsai } = await clientesService.getAll({ q: cleanRunsai });
+            const foundRunsai = resRunsai.find((c: any) => c.codigo_runsai && c.codigo_runsai.trim().toLowerCase() === cleanRunsai.toLowerCase());
 
             // Si el RUNSAI existe pero pertenece a OTRA cédula, bloqueamos
             if (foundRunsai && foundRunsai.cedula_rif !== cedula) {
@@ -236,11 +264,12 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
           }
           setRunsaiConflict(null);
 
-          // 3. Verificar Correo Electrónico (debe ser único)
+          // 3. Verificar Correo Electrónico (debe ser único si se proporciona)
           const email = watch('email');
-          if (email) {
-            const { data: resEmail } = await clientesService.getAll({ q: email });
-            const foundEmail = resEmail.find((c: any) => c.email === email);
+          const cleanEmail = email ? email.trim() : '';
+          if (cleanEmail) {
+            const { data: resEmail } = await clientesService.getAll({ q: cleanEmail });
+            const foundEmail = resEmail.find((c: any) => c.email && c.email.trim().toLowerCase() === cleanEmail.toLowerCase());
 
             if (foundEmail && foundEmail.cedula_rif !== cedula) {
               setEmailConflict(foundEmail);
@@ -315,12 +344,12 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
       };
 
       submissionData.productor = {
-        cedula_rif: values.cedula_rif,
-        nombre: values.nombre_productor,
-        codigo_runsai: values.codigo_runsai,
-        telefono: values.telefono,
-        email: values.email || undefined,
-        direccion_fiscal: values.direccion_fiscal,
+        cedula_rif: values.cedula_rif?.trim(),
+        nombre: values.nombre_productor?.trim(),
+        codigo_runsai: values.codigo_runsai?.trim() || undefined,
+        telefono: values.telefono?.trim() || undefined,
+        email: values.email?.trim() || undefined,
+        direccion_fiscal: values.direccion_fiscal?.trim() || undefined,
       };
 
       await createPropiedad(submissionData);
@@ -369,25 +398,207 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
     }
   };
 
+  // Mini CRUD Municipio
+  const handleCreateMunicipio = async () => {
+    if (!newMunNombre.trim() || !selectedEstado) return;
+    setCreatingMun(true);
+    try {
+      const res = await ubicacionService.createMunicipio({
+        nombre: newMunNombre.trim(),
+        estado_id: parseInt(selectedEstado),
+      });
+      toast.success('Municipio creado exitosamente');
+      setNewMunNombre('');
+      setShowNewMun(false);
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstado));
+      setMunicipios(updated.data || []);
+      if (res.data?.id) {
+        setValue('municipio_id', res.data.id.toString(), { shouldValidate: true });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear el municipio');
+    } finally {
+      setCreatingMun(false);
+    }
+  };
+
+  const handleUpdateMunicipio = async (id: number) => {
+    if (!editingMunNombre.trim()) return;
+    setUpdatingMunId(id);
+    try {
+      await ubicacionService.updateMunicipio(id, { nombre: editingMunNombre.trim() });
+      toast.success('Municipio actualizado');
+      setEditingMunId(null);
+      setEditingMunNombre('');
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstado));
+      setMunicipios(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar el municipio');
+    } finally {
+      setUpdatingMunId(null);
+    }
+  };
+
+  const handleDeleteMunicipio = async (id: number) => {
+    setDeletingMunId(id);
+    try {
+      await ubicacionService.deleteMunicipio(id);
+      toast.success('Municipio eliminado');
+      if (selectedMunicipio === id.toString()) {
+        setValue('municipio_id', '');
+        setValue('parroquia_id', '');
+        setValue('sector_id', '');
+        setParroquias([]);
+        setSectores([]);
+      }
+      const updated = await ubicacionService.getMunicipios(parseInt(selectedEstado));
+      setMunicipios(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar el municipio');
+    } finally {
+      setDeletingMunId(null);
+    }
+  };
+
+  // Mini CRUD Parroquia
+  const handleCreateParroquia = async () => {
+    if (!newParNombre.trim() || !selectedMunicipio) return;
+    setCreatingPar(true);
+    try {
+      const res = await ubicacionService.createParroquia({
+        nombre: newParNombre.trim(),
+        municipio_id: parseInt(selectedMunicipio),
+      });
+      toast.success('Parroquia creada exitosamente');
+      setNewParNombre('');
+      setShowNewPar(false);
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipio));
+      setParroquias(updated.data || []);
+      if (res.data?.id) {
+        setValue('parroquia_id', res.data.id.toString(), { shouldValidate: true });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear la parroquia');
+    } finally {
+      setCreatingPar(false);
+    }
+  };
+
+  const handleUpdateParroquia = async (id: number) => {
+    if (!editingParNombre.trim()) return;
+    setUpdatingParId(id);
+    try {
+      await ubicacionService.updateParroquia(id, { nombre: editingParNombre.trim() });
+      toast.success('Parroquia actualizada');
+      setEditingParId(null);
+      setEditingParNombre('');
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipio));
+      setParroquias(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar la parroquia');
+    } finally {
+      setUpdatingParId(null);
+    }
+  };
+
+  const handleDeleteParroquia = async (id: number) => {
+    setDeletingParId(id);
+    try {
+      await ubicacionService.deleteParroquia(id);
+      toast.success('Parroquia eliminada');
+      if (selectedParroquia === id.toString()) {
+        setValue('parroquia_id', '');
+        setValue('sector_id', '');
+        setSectores([]);
+      }
+      const updated = await ubicacionService.getParroquias(parseInt(selectedMunicipio));
+      setParroquias(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar la parroquia');
+    } finally {
+      setDeletingParId(null);
+    }
+  };
+
+  // Mini CRUD Sector
+  const handleCreateSector = async () => {
+    if (!newSecNombre.trim() || !selectedParroquia) return;
+    setCreatingSec(true);
+    try {
+      const res = await ubicacionService.createSector({
+        nombre: newSecNombre.trim(),
+        parroquia_id: parseInt(selectedParroquia),
+      });
+      toast.success('Sector creado exitosamente');
+      setNewSecNombre('');
+      setShowNewSec(false);
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquia));
+      setSectores(updated.data || []);
+      if (res.data?.id) {
+        setValue('sector_id', res.data.id.toString(), { shouldValidate: true });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al crear el sector');
+    } finally {
+      setCreatingSec(false);
+    }
+  };
+
+  const handleUpdateSector = async (id: number) => {
+    if (!editingSecNombre.trim()) return;
+    setUpdatingSecId(id);
+    try {
+      await ubicacionService.updateSector(id, { nombre: editingSecNombre.trim() });
+      toast.success('Sector actualizado');
+      setEditingSecId(null);
+      setEditingSecNombre('');
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquia));
+      setSectores(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar el sector');
+    } finally {
+      setUpdatingSecId(null);
+    }
+  };
+
+  const handleDeleteSector = async (id: number) => {
+    setDeletingSecId(id);
+    try {
+      await ubicacionService.deleteSector(id);
+      toast.success('Sector eliminado');
+      if (watch('sector_id') === id.toString()) {
+        setValue('sector_id', '');
+      }
+      const updated = await ubicacionService.getSectores(parseInt(selectedParroquia));
+      setSectores(updated.data || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al eliminar el sector');
+    } finally {
+      setDeletingSecId(null);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isSubmitting && onClose()}>
-      <DialogContent className="sm:max-w-3xl border-none shadow-2xl glass-effect p-0 overflow-hidden">
-        <DialogHeader className="p-8 pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner">
-              <Activity className="size-6" />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl border-none shadow-2xl glass-effect p-0 overflow-hidden flex flex-col max-h-[min(92vh,56rem)]">
+        <DialogHeader className="p-4 sm:p-8 pb-3 sm:pb-4 bg-muted/40 dark:bg-muted/20 border-b border-border/50 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="size-10 sm:size-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shadow-inner shrink-0">
+              <Activity className="size-5 sm:size-6" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-bold">Registro Nacional de Productores</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground mt-1">
+              <DialogTitle className="text-xl sm:text-2xl font-bold">Registro Nacional de Productores</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                 Siga los pasos para formalizar la inscripción en el sistema.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-8 pb-12">
-          <Stepper steps={STEPS} currentStep={currentStep} />
+        <div className="p-4 sm:p-8 pb-6 sm:pb-12 flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+          <div className="shrink-0">
+            <Stepper steps={STEPS} currentStep={currentStep} />
+          </div>
 
           <form
             onSubmit={(e) => e.preventDefault()}
@@ -402,11 +613,11 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                 }
               }
             }}
-            className="mt-8"
+            className="mt-6 sm:mt-8 flex-1 flex flex-col justify-between"
           >
             <div
               key={currentStep}
-              className="min-h-87.5 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="min-h-56 sm:min-h-87.5 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1"
             >
               {currentStep === 0 && (
                 <div className="space-y-6">
@@ -551,13 +762,13 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                           )}>
                             <SelectValue placeholder="Seleccione..." />
                           </SelectTrigger>
-                          <SelectContent className="glass-effect border-border max-h-[15.625rem] min-w-[var(--radix-select-trigger-width)]" position="popper" sideOffset={2}>
+                          <SelectContent className="glass-effect border-border max-h-62.2 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
                             {tipos.map((tipo) => (
                               <div key={tipo.id} className="group relative flex items-center">
                                 <SelectItem value={tipo.id.toString()} className="cursor-pointer flex-1 pr-20">
                                   {tipo.nombre}
                                 </SelectItem>
-                                <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                                   <button type="button" disabled={deletingTipoId === tipo.id} onClick={(e) => { e.stopPropagation(); setEditingTipoId(tipo.id); setEditingTipoNombre(tipo.nombre); setShowNewTipo(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar tipo">
                                     <Pencil className="size-3" />
                                   </button>
@@ -608,53 +819,225 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                       {errors.estado_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.estado_id.message}</p>}
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Municipio <span className="text-rose-500">*</span></label>
-                      <Select onValueChange={(val) => setValue('municipio_id', val, { shouldValidate: true })} value={watch('municipio_id') || ''} disabled={!selectedEstado}>
-                        <SelectTrigger className={cn(
-                          "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
-                          errors.municipio_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
-                          !selectedEstado && "opacity-50 cursor-not-allowed"
-                        )}>
-                          <SelectValue placeholder="Seleccione Municipio" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-effect border-border" position="popper" sideOffset={2}>
-                          {municipios.map(m => <SelectItem key={m.id} value={m.id.toString()} className="cursor-pointer">{m.nombre}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
+                        Municipio <span className="text-rose-500">*</span>
+                      </label>
+                      {showNewMun && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={newMunNombre}
+                            onChange={(e) => setNewMunNombre(e.target.value)}
+                            placeholder="Nuevo municipio..."
+                            className="h-10 rounded-xl bg-muted/10 border-border focus:bg-background text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateMunicipio())}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={creatingMun || !newMunNombre.trim()} onClick={handleCreateMunicipio} className="size-10 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                            {creatingMun ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewMun(false); setNewMunNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {editingMunId !== null && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={editingMunNombre}
+                            onChange={(e) => setEditingMunNombre(e.target.value)}
+                            placeholder="Editar nombre..."
+                            className="h-10 rounded-xl bg-muted/10 border-blue-500/30 focus:border-blue-500 text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateMunicipio(editingMunId))}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={updatingMunId === editingMunId || !editingMunNombre.trim()} onClick={() => handleUpdateMunicipio(editingMunId)} className="size-10 shrink-0 rounded-xl bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                            {updatingMunId === editingMunId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingMunId(null); setEditingMunNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={(val) => setValue('municipio_id', val, { shouldValidate: true })} value={watch('municipio_id') || ''} disabled={!selectedEstado}>
+                          <SelectTrigger className={cn(
+                            "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                            errors.municipio_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
+                            !selectedEstado && "opacity-50 cursor-not-allowed"
+                          )}>
+                            <SelectValue placeholder="Seleccione Municipio" />
+                          </SelectTrigger>
+                          <SelectContent className="glass-effect border-border max-h-60" position="popper" sideOffset={2}>
+                            {municipios.map(m => (
+                              <div key={m.id} className="group relative flex items-center">
+                                <SelectItem value={m.id.toString()} className="cursor-pointer flex-1 pr-20">
+                                  {m.nombre}
+                                </SelectItem>
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                                  <button type="button" disabled={deletingMunId === m.id} onClick={(e) => { e.stopPropagation(); setEditingMunId(m.id); setEditingMunNombre(m.nombre); setShowNewMun(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar municipio">
+                                    <Pencil className="size-3" />
+                                  </button>
+                                  <button type="button" disabled={deletingMunId === m.id} onClick={(e) => { e.stopPropagation(); handleDeleteMunicipio(m.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50" title="Eliminar municipio">
+                                    {deletingMunId === m.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="ghost" size="icon" disabled={!selectedEstado} onClick={() => { setShowNewMun(!showNewMun); setEditingMunId(null); }} className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Crear nuevo municipio">
+                          <Plus className="size-5" />
+                        </Button>
+                      </div>
                       {errors.municipio_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.municipio_id.message}</p>}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Parroquia <span className="text-rose-500">*</span></label>
-                      <Select onValueChange={(val) => setValue('parroquia_id', val, { shouldValidate: true })} value={watch('parroquia_id') || ''} disabled={!selectedMunicipio}>
-                        <SelectTrigger className={cn(
-                          "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
-                          errors.parroquia_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
-                          !selectedMunicipio && "opacity-50 cursor-not-allowed"
-                        )}>
-                          <SelectValue placeholder="Seleccione Parroquia" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-effect border-border" position="popper" sideOffset={2}>
-                          {parroquias.map(p => <SelectItem key={p.id} value={p.id.toString()} className="cursor-pointer">{p.nombre}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
+                        Parroquia <span className="text-rose-500">*</span>
+                      </label>
+                      {showNewPar && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={newParNombre}
+                            onChange={(e) => setNewParNombre(e.target.value)}
+                            placeholder="Nueva parroquia..."
+                            className="h-10 rounded-xl bg-muted/10 border-border focus:bg-background text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateParroquia())}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={creatingPar || !newParNombre.trim()} onClick={handleCreateParroquia} className="size-10 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                            {creatingPar ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewPar(false); setNewParNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {editingParId !== null && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={editingParNombre}
+                            onChange={(e) => setEditingParNombre(e.target.value)}
+                            placeholder="Editar nombre..."
+                            className="h-10 rounded-xl bg-muted/10 border-blue-500/30 focus:border-blue-500 text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateParroquia(editingParId))}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={updatingParId === editingParId || !editingParNombre.trim()} onClick={() => handleUpdateParroquia(editingParId)} className="size-10 shrink-0 rounded-xl bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                            {updatingParId === editingParId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingParId(null); setEditingParNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={(val) => setValue('parroquia_id', val, { shouldValidate: true })} value={watch('parroquia_id') || ''} disabled={!selectedMunicipio}>
+                          <SelectTrigger className={cn(
+                            "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                            errors.parroquia_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
+                            !selectedMunicipio && "opacity-50 cursor-not-allowed"
+                          )}>
+                            <SelectValue placeholder="Seleccione Parroquia" />
+                          </SelectTrigger>
+                          <SelectContent className="glass-effect border-border max-h-60" position="popper" sideOffset={2}>
+                            {parroquias.map(p => (
+                              <div key={p.id} className="group relative flex items-center">
+                                <SelectItem value={p.id.toString()} className="cursor-pointer flex-1 pr-20">
+                                  {p.nombre}
+                                </SelectItem>
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                                  <button type="button" disabled={deletingParId === p.id} onClick={(e) => { e.stopPropagation(); setEditingParId(p.id); setEditingParNombre(p.nombre); setShowNewPar(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar parroquia">
+                                    <Pencil className="size-3" />
+                                  </button>
+                                  <button type="button" disabled={deletingParId === p.id} onClick={(e) => { e.stopPropagation(); handleDeleteParroquia(p.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50" title="Eliminar parroquia">
+                                    {deletingParId === p.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="ghost" size="icon" disabled={!selectedMunicipio} onClick={() => { setShowNewPar(!showNewPar); setEditingParId(null); }} className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Crear nueva parroquia">
+                          <Plus className="size-5" />
+                        </Button>
+                      </div>
                       {errors.parroquia_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.parroquia_id.message}</p>}
                     </div>
+
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">Sector <span className="text-rose-500">*</span></label>
-                      <Select onValueChange={(val) => setValue('sector_id', val, { shouldValidate: true })} value={watch('sector_id') || ''} disabled={!selectedParroquia}>
-                        <SelectTrigger className={cn(
-                          "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
-                          errors.sector_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
-                          !selectedParroquia && "opacity-50 cursor-not-allowed"
-                        )}>
-                          <SelectValue placeholder="Seleccione Sector" />
-                        </SelectTrigger>
-                        <SelectContent className="glass-effect border-border" position="popper" sideOffset={2}>
-                          {sectores.map(s => <SelectItem key={s.id} value={s.id.toString()} className="cursor-pointer">{s.nombre}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1 block">
+                        Sector <span className="text-rose-500">*</span>
+                      </label>
+                      {showNewSec && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={newSecNombre}
+                            onChange={(e) => setNewSecNombre(e.target.value)}
+                            placeholder="Nuevo sector..."
+                            className="h-10 rounded-xl bg-muted/10 border-border focus:bg-background text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateSector())}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={creatingSec || !newSecNombre.trim()} onClick={handleCreateSector} className="size-10 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 cursor-pointer">
+                            {creatingSec ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setShowNewSec(false); setNewSecNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {editingSecId !== null && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+                          <Input
+                            value={editingSecNombre}
+                            onChange={(e) => setEditingSecNombre(e.target.value)}
+                            placeholder="Editar nombre..."
+                            className="h-10 rounded-xl bg-muted/10 border-blue-500/30 focus:border-blue-500 text-xs"
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUpdateSector(editingSecId))}
+                            autoFocus
+                          />
+                          <Button type="button" size="icon" disabled={updatingSecId === editingSecId || !editingSecNombre.trim()} onClick={() => handleUpdateSector(editingSecId)} className="size-10 shrink-0 rounded-xl bg-blue-500 text-white hover:bg-blue-600 cursor-pointer">
+                            {updatingSecId === editingSecId ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingSecId(null); setEditingSecNombre(''); }} className="size-10 shrink-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={(val) => setValue('sector_id', val, { shouldValidate: true })} value={watch('sector_id') || ''} disabled={!selectedParroquia}>
+                          <SelectTrigger className={cn(
+                            "w-full h-12 rounded-xl border-border bg-muted/10 focus:bg-background transition-all",
+                            errors.sector_id && "border-rose-500/50 bg-rose-500/5 focus:border-rose-500",
+                            !selectedParroquia && "opacity-50 cursor-not-allowed"
+                          )}>
+                            <SelectValue placeholder="Seleccione Sector" />
+                          </SelectTrigger>
+                          <SelectContent className="glass-effect border-border max-h-60" position="popper" sideOffset={2}>
+                            {sectores.map(s => (
+                              <div key={s.id} className="group relative flex items-center">
+                                <SelectItem value={s.id.toString()} className="cursor-pointer flex-1 pr-20">
+                                  {s.nombre}
+                                </SelectItem>
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
+                                  <button type="button" disabled={deletingSecId === s.id} onClick={(e) => { e.stopPropagation(); setEditingSecId(s.id); setEditingSecNombre(s.nombre); setShowNewSec(false); }} className="p-1 rounded hover:bg-blue-500/10 text-blue-500 cursor-pointer disabled:opacity-50" title="Editar sector">
+                                    <Pencil className="size-3" />
+                                  </button>
+                                  <button type="button" disabled={deletingSecId === s.id} onClick={(e) => { e.stopPropagation(); handleDeleteSector(s.id); }} className="p-1 rounded hover:bg-rose-500/10 text-rose-500 cursor-pointer disabled:opacity-50" title="Eliminar sector">
+                                    {deletingSecId === s.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="ghost" size="icon" disabled={!selectedParroquia} onClick={() => { setShowNewSec(!showNewSec); setEditingSecId(null); }} className="size-12 shrink-0 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer disabled:opacity-50" title="Crear nuevo sector">
+                          <Plus className="size-5" />
+                        </Button>
+                      </div>
                       {errors.sector_id && <p className="text-[10px] text-rose-500 font-bold uppercase pl-1">{errors.sector_id.message}</p>}
                     </div>
                   </div>
@@ -739,9 +1122,9 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
               )} */}
             </div>
 
-            <div className="flex items-center justify-between mt-12 pt-6 border-t border-border/50">
-              <Button type="button" variant="ghost" onClick={currentStep === 0 ? onClose : handleBack} className="h-12 px-6 rounded-xl font-bold cursor-pointer">
-                {currentStep === 0 ? 'Cancelar' : <><ChevronLeft className="mr-2 size-4" /> Anterior</>}
+            <div className="flex items-center justify-between mt-8 pt-5 sm:mt-12 sm:pt-6 border-t border-border/50 shrink-0 gap-3">
+              <Button type="button" variant="ghost" onClick={currentStep === 0 ? onClose : handleBack} className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl font-bold cursor-pointer text-xs sm:text-sm">
+                {currentStep === 0 ? 'Cancelar' : <><ChevronLeft className="mr-1.5 size-4" /> Anterior</>}
               </Button>
 
               <Button
@@ -749,8 +1132,8 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                 onClick={currentStep < STEPS.length - 1 ? handleNext : handleSubmit(onFinalSubmit)}
                 disabled={isSubmitting || !isStepValid() || isCheckingProducer || isAdvancing}
                 className={cn(
-                  "h-12 px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed",
-                  currentStep < STEPS.length - 1 ? "shadow-primary/20" : "px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40"
+                  "h-11 sm:h-12 px-5 sm:px-8 rounded-xl font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-xs sm:text-sm",
+                  currentStep < STEPS.length - 1 ? "shadow-primary/20" : "px-6 sm:px-10 font-black bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40"
                 )}
               >
                 {isSubmitting ? (
@@ -758,9 +1141,9 @@ export function ProducerWizard({ isOpen, onClose }: ProducerWizardProps) {
                 ) : isCheckingProducer || isAdvancing ? (
                   <><Loader2 className="mr-2 size-4 animate-spin" /> {isCheckingProducer ? 'Verificando...' : 'Cargando...'}</>
                 ) : currentStep < STEPS.length - 1 ? (
-                  <>Siguiente <ChevronRight className="ml-2 size-4" /></>
+                  <>Siguiente <ChevronRight className="ml-1.5 size-4" /></>
                 ) : (
-                  <><Check className="mr-2 size-4" /> Finalizar Inscripción</>
+                  <><Check className="mr-1.5 size-4" /> Finalizar</>
                 )}
               </Button>
             </div>

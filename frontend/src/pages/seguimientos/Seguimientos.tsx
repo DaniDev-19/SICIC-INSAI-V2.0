@@ -124,43 +124,43 @@ const Seguimientos: React.FC = () => {
     : [];
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+              className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">
               Seguimientos y Visitas de Control
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
+          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
             Verificación epidemiológica, control de recomendaciones e inspecciones de campo.
           </p>
         </div>
 
         {/* Toolbar Controls */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+          <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
             {/* Filter by Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
                 title="Filtrar por Estatus"
-                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                className="w-10 h-10 shrink-0 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
               >
-                <Filter className={`size-4 ${statusFilter !== 'all' ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                <Filter className={`size-4 shrink-0 ${statusFilter !== 'all' ? 'text-indigo-500' : 'text-muted-foreground'}`} />
                 <span className="sr-only">
                   <SelectValue placeholder="Estatus" />
                 </span>
               </SelectTrigger>
-              <SelectContent className="glass-effect border-border top-9 right-15">
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                 <SelectItem value="all" className="cursor-pointer">Todos los Estatus</SelectItem>
                 <SelectItem value="EN_PROCESO" className="cursor-pointer">En Proceso</SelectItem>
                 <SelectItem value="CUMPLIDO" className="cursor-pointer">Cumplido</SelectItem>
@@ -169,20 +169,20 @@ const Seguimientos: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
 
             {/* Search Bar */}
-            <div className="w-full sm:w-[18rem] lg:w-88">
+            <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
               <SearchInput
                 placeholder="N° Control, propiedad o hallazgos..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onClear={() => setSearch('')}
-                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
               />
             </div>
 
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border hidden sm:block shrink-0" />
 
             {/* Toolbar Create & Export */}
             <ModuleToolbarActions

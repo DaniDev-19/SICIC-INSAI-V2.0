@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Loader2, Server, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Plus, Loader2, Server, AlertTriangle, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -78,52 +78,62 @@ export default function Instancias() {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto w-full min-w-0 overflow-hidden sm:overflow-visible animate-in fade-in duration-500 pb-28 sm:pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 min-w-0">
+        <div className="space-y-1 min-w-0 flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-primary/10 hover:text-primary"
+              className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer shrink-0"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Server className="size-8 text-primary" />
-              Instancias / Sedes
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2 truncate">
+              <Server className="size-7 sm:size-8 text-primary shrink-0" />
+              <span className="truncate">Instancias / Sedes</span>
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium pl-9 sm:pl-12 break-words">
             Registro de sedes operativas vinculadas a bases de datos tenant.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-35 rounded-xl">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="true">Activas</SelectItem>
-              <SelectItem value="false">Inactivas</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto min-w-0">
+          <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10 w-full sm:w-auto min-w-0">
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger
+                title="Filtrar por Estado"
+                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden shrink-0"
+              >
+                <Power className={`size-4 ${status !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="sr-only">
+                  <SelectValue placeholder="Estado" />
+                </span>
+              </SelectTrigger>
+              <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                <SelectItem value="all" className="cursor-pointer">Todas</SelectItem>
+                <SelectItem value="true" className="cursor-pointer">Activas</SelectItem>
+                <SelectItem value="false" className="cursor-pointer">Inactivas</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <div className="w-60 lg:w-60">
-            <SearchInput
-              placeholder="Buscar por nombre o DB..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onClear={() => setSearch('')}
-              className="h-10 rounded-xl"
-            />
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
+
+            <div className="flex-1 min-w-0 w-full sm:w-64 lg:w-80">
+              <SearchInput
+                placeholder="Buscar por nombre o DB..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClear={() => setSearch('')}
+                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background w-full"
+              />
+            </div>
           </div>
 
           <Can screen="instancias" action="create">
-            <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
+            <Button onClick={handleOpenCreate} variant="primary" className="w-full sm:w-auto shrink-0 justify-center shadow-lg shadow-primary/20">
               <Plus className="size-5 text-white" />
               <span className="text-white">Nueva instancia</span>
             </Button>
@@ -145,7 +155,7 @@ export default function Instancias() {
               onToggleStatus={handleToggleStatus}
               onViewUsers={handleViewUsers}
             />
-            <div className="px-6 py-4 border-t border-border bg-muted/20">
+            <div className="p-4 sm:px-6 sm:py-4 border-t border-border bg-muted/20">
               <Pagination pagination={pagination} onPageChange={setPage} onLimitChange={setLimit} />
             </div>
           </>
@@ -165,15 +175,15 @@ export default function Instancias() {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="glass-effect border-rose-500/20 max-w-md">
+        <AlertDialogContent className="glass-effect border-rose-500/20 w-[calc(100vw-2rem)] sm:max-w-md">
           <AlertDialogHeader>
-            <div className="size-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+            <div className="size-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
               <AlertTriangle className="size-8 text-rose-500" />
             </div>
             <AlertDialogTitle className="text-2xl font-black text-center uppercase">
               ¿Eliminar instancia?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
+            <AlertDialogDescription className="text-center font-medium px-2">
               Solo se puede eliminar si no hay usuarios vinculados. De lo contrario, desactívela o remueva las asignaciones.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -182,7 +192,7 @@ export default function Instancias() {
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={isDeleting}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
+              className="bg-rose-500 hover:bg-rose-600 text-white font-bold"
             >
               {isDeleting && <Loader2 className="size-4 animate-spin mr-2" />}
               Confirmar

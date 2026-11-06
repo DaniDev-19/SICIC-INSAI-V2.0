@@ -214,94 +214,165 @@ export const createCliente = async (req, res) => {
   const tenantPrisma = req.db;
   const { cedula_rif, nombre, codigo_runsai, telefono, email, direccion_fiscal } = req.body;
 
-  const existing = await tenantPrisma.clientes.findUnique({ where: { cedula_rif } });
-  if (existing) {
-    return res.status(400).json({ status: 'error', message: 'Ya existe un cliente con esta cédula/RIF' });
-  }
+  try {
+    const cleanCedula = cedula_rif ? String(cedula_rif).trim() : '';
+    const cleanNombre = nombre ? String(nombre).trim() : '';
+    const cleanRunsai = (codigo_runsai && String(codigo_runsai).trim()) ? String(codigo_runsai).trim() : null;
+    const cleanEmail = (email && String(email).trim()) ? String(email).trim() : null;
+    const cleanTelefono = (telefono && String(telefono).trim()) ? String(telefono).trim() : null;
+    const cleanDireccion = (direccion_fiscal && String(direccion_fiscal).trim()) ? String(direccion_fiscal).trim() : null;
 
-  if (codigo_runsai) {
-    const runsaiExists = await tenantPrisma.clientes.findFirst({ where: { codigo_runsai } });
-    if (runsaiExists) {
-      return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+    const existing = await tenantPrisma.clientes.findUnique({ where: { cedula_rif: cleanCedula } });
+    if (existing) {
+      return res.status(400).json({ status: 'error', message: 'Ya existe un cliente con esta cédula/RIF' });
     }
-  }
 
-  if (email) {
-    const emailExists = await tenantPrisma.clientes.findFirst({ where: { email } });
-    if (emailExists) {
-      return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+    if (cleanRunsai) {
+      const runsaiExists = await tenantPrisma.clientes.findFirst({ where: { codigo_runsai: cleanRunsai } });
+      if (runsaiExists) {
+        return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+      }
     }
+
+    if (cleanEmail) {
+      const emailExists = await tenantPrisma.clientes.findFirst({ where: { email: cleanEmail } });
+      if (emailExists) {
+        return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+      }
+    }
+
+    const response = await tenantPrisma.clientes.create({
+      data: {
+        cedula_rif: cleanCedula,
+        nombre: cleanNombre,
+        codigo_runsai: cleanRunsai,
+        telefono: cleanTelefono,
+        email: cleanEmail,
+        direccion_fiscal: cleanDireccion,
+      },
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'CREAR',
+      modulo: 'Clientes',
+      payload_nuevo: response,
+    });
+
+    res.status(201).json({ status: 'success', data: response });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      const target = error.meta?.target;
+      const targetStr = Array.isArray(target) ? target.join(', ') : String(target || '');
+      if (targetStr.includes('codigo_runsai')) {
+        return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+      }
+      if (targetStr.includes('cedula_rif')) {
+        return res.status(400).json({ status: 'error', message: 'La cédula/RIF ya está registrada por otro cliente' });
+      }
+      if (targetStr.includes('email')) {
+        return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+      }
+      return res.status(400).json({ status: 'error', message: `Valor duplicado en campo único: ${targetStr}` });
+    }
+    console.error('Error creando cliente:', error);
+    res.status(500).json({ status: 'error', message: 'Error interno al registrar el cliente' });
   }
-
-  const response = await tenantPrisma.clientes.create({
-    data: { cedula_rif, nombre, codigo_runsai, telefono, email, direccion_fiscal },
-  });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'CREAR',
-    modulo: 'Clientes',
-    payload_nuevo: response,
-  });
-
-  res.status(201).json({ status: 'success', data: response });
 };
 
 export const updateCliente = async (req, res) => {
   const tenantPrisma = req.db;
   const { id } = req.params;
-  const data = req.body;
+  const rawData = req.body;
 
-  const existing = await tenantPrisma.clientes.findUnique({ where: { id: Number(id) } });
-  if (!existing) {
-    return res.status(404).json({ status: 'error', message: 'Cliente no encontrado' });
-  }
-
-  if (data.cedula_rif && data.cedula_rif !== existing.cedula_rif) {
-    const duplicate = await tenantPrisma.clientes.findUnique({ where: { cedula_rif: data.cedula_rif } });
-    if (duplicate) {
-      return res.status(400).json({ status: 'error', message: 'La cédula/RIF ya está registrada por otro cliente' });
+  try {
+    const existing = await tenantPrisma.clientes.findUnique({ where: { id: Number(id) } });
+    if (!existing) {
+      return res.status(404).json({ status: 'error', message: 'Cliente no encontrado' });
     }
-  }
 
-  if (data.codigo_runsai && data.codigo_runsai !== existing.codigo_runsai) {
-    const runsaiExists = await tenantPrisma.clientes.findFirst({
-      where: {
-        codigo_runsai: data.codigo_runsai,
-        id: { not: Number(id) }
+    const data = { ...rawData };
+
+    if (data.cedula_rif) {
+      data.cedula_rif = String(data.cedula_rif).trim();
+      if (data.cedula_rif !== existing.cedula_rif) {
+        const duplicate = await tenantPrisma.clientes.findUnique({ where: { cedula_rif: data.cedula_rif } });
+        if (duplicate) {
+          return res.status(400).json({ status: 'error', message: 'La cédula/RIF ya está registrada por otro cliente' });
+        }
       }
-    });
-    if (runsaiExists) {
-      return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
     }
-  }
 
-  if (data.email && data.email !== existing.email) {
-    const emailExists = await tenantPrisma.clientes.findFirst({
-      where: {
-        email: data.email,
-        id: { not: Number(id) },
-      },
-    });
-    if (emailExists) {
-      return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+    if ('codigo_runsai' in data) {
+      data.codigo_runsai = (data.codigo_runsai && String(data.codigo_runsai).trim()) ? String(data.codigo_runsai).trim() : null;
+      if (data.codigo_runsai && data.codigo_runsai !== existing.codigo_runsai) {
+        const runsaiExists = await tenantPrisma.clientes.findFirst({
+          where: {
+            codigo_runsai: data.codigo_runsai,
+            id: { not: Number(id) }
+          }
+        });
+        if (runsaiExists) {
+          return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+        }
+      }
     }
+
+    if ('email' in data) {
+      data.email = (data.email && String(data.email).trim()) ? String(data.email).trim() : null;
+      if (data.email && data.email !== existing.email) {
+        const emailExists = await tenantPrisma.clientes.findFirst({
+          where: {
+            email: data.email,
+            id: { not: Number(id) },
+          },
+        });
+        if (emailExists) {
+          return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+        }
+      }
+    }
+
+    if ('telefono' in data) {
+      data.telefono = (data.telefono && String(data.telefono).trim()) ? String(data.telefono).trim() : null;
+    }
+
+    if ('direccion_fiscal' in data) {
+      data.direccion_fiscal = (data.direccion_fiscal && String(data.direccion_fiscal).trim()) ? String(data.direccion_fiscal).trim() : null;
+    }
+
+    const response = await tenantPrisma.clientes.update({
+      where: { id: Number(id) },
+      data,
+    });
+
+    bitacoraService.registrar({
+      req,
+      accion: 'ACTUALIZAR',
+      modulo: 'Clientes',
+      payload_previo: existing,
+      payload_nuevo: response
+    });
+
+    res.status(200).json({ status: 'success', data: response });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      const target = error.meta?.target;
+      const targetStr = Array.isArray(target) ? target.join(', ') : String(target || '');
+      if (targetStr.includes('codigo_runsai')) {
+        return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+      }
+      if (targetStr.includes('cedula_rif')) {
+        return res.status(400).json({ status: 'error', message: 'La cédula/RIF ya está registrada por otro cliente' });
+      }
+      if (targetStr.includes('email')) {
+        return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+      }
+      return res.status(400).json({ status: 'error', message: `Valor duplicado en campo único: ${targetStr}` });
+    }
+    console.error('Error actualizando cliente:', error);
+    res.status(500).json({ status: 'error', message: 'Error interno al actualizar el cliente' });
   }
-
-  const response = await tenantPrisma.clientes.update({
-    where: { id: Number(id) },
-    data,
-  });
-
-  bitacoraService.registrar({
-    req,
-    accion: 'ACTUALIZAR',
-    modulo: 'Clientes',
-    payload_previo: existing,
-    payload_nuevo: response
-  });
-
-  res.status(200).json({ status: 'success', data: response });
 };
 
 export const deleteCliente = async (req, res) => {

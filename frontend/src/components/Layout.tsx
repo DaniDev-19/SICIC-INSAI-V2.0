@@ -47,6 +47,7 @@ function LayoutContent() {
         if (pathname.includes('/animales')) return 'Animales';
         if (pathname.includes('/reportes')) return 'Centro de Reportes y Metricas';
         if (pathname.includes('/bitacora')) return 'Bitacora';
+        if (pathname.includes('/configuraciones')) return 'Configuraciones del Sistema';
         if (pathname.includes('/usuarios')) return 'Gestión de Usuarios';
         if (pathname.includes('/instancias')) return 'Centro de instancias';
         if (pathname.includes('/perfil')) return 'Mi Perfil';

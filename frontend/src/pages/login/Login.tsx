@@ -124,7 +124,7 @@ export default function Login() {
         localStorage.setItem('token', res.data.token);
       }
 
-      toast.success('¡Bienvenido al sistema SICIC-INSAI!');
+      toast.success('¡Bienvenido al sistema SICIZ-INSAI!');
       navigate('/home');
     } catch (err: unknown) {
       const error = err as AxiosError<{ message?: string; data?: { retryAfterMs?: number } }>;
@@ -187,7 +187,7 @@ export default function Login() {
 
     queryClient.setQueryData(['auth-user'], res);
     toast.success('Sesión previa desconectada exitosamente', {
-      description: '¡Bienvenido al sistema SICIC-INSAI!',
+      description: '¡Bienvenido al sistema SICIZ-INSAI!',
     });
     navigate('/home');
   };
@@ -209,7 +209,7 @@ export default function Login() {
               ? '¡Sesión previa desconectada y acceso autorizado!'
               : '¡Autenticación MFA Exitosa!',
             {
-              description: 'Bienvenido al sistema SICIC-INSAI.',
+              description: 'Bienvenido al sistema SICIZ-INSAI.',
             }
           );
           navigate('/home');
@@ -291,12 +291,12 @@ export default function Login() {
               <div className="p-2 mb-2 animate-in fade-in zoom-in duration-1000">
                 <img
                   src={image.icon}
-                  title='SICIC-INSAI-V2.0 LOGO'
-                  alt="SICIC-INSAI-v2.0 LOGO"
+                  title='SICIZ-INSAI-V2.0 LOGO'
+                  alt="SICIZ-INSAI-v2.0 LOGO"
                   className="w-25 h-25 sm:w-25 sm:h-25 object-contain drop-shadow-xl"
                 />
               </div>
-              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight text-center">SICIC-INSAI</h1>
+              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight text-center">SICIZ-INSAI</h1>
               <p className="text-emerald-50/60 dark:text-emerald-50/40 mt-0.5 sm:mt-1 text-xs font-medium tracking-wide">Vigilancia y Control</p>
             </div>
 
@@ -509,7 +509,7 @@ export default function Login() {
 
           <div className="py-2.5 px-4 sm:py-3 sm:px-6 bg-white/5 dark:bg-black/20 border-t border-white/5 text-center">
             <p className="text-[11px] text-emerald-100/30 font-medium">
-              © {new Date().getFullYear()} SICIC-INSAI - Sistema de Información para el Control de Inspecciones de Campo
+              © {new Date().getFullYear()} SICIZ-INSAI - Sistema de información para el control de inspecciónes zoosanitarias
             </p>
           </div>
         </div>

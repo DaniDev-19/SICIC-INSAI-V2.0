@@ -191,13 +191,30 @@ export function ActaSiloModal({
   });
 
   const planificaciones = useMemo(() => {
-    const raw = planificacionesRes?.data || [];
+    let raw = planificacionesRes?.data ? [...planificacionesRes.data] : [];
+    const targetPlanId = actaSilo?.planificacion_id ?? actaSilo?.planificaciones?.id ?? initialPlanificacionId;
+
+    // Si estamos editando o hay planificacion inicial, asegurar que esté presente
+    if (targetPlanId) {
+      const exists = raw.some((p) => Number(p.id) === Number(targetPlanId));
+      if (!exists) {
+        if (actaSilo?.planificaciones) {
+          raw.unshift(actaSilo.planificaciones as any);
+        } else {
+          raw.unshift({
+            id: Number(targetPlanId),
+            codigo: `PLA-#${targetPlanId}`,
+            fecha_programada: actaSilo?.fecha_notificacion || new Date().toISOString(),
+          } as any);
+        }
+      }
+    }
+
     return raw.filter((p) => {
-      if (actaSilo && p.id === actaSilo.planificacion_id) return true;
-      if (initialPlanificacionId && p.id === initialPlanificacionId) return true;
+      if (targetPlanId && Number(p.id) === Number(targetPlanId)) return true;
       return !p.acta_silos || p.acta_silos.length === 0;
     });
-  }, [planificacionesRes, actaSilo, initialPlanificacionId]);
+  }, [planificacionesRes?.data, actaSilo, initialPlanificacionId]);
   const catalogEventos = eventosList || [];
   const catalogUnidades = unidadesList || [];
   const isLoading = isCreating || isUpdating;
@@ -246,8 +263,9 @@ export function ActaSiloModal({
     }
 
     if (actaSilo) {
+      const targetId = actaSilo.planificacion_id ?? actaSilo.planificaciones?.id;
       reset({
-        planificacion_id: String(actaSilo.planificacion_id || ''),
+        planificacion_id: targetId ? String(targetId) : '',
         fecha_notificacion: toDateInput(actaSilo.fecha_notificacion),
         semana_epid: actaSilo.semana_epid || '',
         lugar_ubicacion: actaSilo.lugar_ubicacion || '',
@@ -289,6 +307,13 @@ export function ActaSiloModal({
       });
     }
   }, [isOpen, actaSilo, initialPlanificacionId, reset]);
+
+  // Asegurar que la planificación se mantenga seleccionada al abrir o cuando carguen las opciones
+  useEffect(() => {
+    if (isOpen && actaSilo && actaSilo.planificacion_id) {
+      setValue('planificacion_id', String(actaSilo.planificacion_id), { shouldValidate: true });
+    }
+  }, [isOpen, actaSilo, planificaciones, setValue]);
 
   const handleNext = async () => {
     if (isAdvancing) return;
@@ -386,291 +411,303 @@ export function ActaSiloModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-y-auto border-none shadow-2xl glass-effect custom-scrollbar p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl lg:max-w-4xl max-h-[min(92vh,52rem)] overflow-hidden flex flex-col border-none shadow-2xl glass-effect p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <Warehouse className="size-5" />
             </div>
             <div>
               <DialogTitle className="text-xl font-black uppercase tracking-tight">
                 {isEditing ? 'Editar Acta Silo' : 'Registrar Acta Silo'}
               </DialogTitle>
-              <DialogDescription className="text-sm">
+              <DialogDescription className="text-xs sm:text-sm">
                 {isEditing ? 'Modifique los campos del acta' : 'Complete la planilla de registro e inspección de Silos'}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <Stepper steps={STEPS} currentStep={step} className="mb-6" />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 min-w-0 space-y-6">
+            <Stepper steps={STEPS} currentStep={step} className="mb-4 sm:mb-6" />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {step === 0 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <FieldLabel required>Planificación asociada</FieldLabel>
-                <Select
-                  value={watch('planificacion_id')}
-                  onValueChange={(v) => setValue('planificacion_id', v, { shouldValidate: true })}
-                  disabled={isEditing || loadingPlans}
-                >
-                  <SelectTrigger className="h-12 rounded-xl">
-                    <SelectValue placeholder={loadingPlans ? 'Cargando planificaciones...' : 'Seleccionar planificación'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {planificaciones.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)} className="cursor-pointer">
-                        {p.codigo || `#${p.id}`} — {p.solicitudes?.clientes?.nombre || 'Sin productor'} (
-                        {new Date(p.fecha_programada).toLocaleDateString('es-VE')})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.planificacion_id && (
-                  <p className="text-xs text-rose-500 font-medium">{errors.planificacion_id.message}</p>
+            {step === 0 && (
+              <div className="space-y-4 min-w-0 max-w-full">
+                <div className="space-y-2 min-w-0 max-w-full">
+                  <FieldLabel required>Planificación asociada</FieldLabel>
+                  <Select
+                    value={watch('planificacion_id') || undefined}
+                    onValueChange={(v) => setValue('planificacion_id', v, { shouldValidate: true })}
+                    disabled={isEditing || loadingPlans}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl w-full max-w-full min-w-0 [&>span]:truncate [&>span]:block">
+                      <SelectValue placeholder={loadingPlans ? 'Cargando planificaciones...' : 'Seleccionar planificación'} />
+                    </SelectTrigger>
+                    <SelectContent
+                      className="max-w-[calc(100vw-2rem)] sm:max-w-2xl"
+                      position="popper"
+                      sideOffset={6}
+                      align="start"
+                    >
+                      {watch('planificacion_id') && !planificaciones.some((p) => String(p.id) === String(watch('planificacion_id'))) && (
+                        <SelectItem value={String(watch('planificacion_id'))}>
+                          {actaSilo?.planificaciones?.codigo || `Planificación #${watch('planificacion_id')}`}
+                        </SelectItem>
+                      )}
+                      {planificaciones.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)} className="cursor-pointer">
+                          {p.codigo || `#${p.id}`} — {p.solicitudes?.clientes?.nombre || 'Sin productor'} (
+                          {new Date(p.fecha_programada).toLocaleDateString('es-VE')})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.planificacion_id && (
+                    <p className="text-xs text-rose-500 font-medium">{errors.planificacion_id.message}</p>
+                  )}
+                </div>
+
+                {selectedPlan && (
+                  <div className="p-3 sm:p-4 rounded-xl bg-muted/30 border border-border/50 text-xs sm:text-sm space-y-1 min-w-0 wrap-break-words">
+                    <p className="truncate">
+                      <span className="font-bold">Solicitud:</span> {selectedPlan.solicitudes?.codigo} —{' '}
+                      {selectedPlan.solicitudes?.descripcion}
+                    </p>
+                    <p className="truncate">
+                      <span className="font-bold">Establecimiento / Predio:</span>{' '}
+                      {selectedPlan.solicitudes?.propiedades?.nombre || '—'}
+                    </p>
+                    <p className="truncate">
+                      <span className="font-bold">Productor:</span>{' '}
+                      {selectedPlan.solicitudes?.clientes?.nombre || '—'}
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              {selectedPlan && (
-                <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm space-y-1">
-                  <p>
-                    <span className="font-bold">Solicitud:</span> {selectedPlan.solicitudes?.codigo} —{' '}
-                    {selectedPlan.solicitudes?.descripcion}
-                  </p>
-                  <p>
-                    <span className="font-bold">Establecimiento / Predio:</span>{' '}
-                    {selectedPlan.solicitudes?.propiedades?.nombre || '—'}
-                  </p>
-                  <p>
-                    <span className="font-bold">Productor:</span>{' '}
-                    {selectedPlan.solicitudes?.clientes?.nombre || '—'}
-                  </p>
-                </div>
-              )}
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel required>Fecha de Notificación</FieldLabel>
-                  <Input
-                    type="date"
-                    {...register('fecha_notificacion')}
-                    className="h-12 rounded-xl"
-                  />
-                  {errors.fecha_notificacion && (
-                    <p className="text-xs text-rose-500">{errors.fecha_notificacion.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Semana Epidemiológica</FieldLabel>
-                  <Input {...register('semana_epid')} placeholder="Ej. Semana 22" className="h-12 rounded-xl" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <FieldLabel>Ubicación / Sector Específico del Establecimiento</FieldLabel>
-                <Input {...register('lugar_ubicacion')} placeholder="Ej. Zona Industrial, Avenida principal" className="h-12 rounded-xl" />
-              </div>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel>N° de Silos</FieldLabel>
-                  <Input {...register('n_silos')} placeholder="Ej. 12" className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>N° de Galpones</FieldLabel>
-                  <Input {...register('n_galpones')} placeholder="Ej. 4" className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Evento Fitosanitario</FieldLabel>
-                  <Select
-                    value={watch('evento_id') || ''}
-                    onValueChange={(v) => setValue('evento_id', v)}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder="Seleccionar evento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogEventos.map((ev) => (
-                        <SelectItem key={ev.id} value={String(ev.id)} className="cursor-pointer">
-                          {ev.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel>Capacidad Instalada</FieldLabel>
-                  <Input {...register('c_instalada')} placeholder="Ej. 50,000 Ton" className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Capacidad Operativa</FieldLabel>
-                  <Input {...register('c_operativa')} placeholder="Ej. 35,000 Ton" className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Capacidad de Almacenamiento</FieldLabel>
-                  <Input {...register('c_almacenamiento')} placeholder="Ej. 30,000 Ton" className="h-12 rounded-xl" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel>Unidad de Medida del Rubro</FieldLabel>
-                  <Select
-                    value={watch('unidad_medida_id') || ''}
-                    onValueChange={(v) => setValue('unidad_medida_id', v)}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder="Seleccionar unidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogUnidades.map((un) => (
-                        <SelectItem key={un.id} value={String(un.id)} className="cursor-pointer">
-                          {un.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Destino y Objetivo del Rubro</FieldLabel>
-                  <Input {...register('destino_objetivo')} placeholder="Ej. Distribución Nacional" className="h-12 rounded-xl" />
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel>Cantidad Nacional</FieldLabel>
-                  <Input type="number" step="any" {...register('cant_nacional')} className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Cantidad Importada</FieldLabel>
-                  <Input type="number" step="any" {...register('cant_importado')} className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Cantidad Afectada</FieldLabel>
-                  <Input type="number" step="any" {...register('cant_afectado')} className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Afectación (%)</FieldLabel>
-                  <Input type="number" step="any" {...register('cant_afectado_porcentaje')} className="h-12 rounded-xl" />
-                  {errors.cant_afectado_porcentaje && (
-                    <p className="text-xs text-rose-500">{errors.cant_afectado_porcentaje.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <FieldLabel>Aspectos Constatados (Observaciones)</FieldLabel>
-                  <Textarea {...register('observaciones')} rows={3} className="rounded-xl resize-none" />
-                </div>
-                <div className="space-y-2">
-                  <FieldLabel>Medidas y Recomendaciones Ordenadas</FieldLabel>
-                  <Textarea {...register('medidas_recomendadas')} rows={3} className="rounded-xl resize-none" />
-                </div>
-              </div>
-
-              {existingFotosVisibles.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    Fotos registradas ({existingFotosVisibles.length})
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {existingFotosVisibles.map((foto) => (
-                      <div
-                        key={foto.id}
-                        className="relative aspect-square rounded-xl overflow-hidden border border-border group"
-                      >
-                        <img
-                          src={resolveMediaUrl(foto.imagen)}
-                          alt="Evidencia registrada"
-                          className="w-full h-full object-cover bg-muted"
-                          loading="lazy"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => handleRemoveExistingFoto(foto.id)}
-                          className="absolute top-2 right-2 size-8 opacity-90 cursor-pointer"
-                          title="Eliminar foto"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </div>
-                    ))}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <FieldLabel required>Fecha de Notificación</FieldLabel>
+                    <Input
+                      type="date"
+                      {...register('fecha_notificacion')}
+                      className="h-12 rounded-xl"
+                    />
+                    {errors.fecha_notificacion && (
+                      <p className="text-xs text-rose-500">{errors.fecha_notificacion.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Semana Epidemiológica</FieldLabel>
+                    <Input {...register('semana_epid')} placeholder="Ej. Semana 22" className="h-12 rounded-xl" />
                   </div>
                 </div>
-              )}
 
-              <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center">
-                <Upload className="size-10 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-semibold mb-2">
-                  Adjuntar fotos de evidencia (máx. 10)
-                </p>
-                <label className={cn('inline-flex', existingFotosVisibles.length >= 10 ? 'pointer-events-none opacity-50' : 'cursor-pointer')}>
-                  <span className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">
-                    Seleccionar fotos
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    disabled={existingFotosVisibles.length >= 10}
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </div>
-
-              {fotos.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    Nuevas fotos seleccionadas ({fotos.length})
-                  </p>
-                  <ul className="space-y-1">
-                    {fotos.map((file, i) => (
-                      <li
-                        key={`${file.name}-${i}`}
-                        className="flex items-center justify-between p-2 rounded-xl bg-muted/30 text-sm"
-                      >
-                        <span className="truncate font-medium">{file.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setFotos((prev) => prev.filter((_, idx) => idx !== i))}
-                          className="cursor-pointer shrink-0"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
+                  <FieldLabel>Ubicación / Sector Específico del Establecimiento</FieldLabel>
+                  <Input {...register('lugar_ubicacion')} placeholder="Ej. Zona Industrial, Avenida principal" className="h-12 rounded-xl" />
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-4 border-t border-border/50">
+            {step === 1 && (
+              <div className="space-y-4 min-w-0 max-w-full">
+                <div className="grid sm:grid-cols-3 gap-4 min-w-0 max-w-full">
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>N° de Silos</FieldLabel>
+                    <Input {...register('n_silos')} placeholder="Ej. 12" className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>N° de Galpones</FieldLabel>
+                    <Input {...register('n_galpones')} placeholder="Ej. 4" className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Evento Fitosanitario</FieldLabel>
+                    <Select
+                      value={watch('evento_id') || ''}
+                      onValueChange={(v) => setValue('evento_id', v)}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
+                        <SelectValue placeholder="Seleccionar evento" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+                        {catalogEventos.map((ev) => (
+                          <SelectItem key={ev.id} value={String(ev.id)} className="cursor-pointer">
+                            {ev.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-3 gap-4 min-w-0 max-w-full">
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Capacidad Instalada</FieldLabel>
+                    <Input {...register('c_instalada')} placeholder="Ej. 50,000 Ton" className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Capacidad Operativa</FieldLabel>
+                    <Input {...register('c_operativa')} placeholder="Ej. 35,000 Ton" className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Capacidad de Almacenamiento</FieldLabel>
+                    <Input {...register('c_almacenamiento')} placeholder="Ej. 30,000 Ton" className="h-12 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4 min-w-0 max-w-full">
+                <div className="grid sm:grid-cols-2 gap-4 min-w-0 max-w-full">
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Unidad de Medida del Rubro</FieldLabel>
+                    <Select
+                      value={watch('unidad_medida_id') || ''}
+                      onValueChange={(v) => setValue('unidad_medida_id', v)}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
+                        <SelectValue placeholder="Seleccionar unidad" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+                        {catalogUnidades.map((un) => (
+                          <SelectItem key={un.id} value={String(un.id)} className="cursor-pointer">
+                            {un.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 min-w-0 max-w-full">
+                    <FieldLabel>Destino y Objetivo del Rubro</FieldLabel>
+                    <Input {...register('destino_objetivo')} placeholder="Ej. Distribución Nacional" className="h-12 rounded-xl" />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <FieldLabel>Cantidad Nacional</FieldLabel>
+                    <Input type="number" step="any" {...register('cant_nacional')} className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Cantidad Importada</FieldLabel>
+                    <Input type="number" step="any" {...register('cant_importado')} className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Cantidad Afectada</FieldLabel>
+                    <Input type="number" step="any" {...register('cant_afectado')} className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Afectación (%)</FieldLabel>
+                    <Input type="number" step="any" {...register('cant_afectado_porcentaje')} className="h-12 rounded-xl" />
+                    {errors.cant_afectado_porcentaje && (
+                      <p className="text-xs text-rose-500">{errors.cant_afectado_porcentaje.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <FieldLabel>Aspectos Constatados (Observaciones)</FieldLabel>
+                    <Textarea {...register('observaciones')} rows={3} className="rounded-xl resize-none" />
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Medidas y Recomendaciones Ordenadas</FieldLabel>
+                    <Textarea {...register('medidas_recomendadas')} rows={3} className="rounded-xl resize-none" />
+                  </div>
+                </div>
+
+                {existingFotosVisibles.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                      Fotos registradas ({existingFotosVisibles.length})
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {existingFotosVisibles.map((foto) => (
+                        <div
+                          key={foto.id}
+                          className="relative aspect-square rounded-xl overflow-hidden border border-border group"
+                        >
+                          <img
+                            src={resolveMediaUrl(foto.imagen)}
+                            alt="Evidencia registrada"
+                            className="w-full h-full object-cover bg-muted"
+                            loading="lazy"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleRemoveExistingFoto(foto.id)}
+                            className="absolute top-2 right-2 size-8 opacity-90 cursor-pointer"
+                            title="Eliminar foto"
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center">
+                  <Upload className="size-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm font-semibold mb-2">
+                    Adjuntar fotos de evidencia (máx. 10)
+                  </p>
+                  <label className={cn('inline-flex', existingFotosVisibles.length >= 10 ? 'pointer-events-none opacity-50' : 'cursor-pointer')}>
+                    <span className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold">
+                      Seleccionar fotos
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      disabled={existingFotosVisibles.length >= 10}
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+
+                {fotos.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                      Nuevas fotos seleccionadas ({fotos.length})
+                    </p>
+                    <ul className="space-y-1">
+                      {fotos.map((file, i) => (
+                        <li
+                          key={`${file.name}-${i}`}
+                          className="flex items-center justify-between p-2 rounded-xl bg-muted/30 text-sm"
+                        >
+                          <span className="truncate font-medium">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setFotos((prev) => prev.filter((_, idx) => idx !== i))}
+                            className="cursor-pointer shrink-0"
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="p-4 sm:p-6 pt-3 sm:pt-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             {step > 0 ? (
-              <Button type="button" variant="outline" onClick={handleBack} className="cursor-pointer font-bold">
+              <Button type="button" variant="outline" onClick={handleBack} className="cursor-pointer font-bold h-11 px-4 sm:px-5 rounded-xl text-xs sm:text-sm">
                 <ChevronLeft className="size-4 mr-1" /> Anterior
               </Button>
             ) : (
-              <Button type="button" variant="ghost" onClick={onClose} className="cursor-pointer">
+              <Button type="button" variant="ghost" onClick={onClose} className="cursor-pointer font-bold h-11 px-4 sm:px-5 rounded-xl text-xs sm:text-sm">
                 Cancelar
               </Button>
             )}
@@ -681,7 +718,7 @@ export function ActaSiloModal({
                 type="button"
                 onClick={handleNext}
                 disabled={!isStepValid() || isLoading || isAdvancing}
-                className={cn('cursor-pointer ml-auto font-bold', (!isStepValid() || isLoading) && 'opacity-50 cursor-not-allowed')}
+                className={cn('cursor-pointer font-bold h-11 px-5 sm:px-6 rounded-xl text-xs sm:text-sm', (!isStepValid() || isLoading) && 'opacity-50 cursor-not-allowed')}
               >
                 Siguiente <ChevronRight className="size-4 ml-1" />
               </Button>
@@ -690,7 +727,7 @@ export function ActaSiloModal({
                 key="step-submit"
                 type="submit"
                 disabled={isLoading || !isStepValid() || submitLocked}
-                className={cn('cursor-pointer ml-auto font-bold bg-primary hover:bg-primary/95 text-white', (isLoading || !isStepValid() || submitLocked) && 'opacity-50 cursor-not-allowed')}
+                className={cn('cursor-pointer font-bold bg-primary hover:bg-primary/95 text-white h-11 px-5 sm:px-6 rounded-xl text-xs sm:text-sm shadow-md', (isLoading || !isStepValid() || submitLocked) && 'opacity-50 cursor-not-allowed')}
               >
                 {isLoading ? (
                   <>

@@ -61,7 +61,8 @@ export function PermissionsMatrix({
       </div>
 
       <div className="border border-border/50 rounded-2xl bg-card/60 dark:bg-card/40 overflow-hidden shadow-sm">
-        <Table>
+        <div className="overflow-x-auto custom-scrollbar">
+          <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 dark:bg-muted/40 border-b border-border/50">
               <TableHead className="px-6 py-4 text-[10px] font-black uppercase text-muted-foreground w-[250px]">
@@ -125,6 +126,7 @@ export function PermissionsMatrix({
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
       <p className="text-[10px] text-muted-foreground italic pl-2">
         * Los cambios en la matriz se aplicarán de forma inmediata tras guardar el rol.

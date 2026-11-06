@@ -26,6 +26,7 @@ import Inventario from './pages/inventario/Inventario';
 import Avales from './pages/avales/Avales';
 import ReportesPage from './pages/reportes/ReportesPage';
 import MailPage from './pages/mail/MailPage';
+import Configuraciones from './pages/configuraciones/Configuraciones';
 
 import PerfilPage from './pages/perfil/PerfilPage';
 
@@ -130,6 +131,9 @@ function App() {
                 </Route>
                 <Route element={<PermissionRoute screen="reportes" />}>
                   <Route path='reportes' element={<ReportesPage />} />
+                </Route>
+                <Route element={<PermissionRoute screen="configuraciones" />}>
+                  <Route path='configuraciones' element={<Configuraciones />} />
                 </Route>
                 <Route path='comunicados' element={<MailPage />} />
                 <Route path='perfil' element={<PerfilPage />} />

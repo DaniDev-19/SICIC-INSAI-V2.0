@@ -237,15 +237,22 @@ export const createPropiedad = async (req, res) => {
       let finalDueoId = due_o_id;
 
       if (productor) {
+        const cleanCedula = productor.cedula_rif ? String(productor.cedula_rif).trim() : null;
+        const cleanRunsai = (productor.codigo_runsai && String(productor.codigo_runsai).trim()) ? String(productor.codigo_runsai).trim() : null;
+        const cleanEmail = (productor.email && String(productor.email).trim()) ? String(productor.email).trim() : null;
+        const cleanTelefono = (productor.telefono && String(productor.telefono).trim()) ? String(productor.telefono).trim() : null;
+        const cleanDireccion = (productor.direccion_fiscal && String(productor.direccion_fiscal).trim()) ? String(productor.direccion_fiscal).trim() : null;
+        const cleanNombre = productor.nombre ? String(productor.nombre).trim() : '';
+
         const existingClient = await tx.clientes.findUnique({
-          where: { cedula_rif: productor.cedula_rif }
+          where: { cedula_rif: cleanCedula }
         });
 
         if (existingClient) {
-          if (productor.codigo_runsai && productor.codigo_runsai !== existingClient.codigo_runsai) {
+          if (cleanRunsai && cleanRunsai !== existingClient.codigo_runsai) {
             const runsaiConflict = await tx.clientes.findFirst({
               where: {
-                codigo_runsai: productor.codigo_runsai,
+                codigo_runsai: cleanRunsai,
                 id: { not: existingClient.id }
               }
             });
@@ -256,10 +263,10 @@ export const createPropiedad = async (req, res) => {
             }
           }
 
-          if (productor.email && productor.email !== existingClient.email) {
+          if (cleanEmail && cleanEmail !== existingClient.email) {
             const emailConflict = await tx.clientes.findFirst({
               where: {
-                email: productor.email,
+                email: cleanEmail,
                 id: { not: existingClient.id }
               }
             });
@@ -273,17 +280,17 @@ export const createPropiedad = async (req, res) => {
           const updatedClient = await tx.clientes.update({
             where: { id: existingClient.id },
             data: {
-              nombre: productor.nombre,
-              codigo_runsai: productor.codigo_runsai,
-              telefono: productor.telefono,
-              email: productor.email,
-              direccion_fiscal: productor.direccion_fiscal,
+              nombre: cleanNombre,
+              codigo_runsai: cleanRunsai,
+              telefono: cleanTelefono,
+              email: cleanEmail,
+              direccion_fiscal: cleanDireccion,
             }
           });
           finalDueoId = updatedClient.id;
         } else {
-          if (productor.codigo_runsai) {
-            const runsaiExists = await tx.clientes.findFirst({ where: { codigo_runsai: productor.codigo_runsai } });
+          if (cleanRunsai) {
+            const runsaiExists = await tx.clientes.findFirst({ where: { codigo_runsai: cleanRunsai } });
             if (runsaiExists) {
               const error = new Error('El código RUNSAI ya está registrado por otro cliente');
               error.statusCode = 400;
@@ -291,8 +298,8 @@ export const createPropiedad = async (req, res) => {
             }
           }
 
-          if (productor.email) {
-            const emailExists = await tx.clientes.findFirst({ where: { email: productor.email } });
+          if (cleanEmail) {
+            const emailExists = await tx.clientes.findFirst({ where: { email: cleanEmail } });
             if (emailExists) {
               const error = new Error('El correo electrónico ya está registrado por otro cliente');
               error.statusCode = 400;
@@ -302,12 +309,12 @@ export const createPropiedad = async (req, res) => {
 
           const newClient = await tx.clientes.create({
             data: {
-              cedula_rif: productor.cedula_rif,
-              nombre: productor.nombre,
-              codigo_runsai: productor.codigo_runsai,
-              telefono: productor.telefono,
-              email: productor.email,
-              direccion_fiscal: productor.direccion_fiscal,
+              cedula_rif: cleanCedula,
+              nombre: cleanNombre,
+              codigo_runsai: cleanRunsai,
+              telefono: cleanTelefono,
+              email: cleanEmail,
+              direccion_fiscal: cleanDireccion,
             }
           });
           finalDueoId = newClient.id;
@@ -320,8 +327,11 @@ export const createPropiedad = async (req, res) => {
         throw error;
       }
 
-      if (rif) {
-        const existingRif = await tx.propiedades.findFirst({ where: { rif } });
+      const cleanRif = (rif && String(rif).trim()) ? String(rif).trim() : null;
+      const cleanCodigoInsai = (codigo_insai && String(codigo_insai).trim()) ? String(codigo_insai).trim() : null;
+
+      if (cleanRif) {
+        const existingRif = await tx.propiedades.findFirst({ where: { rif: cleanRif } });
         if (existingRif) {
           const error = new Error('Ya existe una propiedad con este RIF');
           error.statusCode = 400;
@@ -329,8 +339,8 @@ export const createPropiedad = async (req, res) => {
         }
       }
 
-      if (codigo_insai) {
-        const existing = await tx.propiedades.findUnique({ where: { codigo_insai } });
+      if (cleanCodigoInsai) {
+        const existing = await tx.propiedades.findUnique({ where: { codigo_insai: cleanCodigoInsai } });
         if (existing) {
           const error = new Error('Ya existe una propiedad con este código INSAI');
           error.statusCode = 400;
@@ -338,7 +348,7 @@ export const createPropiedad = async (req, res) => {
         }
       }
 
-      let finalCodigo = codigo_insai;
+      let finalCodigo = cleanCodigoInsai;
       if (!finalCodigo) {
         const lastRecord = await tx.propiedades.findFirst({
           orderBy: { id: 'desc' },
@@ -352,7 +362,7 @@ export const createPropiedad = async (req, res) => {
         data: {
           codigo_insai: finalCodigo,
           nombre,
-          rif,
+          rif: cleanRif,
           punto_referencia,
           hectareas_totales,
           status: status || 'ACTIVA',
@@ -390,6 +400,25 @@ export const createPropiedad = async (req, res) => {
     if (error.statusCode === 400) {
       return res.status(400).json({ status: 'error', message: error.message });
     }
+
+    if (error.code === 'P2002') {
+      const target = error.meta?.target;
+      const targetStr = Array.isArray(target) ? target.join(', ') : String(target || '');
+      if (targetStr.includes('codigo_runsai')) {
+        return res.status(400).json({ status: 'error', message: 'El código RUNSAI ya está registrado por otro cliente' });
+      }
+      if (targetStr.includes('cedula_rif')) {
+        return res.status(400).json({ status: 'error', message: 'La cédula/RIF ya está registrada por otro cliente' });
+      }
+      if (targetStr.includes('email')) {
+        return res.status(400).json({ status: 'error', message: 'El correo electrónico ya está registrado por otro cliente' });
+      }
+      if (targetStr.includes('rif')) {
+        return res.status(400).json({ status: 'error', message: 'El RIF ya está registrado por otra propiedad' });
+      }
+      return res.status(400).json({ status: 'error', message: `Valor duplicado en campo único: ${targetStr}` });
+    }
+
     console.error('Error creando propiedad:', error);
     res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
   }

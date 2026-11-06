@@ -90,17 +90,17 @@ export function InsumoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[750px] max-w-4xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
-        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl lg:max-w-2xl bg-background/95 backdrop-blur-xl border-border rounded-2xl sm:rounded-3xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12 min-w-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
               <Package className="size-5" />
             </div>
-            <div>
-              <DialogTitle className="text-lg font-bold">
+            <div className="min-w-0">
+              <DialogTitle className="text-base sm:text-lg font-bold truncate">
                 {isEditing ? 'Editar Insumo Maestro' : 'Nuevo Insumo de Inventario'}
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground truncate">
                 {isEditing
                   ? 'Modifique los datos del producto o insumo registrado.'
                   : 'Complete los datos para agregar un nuevo insumo al catálogo global.'}
@@ -109,9 +109,9 @@ export function InsumoModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar px-6 py-4">
-            <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Código */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
@@ -155,15 +155,15 @@ export function InsumoModal({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Categoría */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="text-xs font-semibold text-muted-foreground">Categoría</label>
                 <Select value={categoriaId} onValueChange={setCategoriaId}>
-                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium">
+                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect max-h-52">
+                  <SelectContent className="glass-effect max-h-52 max-w-[calc(100vw-2rem)] sm:max-w-md">
                     {categorias.map((cat) => (
                       <SelectItem key={cat.id} value={String(cat.id)}>
                         {cat.nombre}
@@ -174,16 +174,16 @@ export function InsumoModal({
               </div>
 
               {/* Unidad de Medida */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <label className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                   <Ruler className="size-3.5" />
                   Unidad de Medida
                 </label>
                 <Select value={unidadMedidaId} onValueChange={setUnidadMedidaId}>
-                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium">
+                  <SelectTrigger className="h-10 bg-background/80 rounded-xl font-medium w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect max-h-52">
+                  <SelectContent className="glass-effect max-h-52 max-w-[calc(100vw-2rem)] sm:max-w-md">
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={String(u.id)}>
                         {u.nombre} {u.abreviatura ? `(${u.abreviatura})` : ''}
@@ -207,20 +207,20 @@ export function InsumoModal({
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
+              className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold shrink-0"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !nombre.trim()}
-              className="rounded-xl h-10 px-5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 cursor-pointer font-bold"
+              className="rounded-xl h-10 px-5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 cursor-pointer font-bold shrink-0"
             >
               {isSubmitting ? (
                 <>

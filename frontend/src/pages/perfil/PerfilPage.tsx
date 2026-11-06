@@ -104,13 +104,13 @@ export default function PerfilPage() {
   const isMfaActive = Boolean(user?.mfa_enabled);
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-32">
 
-      <div className="relative rounded-2xl bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-6 md:p-8 text-white shadow-xl overflow-hidden">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-linear-to-r from-emerald-800 via-teal-700 to-emerald-900 p-5 sm:p-8 text-white shadow-xl overflow-hidden">
         <div className="absolute right-0 top-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-200 p-1 shadow-2xl flex items-center justify-center">
+            <div className="w-24 h-24 rounded-2xl bg-linear-to-br from-emerald-400 to-teal-200 p-1 shadow-2xl flex items-center justify-center">
               <div className="w-full h-full rounded-[14px] bg-slate-900/90 backdrop-blur-md flex items-center justify-center text-3xl font-extrabold text-emerald-300 tracking-wider">
                 {initials}
               </div>
@@ -167,7 +167,7 @@ export default function PerfilPage() {
                   <Mail className="w-4 h-4 text-slate-400" />
                   Correo Registrado
                 </span>
-                <span className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[160px]">{user?.email}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-40">{user?.email}</span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800/60">
@@ -208,13 +208,13 @@ export default function PerfilPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/30 space-y-3">
+          <div className="bg-linear-to-br from-slate-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/30 space-y-3">
             <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
               <ShieldCheck className="w-5 h-5" />
               Seguridad de la Plataforma
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Tus datos personales y de acceso están cifrados y protegidos bajo la arquitectura multitenant de SICIC-INSAI.
+              Tus datos personales y de acceso están cifrados y protegidos bajo la arquitectura multitenant de SICIZ-INSAI.
             </p>
           </div>
         </div>
@@ -222,15 +222,14 @@ export default function PerfilPage() {
         {/* Content Tabs Area */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
           {/* Tab Navigation */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 p-2 gap-2">
+          <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 p-1.5 sm:p-2 gap-1.5 sm:gap-2">
             <button
               onClick={() => setActiveTab('info')}
               title="Información General"
-              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'info'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-              }`}
+              className={`cursor-pointer whitespace-nowrap shrink-0 sm:shrink sm:flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${activeTab === 'info'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                }`}
             >
               <User className="w-4 h-4" />
               Información General
@@ -239,11 +238,10 @@ export default function PerfilPage() {
             <button
               onClick={() => setActiveTab('security')}
               title="Cambiar Contraseña"
-              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'security'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-              }`}
+              className={`cursor-pointer whitespace-nowrap shrink-0 sm:shrink sm:flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${activeTab === 'security'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                }`}
             >
               <Lock className="w-4 h-4" />
               Cambiar Contraseña
@@ -252,11 +250,10 @@ export default function PerfilPage() {
             <button
               onClick={() => setActiveTab('mfa')}
               title="Seguridad MFA"
-              className={`cursor-pointer flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'mfa'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-              }`}
+              className={`cursor-pointer whitespace-nowrap shrink-0 sm:shrink sm:flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${activeTab === 'mfa'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                }`}
             >
               <ShieldAlert className="w-4 h-4" />
               Seguridad MFA

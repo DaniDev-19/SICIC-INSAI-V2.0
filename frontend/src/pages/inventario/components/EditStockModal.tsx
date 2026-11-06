@@ -82,44 +82,44 @@ export function EditStockModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl bg-background/95 backdrop-blur-xl border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
-        <DialogHeader className="space-y-2 p-6 pb-4 border-b border-border/50 shrink-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl bg-background/95 backdrop-blur-xl border-border rounded-2xl sm:rounded-3xl shadow-2xl p-0 overflow-hidden flex flex-col max-h-[min(92vh,48rem)]">
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12 min-w-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0">
               <Settings2 className="size-5" />
             </div>
-            <div>
-              <DialogTitle className="text-lg font-bold">
+            <div className="min-w-0">
+              <DialogTitle className="text-base sm:text-lg font-bold truncate">
                 Configurar Stock de Inventario
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground truncate">
                 Ajuste el stock mínimo, lote y vencimiento del registro seleccionado.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-4">
           {/* Info Card del registro actual */}
-          <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
+          <div className="bg-muted/30 border border-border rounded-xl p-3 sm:p-4 space-y-3">
             <div className="flex items-start gap-3">
               <Package className="size-4 text-emerald-500 mt-0.5 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Insumo / Producto</p>
-                <p className="text-sm font-bold text-foreground">
+                <p className="text-sm font-bold text-foreground truncate">
                   {stockItem.insumos?.nombre || `Insumo #${stockItem.insumo_id}`}
                 </p>
                 {stockItem.insumos?.codigo && (
-                  <p className="text-[11px] font-mono text-muted-foreground">{stockItem.insumos.codigo}</p>
+                  <p className="text-[11px] font-mono text-muted-foreground truncate">{stockItem.insumos.codigo}</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-start gap-3">
               <Building2 className="size-4 text-primary mt-0.5 shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Oficina / Sede</p>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold truncate">
                   {stockItem.oficinas?.nombre || `Sede #${stockItem.oficina_id}`}
                 </p>
               </div>
@@ -157,7 +157,7 @@ export function EditStockModal({
             {/* Stock Mínimo */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold flex items-center gap-1.5 text-foreground">
-                <AlertTriangle className="size-3.5 text-amber-500" />
+                <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
                 Stock Mínimo (Alerta crítica)
               </label>
               <p className="text-[11px] text-muted-foreground -mt-1">
@@ -170,11 +170,11 @@ export function EditStockModal({
                 value={stockMinimo}
                 onChange={(e) => setStockMinimo(e.target.value)}
                 placeholder="0"
-                className="h-11 bg-background/80 rounded-xl font-bold text-sm"
+                className="h-10 sm:h-11 bg-background/80 rounded-xl font-bold text-sm"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Lote */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground">Lote / Número de Serie</label>
@@ -182,7 +182,7 @@ export function EditStockModal({
                   placeholder="Ej. L-2026-05"
                   value={lote}
                   onChange={(e) => setLote(e.target.value)}
-                  className="h-11 bg-background/80 rounded-xl"
+                  className="h-10 sm:h-11 bg-background/80 rounded-xl"
                 />
               </div>
 
@@ -196,20 +196,20 @@ export function EditStockModal({
                   type="date"
                   value={fechaVencimiento}
                   onChange={(e) => setFechaVencimiento(e.target.value)}
-                  className="h-11 bg-background/80 rounded-xl text-sm"
+                  className="h-10 sm:h-11 bg-background/80 rounded-xl text-sm"
                 />
               </div>
             </div>
           </form>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-border/30 bg-muted/10 shrink-0 gap-2">
+        <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isSaving}
-            className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold"
+            className="rounded-xl h-10 px-4 text-xs cursor-pointer font-bold shrink-0"
           >
             Cancelar
           </Button>
@@ -217,7 +217,7 @@ export function EditStockModal({
             type="button"
             onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
             disabled={isSaving}
-            className="rounded-xl h-10 px-5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 cursor-pointer"
+            className="rounded-xl h-10 px-5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 cursor-pointer shrink-0"
           >
             {isSaving ? (
               <>

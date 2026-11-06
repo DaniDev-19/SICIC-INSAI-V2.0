@@ -25,7 +25,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
         <div className="flex flex-col items-center gap-2">
           <h2 className="text-emerald-50 font-bold tracking-[0.2em] text-xl animate-pulse">
-            SICIC-INSAI
+            SICIZ-INSAI
           </h2>
           <div className="h-1 w-12 bg-emerald-500/30 rounded-full overflow-hidden">
             <div

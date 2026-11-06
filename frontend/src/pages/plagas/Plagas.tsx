@@ -79,40 +79,40 @@ const Plagas: React.FC = () => {
     };
 
     return (
-        <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+        <div className="p-4 sm:p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+                <div className="space-y-1.5 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate('/home')}
-                            className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                            className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer shrink-0"
                         >
                             <ChevronLeft className="size-5" />
                         </Button>
-                        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text break-words">
                             Catálogo de Plagas
                         </h1>
                     </div>
-                    <p className="text-muted-foreground font-medium pl-12">
+                    <p className="text-muted-foreground font-medium text-xs sm:text-sm pl-9 sm:pl-12">
                         Administra los tipos de plagas disponibles para las inspecciones y programas.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto min-w-0">
+                    <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10 w-full sm:w-auto min-w-0">
                         <Select value={tipoId} onValueChange={setTipoId}>
                             <SelectTrigger
                                 title="Filtrar por Tipo"
-                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm focus:ring-primary/20 transition-all cursor-pointer justify-center [&>svg:last-child]:hidden shrink-0"
                             >
                                 <Database className={`size-4 ${tipoId !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                                 <span className="sr-only">
                                     <SelectValue placeholder="Tipo" />
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border top-9 right-15">
+                            <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
                                 <SelectItem value="all" className="cursor-pointer">Todos los Tipos</SelectItem>
                                 {tipos.map(t => (
                                     <SelectItem key={t.id} value={t.id.toString()} className="cursor-pointer">
@@ -122,28 +122,28 @@ const Plagas: React.FC = () => {
                             </SelectContent>
                         </Select>
 
-                        <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+                        <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
 
-                        <div className="w-full sm:w-[18rem] lg:w-[22rem]">
+                        <div className="flex-1 min-w-0 w-full sm:w-64 lg:w-80">
                             <SearchInput
                                 placeholder="Buscar plaga..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 onClear={() => setSearch('')}
-                                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background w-full"
                             />
                         </div>
                     </div>
 
                     <Can screen="plagas" action="create">
-                        <Button onClick={handleOpenCreate} title='crea una nueva plaga' variant={"primary"}>
-                        <Plus className="size-5 text-white" /> <span className="text-white">Nueva plaga</span>
-                    </Button>
+                        <Button onClick={handleOpenCreate} title='crea una nueva plaga' variant={"primary"} className="w-full sm:w-auto shrink-0 justify-center">
+                            <Plus className="size-5 text-white" /> <span className="text-white">Nueva plaga</span>
+                        </Button>
                     </Can>
                 </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+            <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect min-w-0">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/30 rounded-2xl border border-dashed m-4">
                         <div className="relative">

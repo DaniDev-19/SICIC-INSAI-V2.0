@@ -173,35 +173,35 @@ const Inventario: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-32">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 overflow-hidden sm:overflow-visible">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/home')}
-              className="rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 transition-all cursor-pointer"
+              className="shrink-0 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 transition-all cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
-              <Package className="size-8 text-emerald-500" />
-              Inventario de Insumos & Kardex
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+              <Package className="size-6 sm:size-8 text-emerald-500 shrink-0" />
+              <span className="break-words">Inventario de Insumos & Kardex</span>
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium pl-12">
+          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
             Control de productos, vacunas, insumos fitosanitarios y auditoría de movimientos por sede.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto shrink-0 min-w-0">
           <Can screen="insumos" action="create">
             <Button
               onClick={handleOpenCreateInsumo}
               variant="outline"
-              className="border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 rounded-xl font-bold shadow-sm cursor-pointer"
+              className="border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 rounded-xl font-bold shadow-sm cursor-pointer h-10 sm:h-11 px-4 text-xs sm:text-sm justify-center"
             >
               <Plus className="size-4 mr-2" /> Insumo Maestro
             </Button>
@@ -210,7 +210,7 @@ const Inventario: React.FC = () => {
           <Can screen="insumos" action="update">
             <Button
               onClick={() => handleOpenMovimientoModal()}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/20 cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/20 cursor-pointer h-10 sm:h-11 px-4 text-xs sm:text-sm justify-center"
             >
               <ArrowLeftRight className="size-4 mr-2" /> Movimiento Kardex
             </Button>
@@ -219,18 +219,18 @@ const Inventario: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* KPI 1 */}
-        <div className="bg-card p-5 rounded-2xl border border-border glass-effect flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-            <Package className="size-6" />
+        <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border glass-effect flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+            <Package className="size-5 sm:size-6" />
           </div>
-          <div>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate">
               CATÁLOGO MAESTRO
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-2xl font-black text-foreground">
+              <span className="text-xl sm:text-2xl font-black text-foreground">
                 {isLoadingKpis ? '...' : kpis?.totalInsumos || 0}
               </span>
               <span className="text-xs font-medium text-muted-foreground">items</span>
@@ -239,20 +239,20 @@ const Inventario: React.FC = () => {
         </div>
 
         {/* KPI 2 */}
-        <div className="bg-card p-5 rounded-2xl border border-border glass-effect flex items-center gap-4">
-          <div className={`p-3.5 rounded-2xl border ${
+        <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border glass-effect flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className={`p-3 sm:p-3.5 rounded-2xl border shrink-0 ${
             (kpis?.stockBajoCount || 0) > 0
               ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
               : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
           }`}>
-            <AlertTriangle className="size-6" />
+            <AlertTriangle className="size-5 sm:size-6" />
           </div>
-          <div>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate">
               STOCK CRÍTICO
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className={`text-2xl font-black ${
+              <span className={`text-xl sm:text-2xl font-black ${
                 (kpis?.stockBajoCount || 0) > 0 ? 'text-rose-500' : 'text-foreground'
               }`}>
                 {isLoadingKpis ? '...' : kpis?.stockBajoCount || 0}
@@ -263,16 +263,16 @@ const Inventario: React.FC = () => {
         </div>
 
         {/* KPI 3 */}
-        <div className="bg-card p-5 rounded-2xl border border-border glass-effect flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
-            <ArrowLeftRight className="size-6" />
+        <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border glass-effect flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 shrink-0">
+            <ArrowLeftRight className="size-5 sm:size-6" />
           </div>
-          <div>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate">
               KARDEX MOVIMIENTOS
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-2xl font-black text-foreground">
+              <span className="text-xl sm:text-2xl font-black text-foreground">
                 {isLoadingKpis ? '...' : kpis?.totalMovimientos || 0}
               </span>
               <span className="text-xs font-medium text-muted-foreground">reg.</span>
@@ -281,16 +281,16 @@ const Inventario: React.FC = () => {
         </div>
 
         {/* KPI 4 */}
-        <div className="bg-card p-5 rounded-2xl border border-border glass-effect flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-            <Building2 className="size-6" />
+        <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border glass-effect flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
+            <Building2 className="size-5 sm:size-6" />
           </div>
-          <div>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate">
               SEDES REGISTRADAS
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-2xl font-black text-foreground">
+              <span className="text-xl sm:text-2xl font-black text-foreground">
                 {oficinas?.length || 0}
               </span>
               <span className="text-xs font-medium text-muted-foreground">oficinas</span>
@@ -305,23 +305,23 @@ const Inventario: React.FC = () => {
         onValueChange={(val) => setActiveTab(val as any)}
         className="space-y-6"
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border pb-4">
-          <TabsList className="bg-muted/40 p-1 rounded-2xl border border-border glass-effect">
+        <div className="w-full overflow-x-auto custom-scrollbar no-scrollbar pb-1 border-b border-border">
+          <TabsList className="inline-flex sm:grid sm:grid-cols-3 w-max sm:w-full justify-start sm:justify-center bg-muted/40 p-1.5 rounded-2xl border border-border glass-effect gap-1">
             <TabsTrigger
               value="catalogo"
-              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all"
+              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all whitespace-nowrap"
             >
               <Package className="size-4 mr-2" /> Catálogo Maestro
             </TabsTrigger>
             <TabsTrigger
               value="existencias"
-              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all"
+              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all whitespace-nowrap"
             >
               <Warehouse className="size-4 mr-2" /> Existencias / Stock
             </TabsTrigger>
             <TabsTrigger
               value="kardex"
-              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all"
+              className="rounded-xl px-4 py-2 font-bold text-xs cursor-pointer data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all whitespace-nowrap"
             >
               <History className="size-4 mr-2" /> Kardex
             </TabsTrigger>
@@ -329,38 +329,40 @@ const Inventario: React.FC = () => {
         </div>
 
         {/* TAB 1: CATÁLOGO MAESTRO */}
-        <TabsContent value="catalogo" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border glass-effect">
-            <div className="w-full sm:w-[320px]">
-              <SearchInput
-                placeholder="Buscar por código, nombre o marca..."
-                value={insumoSearch}
-                onChange={(e) => {
-                  setInsumoSearch(e.target.value);
-                  setInsumoPage(1);
-                }}
-                onClear={() => {
-                  setInsumoSearch('');
-                  setInsumoPage(1);
-                }}
-                className="h-10 rounded-xl bg-background/80"
-              />
-            </div>
+        <TabsContent value="catalogo" className="space-y-4 min-w-0 max-w-full">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-2xl border border-border glass-effect min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 min-w-0">
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                <SearchInput
+                  placeholder="Buscar por código, nombre o marca..."
+                  value={insumoSearch}
+                  onChange={(e) => {
+                    setInsumoSearch(e.target.value);
+                    setInsumoPage(1);
+                  }}
+                  onClear={() => {
+                    setInsumoSearch('');
+                    setInsumoPage(1);
+                  }}
+                  className="h-10 rounded-xl bg-background/80 w-full"
+                />
+              </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold">
-                  <SelectValue placeholder="Todas las Categorías" />
-                </SelectTrigger>
-                <SelectContent className="glass-effect">
-                  <SelectItem value="ALL">Todas las Categorías</SelectItem>
-                  {categorias.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full sm:w-auto min-w-0">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                    <SelectValue placeholder="Todas las Categorías" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect">
+                    <SelectItem value="ALL">Todas las Categorías</SelectItem>
+                    {categorias.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {selectedInsumoIds.length > 0 && (
                 <Can screen="insumos" action="delete">
@@ -368,7 +370,7 @@ const Inventario: React.FC = () => {
                     variant="destructive"
                     size="sm"
                     onClick={() => setIsBulkDeleteOpen(true)}
-                    className="h-10 px-3 rounded-xl text-xs font-bold animate-in fade-in"
+                    className="h-10 px-3 rounded-xl text-xs font-bold animate-in fade-in shrink-0"
                   >
                     <Trash2 className="size-4 mr-1.5" />
                     Eliminar ({selectedInsumoIds.length})
@@ -378,7 +380,7 @@ const Inventario: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect min-w-0">
             <InsumosCatalogTable
               insumos={filteredInsumos}
               selectedInsumoIds={selectedInsumoIds}
@@ -404,44 +406,46 @@ const Inventario: React.FC = () => {
         </TabsContent>
 
         {/* TAB 2: EXISTENCIAS Y STOCK POR OFICINA */}
-        <TabsContent value="existencias" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border glass-effect">
-            <div className="w-full sm:w-[320px]">
-              <SearchInput
-                placeholder="Buscar por insumo o código..."
-                value={stockSearch}
-                onChange={(e) => {
-                  setStockSearch(e.target.value);
-                  setStockPage(1);
-                }}
-                onClear={() => {
-                  setStockSearch('');
-                  setStockPage(1);
-                }}
-                className="h-10 rounded-xl bg-background/80"
-              />
-            </div>
+        <TabsContent value="existencias" className="space-y-4 min-w-0 max-w-full">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-2xl border border-border glass-effect min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 min-w-0">
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                <SearchInput
+                  placeholder="Buscar por insumo o código..."
+                  value={stockSearch}
+                  onChange={(e) => {
+                    setStockSearch(e.target.value);
+                    setStockPage(1);
+                  }}
+                  onClear={() => {
+                    setStockSearch('');
+                    setStockPage(1);
+                  }}
+                  className="h-10 rounded-xl bg-background/80 w-full"
+                />
+              </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select
-                value={selectedOficinaId ? String(selectedOficinaId) : 'ALL'}
-                onValueChange={(val) => {
-                  setSelectedOficinaId(val === 'ALL' ? undefined : Number(val));
-                  setStockPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[220px] h-10 bg-background/80 rounded-xl text-xs font-semibold">
-                  <SelectValue placeholder="Todas las oficinas / sedes" />
-                </SelectTrigger>
-                <SelectContent className="glass-effect max-h-60">
-                  <SelectItem value="ALL">Todas las Sedes</SelectItem>
-                  {oficinas.map((of) => (
-                    <SelectItem key={of.id} value={String(of.id)}>
-                      {of.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full sm:w-auto min-w-0">
+                <Select
+                  value={selectedOficinaId ? String(selectedOficinaId) : 'ALL'}
+                  onValueChange={(val) => {
+                    setSelectedOficinaId(val === 'ALL' ? undefined : Number(val));
+                    setStockPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-[220px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                    <SelectValue placeholder="Todas las oficinas / sedes" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect max-h-60">
+                    <SelectItem value="ALL">Todas las Sedes</SelectItem>
+                    {oficinas.map((of) => (
+                      <SelectItem key={of.id} value={String(of.id)}>
+                        {of.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               <Button
                 variant={onlyLowStock ? 'destructive' : 'outline'}
@@ -449,7 +453,7 @@ const Inventario: React.FC = () => {
                   setOnlyLowStock(!onlyLowStock);
                   setStockPage(1);
                 }}
-                className="h-10 rounded-xl text-xs font-bold cursor-pointer"
+                className="h-10 rounded-xl text-xs font-bold cursor-pointer shrink-0 w-full sm:w-auto"
               >
                 <AlertTriangle className="size-4 mr-1.5" />
                 {onlyLowStock ? 'Mostrando Stock Crítico' : 'Filtrar Stock Crítico'}
@@ -457,7 +461,7 @@ const Inventario: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect min-w-0">
             <StockExistenciasTable
               stock={stock}
               isLoading={isLoadingStock}
@@ -478,48 +482,50 @@ const Inventario: React.FC = () => {
         </TabsContent>
 
         {/* TAB 3: KARDEX DE MOVIMIENTOS */}
-        <TabsContent value="kardex" className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border glass-effect">
-            <div className="w-full sm:w-[320px]">
-              <SearchInput
-                placeholder="Buscar por insumo, lote u observación..."
-                value={kardexSearch}
-                onChange={(e) => {
-                  setKardexSearch(e.target.value);
-                  setKardexPage(1);
-                }}
-                onClear={() => {
-                  setKardexSearch('');
-                  setKardexPage(1);
-                }}
-                className="h-10 rounded-xl bg-background/80"
-              />
-            </div>
+        <TabsContent value="kardex" className="space-y-4 min-w-0 max-w-full">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-2xl border border-border glass-effect min-w-0">
+            <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 min-w-0">
+              <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-64">
+                <SearchInput
+                  placeholder="Buscar por insumo, lote u observación..."
+                  value={kardexSearch}
+                  onChange={(e) => {
+                    setKardexSearch(e.target.value);
+                    setKardexPage(1);
+                  }}
+                  onClear={() => {
+                    setKardexSearch('');
+                    setKardexPage(1);
+                  }}
+                  className="h-10 rounded-xl bg-background/80 w-full"
+                />
+              </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select
-                value={kardexTipoMov}
-                onValueChange={(val) => {
-                  setKardexTipoMov(val);
-                  setKardexPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold">
-                  <SelectValue placeholder="Todos los tipos" />
-                </SelectTrigger>
-                <SelectContent className="glass-effect">
-                  <SelectItem value="ALL">Todos los Movimientos</SelectItem>
-                  <SelectItem value="ENTRADA">Entradas (+)</SelectItem>
-                  <SelectItem value="SALIDA">Salidas (-)</SelectItem>
-                  <SelectItem value="CONSUMO">Consumos Campo</SelectItem>
-                  <SelectItem value="AJUSTE_MAS">Ajuste Positivo (+)</SelectItem>
-                  <SelectItem value="AJUSTE_MENOS">Ajuste Negativo (-)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="w-full sm:w-auto min-w-0">
+                <Select
+                  value={kardexTipoMov}
+                  onValueChange={(val) => {
+                    setKardexTipoMov(val);
+                    setKardexPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                    <SelectValue placeholder="Todos los tipos" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-effect">
+                    <SelectItem value="ALL">Todos los Movimientos</SelectItem>
+                    <SelectItem value="ENTRADA">Entradas (+)</SelectItem>
+                    <SelectItem value="SALIDA">Salidas (-)</SelectItem>
+                    <SelectItem value="CONSUMO">Consumos Campo</SelectItem>
+                    <SelectItem value="AJUSTE_MAS">Ajuste Positivo (+)</SelectItem>
+                    <SelectItem value="AJUSTE_MENOS">Ajuste Negativo (-)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect">
+          <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden glass-effect min-w-0">
             <KardexMovimientosTable
               movimientos={movimientos}
               isLoading={isLoadingKardex}

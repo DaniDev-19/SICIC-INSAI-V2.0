@@ -149,35 +149,35 @@ export function ProgramaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-125 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="bg-primary/5 p-6 border-b border-border/50 shrink-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl glass-effect border-border shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0 min-w-0 max-w-full">
+          <div className="bg-primary/5 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border/50 shrink-0 pr-12 min-w-0">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <DialogTitle className="text-xl sm:text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">
                 {programa ? 'Editar Programa' : 'Nuevo Programa'}
               </DialogTitle>
-              <p className="text-muted-foreground text-sm font-medium">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">
                 {programa ? 'Actualiza los datos del programa existente.' : 'Define un nuevo programa para el control fitosanitario.'}
               </p>
             </DialogHeader>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
-            <div className="space-y-2">
-              <Label htmlFor="nombre" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+            <div className="space-y-1.5">
+              <Label htmlFor="nombre" className="text-xs sm:text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
                 Nombre del Programa
               </Label>
               <Input
                 id="nombre"
                 {...register('nombre')}
                 placeholder="Ej: Control de Plagas en Maíz"
-                className="h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm"
+                className="h-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm"
               />
               {errors.nombre && <span className="text-xs text-rose-500 font-medium ml-1">{errors.nombre.message as string}</span>}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tipo" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="tipo" className="text-xs sm:text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
                 Tipo de Programa
               </Label>
 
@@ -246,21 +246,21 @@ export function ProgramaModal({
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <Select
                   value={watchTipo || ''}
                   onValueChange={(value) => setValue('tipo_programa_id', value, { shouldValidate: true })}
                 >
-                  <SelectTrigger className="w-full h-12 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm">
+                  <SelectTrigger className="w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left h-11 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm">
                     <SelectValue placeholder="Seleccione un tipo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-62.5 min-w-var(--radix-select-trigger-width)" position="popper" sideOffset={2}>
+                  <SelectContent className="glass-effect border-border rounded-2xl shadow-2xl max-h-62.5 max-w-[calc(100vw-2rem)] sm:max-w-md" position="popper" sideOffset={2}>
                     {tipos.map((tipo) => (
                       <div key={tipo.id} className="group relative flex items-center">
                         <SelectItem value={tipo.id.toString()} className="rounded-xl cursor-pointer flex-1 pr-20">
                           {tipo.nombre}
                         </SelectItem>
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 z-10">
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex sm:hidden sm:group-hover:flex items-center gap-1 z-10">
                           <button
                             type="button"
                             disabled={deletingTipoId === tipo.id}
@@ -302,7 +302,7 @@ export function ProgramaModal({
                   variant="ghost"
                   size="icon"
                   onClick={() => { setShowNewTipo(!showNewTipo); setEditingTipoId(null); }}
-                  className="size-12 shrink-0 rounded-2xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                  className="size-11 shrink-0 rounded-2xl border border-dashed border-border hover:border-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
                   title="Crear nuevo tipo"
                 >
                   <Plus className="size-5" />
@@ -310,33 +310,33 @@ export function ProgramaModal({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="descripcion" className="text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="descripcion" className="text-xs sm:text-sm font-bold tracking-wide uppercase text-muted-foreground/80 ml-1">
                 Descripción
               </Label>
               <Textarea
                 id="descripcion"
                 {...register('descripcion')}
                 placeholder="Detalla los objetivos y alcance del programa..."
-                className="min-h-30 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none"
+                className="min-h-24 sm:min-h-30 rounded-2xl border-border bg-background/50 focus:bg-background transition-all shadow-sm resize-none text-xs sm:text-sm"
               />
             </div>
           </div>
 
-          <DialogFooter className="bg-muted/30 p-6 border-t border-border/50 gap-2 sm:gap-0 shrink-0">
+          <DialogFooter className="bg-muted/20 p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full gap-2">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={onClose}
               disabled={isLoading}
-              className="rounded-2xl h-12 px-6 font-bold hover:bg-background transition-all cursor-pointer"
+              className="rounded-xl h-10 px-4 text-xs font-bold hover:bg-background transition-all cursor-pointer shrink-0"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="rounded-2xl h-12 px-8 font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="rounded-xl h-10 px-5 text-xs font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               {isLoading ? (
                 <>

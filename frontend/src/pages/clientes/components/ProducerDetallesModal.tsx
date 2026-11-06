@@ -78,7 +78,7 @@ export function ProducerDetallesModal({
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="inline-flex items-center gap-1 text-xs font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-lg border border-primary/20">
                     <Fingerprint className="size-3.5" />
-                    V/J-{producer.cedula_rif}
+                    {/^[VvJjEeGgPp]-/.test(producer.cedula_rif) ? producer.cedula_rif.toUpperCase() : `V/J-${producer.cedula_rif}`}
                   </span>
                   {producer.codigo_runsai && (
                     <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-500/10 text-emerald-600 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">

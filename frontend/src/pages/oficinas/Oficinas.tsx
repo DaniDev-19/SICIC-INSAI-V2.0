@@ -110,92 +110,97 @@ const Oficinas: React.FC = () => {
     };
 
     return (
-        <div className="p-6 lg:p-10 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-32">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-3">
+        <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+                <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate('/home')}
-                            className="rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                            className="shrink-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
                         >
                             <ChevronLeft className="size-5" />
                         </Button>
-                        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
-                            <Building2 className="size-8 text-primary" />
-                            Gestión de Oficinas
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+                            <Building2 className="size-6 sm:size-8 text-primary shrink-0" />
+                            <span className="truncate">Gestión de Oficinas</span>
                         </h1>
                     </div>
-                    <p className="text-muted-foreground font-medium pl-12">
+                    <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12">
                         Administra las sedes, centros de validación y oficinas administrativas del INSAI.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center flex-nowrap gap-2 bg-muted/30 p-2 rounded-2xl border border-border backdrop-blur-sm shadow-xl ring-1 ring-white/10">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto md:shrink-0 min-w-0">
+                    <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center justify-center md:justify-normal gap-2 bg-muted/30 p-2 sm:p-2.5 rounded-2xl border border-border backdrop-blur-sm shadow-lg ring-1 ring-white/10 min-w-0 w-full">
                         {/* Filtro: Centro de Validación */}
                         <Select value={centroFilter} onValueChange={(v) => setCentroFilter(v as 'all' | 'si' | 'no')}>
                             <SelectTrigger
                                 title="Filtrar por Centro de Validación"
-                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center [&>svg:last-child]:hidden"
+                                className="w-10 h-10 p-0 rounded-xl bg-background/80 border-border hover:bg-background hover:shadow-sm transition-all cursor-pointer justify-center shrink-0 [&>svg:last-child]:hidden"
                             >
                                 <ShieldCheck className={`size-4 ${centroFilter !== 'all' ? 'text-primary' : 'text-muted-foreground'}`} />
                                 <span className="sr-only"><SelectValue /></span>
                             </SelectTrigger>
-                            <SelectContent className="glass-effect border-border rounded-xl top-9 right-15">                             <SelectItem value="all" className="cursor-pointer font-bold">TODAS LAS SEDES</SelectItem>
+                            <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border rounded-xl max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                                <SelectItem value="all" className="cursor-pointer font-bold">TODAS LAS SEDES</SelectItem>
                                 <SelectItem value="si" className="cursor-pointer text-emerald-600 font-bold">C. VALIDACIÓN: SÍ</SelectItem>
                                 <SelectItem value="no" className="cursor-pointer">C. VALIDACIÓN: NO</SelectItem>
                             </SelectContent>
                         </Select>
 
-                        <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+                        <div className="h-6 w-px bg-border mx-1 hidden sm:block shrink-0" />
 
-                        <div className="w-[220px] lg:w-[320px]">
+                        <div className="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-48 lg:min-w-[16rem]">
                             <SearchInput
                                 placeholder="Buscar por nombre o dirección..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 onClear={() => setSearch('')}
-                                className="h-10 rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
+                                className="h-10 w-full rounded-xl border-border bg-background/80 shadow-sm transition-all focus-within:bg-background"
                             />
                         </div>
                     </div>
 
                     <Can screen="oficinas" action="create">
-                        <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20">
-                        <Plus className="size-5 text-white" /> <span className="text-white">Nueva Oficina</span>
-                    </Button>
+                        <Button onClick={handleOpenCreate} variant="primary" className="shadow-lg shadow-primary/20 shrink-0 h-10 sm:h-11 w-full sm:w-auto justify-center">
+                            <Plus className="size-5 text-white" /> <span className="text-white">Nueva Oficina</span>
+                        </Button>
                     </Can>
                 </div>
             </div>
 
 
-            {/* Floating bulk delete bar - igual que en Roles */}
+            {/* Floating bulk delete bar - Mobile-First */}
             {selectedIds.length > 0 && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500">
-                    <div className="bg-card text-card-foreground px-6 py-4 rounded-2xl shadow-2xl border border-border flex items-center gap-8 glass-effect">
-                        <div className="flex items-center gap-3 pr-8 border-r border-border">
-                            <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20">
+                <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 duration-500 max-w-[calc(100vw-1.5rem)] sm:max-w-fit w-auto">
+                    <div className="bg-card text-card-foreground px-3 sm:px-6 py-2.5 sm:py-4 rounded-2xl shadow-2xl border border-border flex items-center justify-between gap-3 sm:gap-8 glass-effect">
+                        <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-8 border-r border-border shrink-0">
+                            <div className="size-7 sm:size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-primary/20 shrink-0">
                                 {selectedIds.length}
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Seleccionados</span>
+                            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-widest opacity-80 whitespace-nowrap">
+                                Seleccionados
+                            </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 title="Eliminar seleccionados"
-                                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit"
+                                className="font-bold cursor-pointer hover:bg-rose-500/20 hover:text-rose-500 transition-colors text-inherit text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                 onClick={() => setIsBulkDeleteOpen(true)}
                             >
-                                <Trash2 className="size-4 mr-2" /> Eliminar Masivo
+                                <Trash2 className="size-4 mr-1 sm:mr-2 text-rose-500 sm:text-inherit" />
+                                <span className="hidden xs:inline sm:inline">Eliminar Masivo</span>
+                                <span className="xs:hidden sm:hidden">Eliminar</span>
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 title="Limpiar selección"
-                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit"
+                                className="rounded-full hover:bg-muted dark:hover:bg-foreground/10 cursor-pointer text-inherit size-8 sm:size-9 shrink-0"
                                 onClick={() => setSelectedIds([])}
                             >
                                 <X className="size-4" />

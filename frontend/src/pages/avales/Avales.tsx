@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Can from '@/components/auth/Can';
+import { cn } from '@/lib/utils';
 import { useAvales } from '@/hooks/use-avales';
 import { avalesService } from '@/services/avales.service';
 import { AvalDetailsModal } from './components/AvalDetailsModal';
@@ -155,19 +156,19 @@ const Avales: React.FC = () => {
   }, 0);
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-5 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 pb-28 sm:pb-32 min-w-0 w-full overflow-hidden sm:overflow-visible">
 
       {/* ─── HEADER ────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-inner shrink-0">
-            <ShieldCheck className="size-8" />
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 border-b border-border/10 pb-4 md:pb-5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-inner shrink-0">
+            <ShieldCheck className="size-6 sm:size-8" />
           </div>
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-foreground leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight truncate">
               Avales Sanitarios
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
               Certificaciones Zoosanitarias · Inspecciones de Rebaño · Control de Inmunización
             </p>
           </div>
@@ -176,10 +177,10 @@ const Avales: React.FC = () => {
         <Can screen="avales" action="create">
           <Button
             onClick={handleOpenCreate}
-            className="rounded-2xl h-12 px-6 text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/25 cursor-pointer shrink-0 gap-2"
+            className="rounded-2xl h-11 sm:h-12 px-5 sm:px-6 text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/25 cursor-pointer shrink-0 gap-2 w-full sm:w-auto justify-center"
           >
             <Plus className="size-5" />
-            Emitir Nuevo Aval
+            <span>Emitir Nuevo Aval</span>
           </Button>
         </Can>
       </div>
@@ -237,7 +238,7 @@ const Avales: React.FC = () => {
 
       {/* ─── TOOLBAR ───────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-2xl glass-effect p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-auto sm:min-w-[340px]">
+        <div className="relative w-full sm:w-auto sm:min-w-85">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Buscar por n° aval, predio, médico..."
@@ -308,7 +309,130 @@ const Avales: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── Vista Móvil / Tablet (< lg): Tarjetas ── */}
+            <div className="lg:hidden p-3 sm:p-4 space-y-3">
+              {avales.map((aval: AvalSanitario) => {
+                const isVencido = aval.fecha_vencimiento
+                  ? new Date(aval.fecha_vencimiento) < new Date()
+                  : false;
+                const totalBov = aval.aval_hallazgos_bov_buf?.[0]?.total_bov_buf || 0;
+                const medico = aval.empleados_avales_sanitarios_medico_responsable_idToempleados;
+
+                return (
+                  <article
+                    key={aval.id}
+                    className="rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5 shadow-sm space-y-3.5 min-w-0 max-w-full overflow-hidden"
+                  >
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="size-11 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                          <FileCheck className="size-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-foreground text-sm sm:text-base font-mono truncate">{aval.numero_aval}</p>
+                          <p className="text-xs text-muted-foreground font-semibold truncate mt-0.5">
+                            {aval.codigo_predio || 'Sin predio especificado'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Badge
+                        className={cn(
+                          'shrink-0 text-[10px] font-bold',
+                          isVencido
+                            ? 'bg-rose-500/10 text-rose-600 border-rose-500/25'
+                            : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
+                        )}
+                      >
+                        {isVencido ? '● VENCIDO' : '● VIGENTE'}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Calendar className="size-3.5 text-primary shrink-0" />
+                        <span className="truncate">
+                          Vence: {aval.fecha_vencimiento ? new Date(aval.fecha_vencimiento).toLocaleDateString('es-VE') : '—'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Sparkles className="size-3.5 text-amber-500 shrink-0" />
+                        <span className="font-bold text-foreground truncate">
+                          {totalBov} cabezas
+                        </span>
+                      </div>
+
+                      {medico && (
+                        <div className="flex items-center gap-1.5 min-w-0 col-span-2">
+                          <User2 className="size-3.5 text-blue-500 shrink-0" />
+                          <span className="truncate text-foreground font-medium">
+                            Médico: {medico.nombre} {medico.apellido}
+                          </span>
+                        </div>
+                      )}
+
+                      {aval.inspecciones?.n_control && (
+                        <div className="text-[11px] text-muted-foreground col-span-2">
+                          Inspección: <span className="font-mono font-bold text-foreground">#{aval.inspecciones.n_control}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border/40">
+                      <Can screen="avales" action="see">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={generatingPdfId === aval.id}
+                          onClick={() => handleDownloadSinglePdf(aval.id)}
+                          title="Descargar PDF"
+                          className="size-9 p-0 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-600 text-emerald-600/80 cursor-pointer"
+                        >
+                          {generatingPdfId === aval.id ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+                        </Button>
+                      </Can>
+                      <Can screen="avales" action="see">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenDetails(aval)}
+                          title="Ver Ficha"
+                          className="size-9 p-0 rounded-xl hover:bg-blue-500/10 hover:text-blue-500 cursor-pointer"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                      </Can>
+                      <Can screen="avales" action="update">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenEdit(aval)}
+                          title="Editar"
+                          className="size-9 p-0 rounded-xl hover:bg-emerald-500/10 hover:text-emerald-500 cursor-pointer"
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                      </Can>
+                      <Can screen="avales" action="delete">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteAvalId(aval.id)}
+                          title="Eliminar"
+                          className="size-9 p-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </Can>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* ── Vista Escritorio (>= lg): Tabla tradicional ── */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>

@@ -309,42 +309,45 @@ export function AvalFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-6xl mx-auto bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl max-h-[95vh] overflow-y-auto p-8">
-        <DialogHeader className="border-b border-border pb-5">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-inner">
-              <FileCheck className="size-8" />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-5xl lg:max-w-6xl max-h-[min(92vh,56rem)] overflow-hidden flex flex-col p-0 border border-border shadow-2xl glass-effect">
+        <DialogHeader className="p-4 sm:p-6 pr-12 pb-3 sm:pb-4 border-b border-border/50 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-inner shrink-0">
+              <FileCheck className="size-6 sm:size-8" />
             </div>
-            <div>
-              <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-lg sm:text-2xl font-black tracking-tight text-foreground truncate">
                 {aval ? 'Editar Aval Sanitario' : 'Emitir Nuevo Aval Sanitario'}
               </DialogTitle>
-              <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">
+              <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5 line-clamp-2">
                 Diligencie los datos de la certificación zoosanitaria, inspección de rebaño y vacunas aplicadas.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-5 w-full bg-muted/60 p-1.5 rounded-2xl h-14 text-xs font-bold">
-              <TabsTrigger value="generales" className="rounded-xl py-2.5 font-bold tracking-wide">
-                1. Generales
-              </TabsTrigger>
-              <TabsTrigger value="rebaño" className="rounded-xl py-2.5 font-bold tracking-wide flex items-center justify-center gap-2">
-                2. Rebaño <Badge className="bg-amber-500 text-white font-black px-2 py-0.5 text-[11px] rounded-full">{totalBovBuf}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="especies" className="rounded-xl py-2.5 font-bold tracking-wide">
-                3. Otras Especies
-              </TabsTrigger>
-              <TabsTrigger value="biologicos" className="rounded-xl py-2.5 font-bold tracking-wide">
-                4. Biológicos
-              </TabsTrigger>
-              <TabsTrigger value="hierros" className="rounded-xl py-2.5 font-bold tracking-wide">
-                5. Hierros / Marcas
-              </TabsTrigger>
-            </TabsList>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-w-0 max-w-full">
+          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 min-w-0 space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0">
+              <div className="w-full overflow-x-auto no-scrollbar pb-1">
+                <TabsList className="inline-flex sm:grid sm:grid-cols-5 w-max sm:w-full justify-start sm:justify-center bg-muted/60 p-1.5 rounded-2xl h-auto text-xs font-bold gap-1 min-w-0">
+                  <TabsTrigger value="generales" className="shrink-0 px-3 sm:px-2 rounded-xl py-2 sm:py-2.5 font-bold tracking-wide whitespace-nowrap">
+                    1. Generales
+                  </TabsTrigger>
+                  <TabsTrigger value="rebaño" className="shrink-0 px-3 sm:px-2 rounded-xl py-2 sm:py-2.5 font-bold tracking-wide flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    2. Rebaño <Badge className="bg-amber-500 text-white font-black px-1.5 py-0.2 text-[10px] rounded-full">{totalBovBuf}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="especies" className="shrink-0 px-3 sm:px-2 rounded-xl py-2 sm:py-2.5 font-bold tracking-wide whitespace-nowrap">
+                    3. Otras Especies
+                  </TabsTrigger>
+                  <TabsTrigger value="biologicos" className="shrink-0 px-3 sm:px-2 rounded-xl py-2 sm:py-2.5 font-bold tracking-wide whitespace-nowrap">
+                    4. Biológicos
+                  </TabsTrigger>
+                  <TabsTrigger value="hierros" className="shrink-0 px-3 sm:px-2 rounded-xl py-2 sm:py-2.5 font-bold tracking-wide whitespace-nowrap">
+                    5. Hierros / Marcas
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
             {/* TAB 1: DATOS GENERALES */}
             <TabsContent value="generales" className="space-y-5 pt-5">
@@ -412,10 +415,10 @@ export function AvalFormModal({
                     Inspección de Origen (Solo Aprobadas / Seguimiento / Cuarentena)
                   </label>
                   <Select value={inspeccionId} onValueChange={setInspeccionId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border">
+                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
                       <SelectValue placeholder="Seleccione Inspección" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
                       <SelectItem value="none">Sin inspección vinculada (Directo)</SelectItem>
                       {inspeccionesElegibles.map((insp) => (
                         <SelectItem key={insp.id} value={String(insp.id)}>
@@ -426,15 +429,15 @@ export function AvalFormModal({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Stethoscope className="size-4 text-blue-500" /> Médico Veterinario
                   </label>
                   <Select value={medicoResponsableId} onValueChange={setMedicoResponsableId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border">
+                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
                       <SelectValue placeholder="Seleccione Médico" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
                       <SelectItem value="none">No asignado</SelectItem>
                       {empleados.map((emp) => (
                         <SelectItem key={emp.id} value={String(emp.id)}>
@@ -445,12 +448,12 @@ export function AvalFormModal({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <UserCheck className="size-4 text-purple-500" /> Inspector Jefe (OSA)
                   </label>
                   <Select value={jefeOsaId} onValueChange={setJefeOsaId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border">
+                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
                       <SelectValue placeholder="Seleccione Jefe OSA" />
                     </SelectTrigger>
                     <SelectContent>
@@ -704,10 +707,10 @@ export function AvalFormModal({
                             setOtrasEspecies(copy);
                           }}
                         >
-                          <SelectTrigger className="h-11 text-xs rounded-xl">
+                          <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                             <SelectValue placeholder="Seleccione Especie" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
                             {tiposAnimales.map((t) => (
                               <SelectItem key={t.id} value={String(t.id)}>
                                 {t.nombre}
@@ -819,10 +822,10 @@ export function AvalFormModal({
                               setBiologicos(copy);
                             }}
                           >
-                            <SelectTrigger className="h-11 text-xs rounded-xl">
+                            <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                               <SelectValue placeholder="Seleccione Vacuna" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
                               {insumos.map((ins) => (
                                 <SelectItem key={ins.id} value={String(ins.id)}>
                                   {ins.nombre} ({ins.codigo || 'Sin código'})
@@ -842,10 +845,10 @@ export function AvalFormModal({
                               setBiologicos(copy);
                             }}
                           >
-                            <SelectTrigger className="h-11 text-xs rounded-xl">
+                            <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
                               <SelectValue placeholder="Seleccione Oficina" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
                               {oficinas.map((of) => {
                                 const stockMatch = stock.find(
                                   (s) => s.insumo_id === bio.insumo_id && s.oficina_id === of.id
@@ -996,32 +999,33 @@ export function AvalFormModal({
               )}
             </TabsContent>
           </Tabs>
+        </div>
 
-          <DialogFooter className="pt-6 border-t border-border gap-3 sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="rounded-xl h-12 px-6 text-xs font-bold cursor-pointer"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="rounded-xl h-12 px-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-lg shadow-emerald-600/20"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" /> Guardando Aval...
-                </>
-              ) : (
-                'Emitir Aval Sanitario'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+        <DialogFooter className="p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full bg-background/50 backdrop-blur-sm gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="rounded-xl h-11 px-4 sm:px-6 text-xs font-bold cursor-pointer"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSaving}
+            className="rounded-xl h-11 px-5 sm:px-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-lg shadow-emerald-600/20"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" /> Guardando...
+              </>
+            ) : (
+              aval ? 'Guardar Cambios' : 'Emitir Aval Sanitario'
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
+);
 }

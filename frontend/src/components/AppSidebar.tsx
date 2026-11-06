@@ -131,7 +131,7 @@ export function AppSidebar() {
             <Leaf className="size-5" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-bold uppercase tracking-wider text-foreground">SICIC-INSAI</span>
+            <span className="truncate font-bold uppercase tracking-wider text-foreground">SICIZ-INSAI</span>
             <span className="truncate text-[12px] text-muted-foreground font-medium mt-1">{user?.username.toUpperCase() || 'V2.0'}</span>
           </div>
         </div>

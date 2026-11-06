@@ -83,17 +83,17 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-120 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)}>
-          <div className="bg-primary/5 p-6 border-b border-border/50">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="bg-primary/5 p-4 sm:p-6 pr-12 pb-4 border-b border-border/50 shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <Server className="size-6 text-primary" />
-                {isEditing ? 'Editar instancia' : 'Nueva instancia'}
+              <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2 truncate">
+                <Server className="size-5 sm:size-6 text-primary shrink-0" />
+                <span className="truncate">{isEditing ? 'Editar instancia' : 'Nueva instancia'}</span>
               </DialogTitle>
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-5">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1">
             <div className="space-y-2">
               <Label htmlFor="nombre_mostrable">Nombre visible *</Label>
               <Input
@@ -133,8 +133,8 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
               )}
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-border p-4">
-              <Label htmlFor="status">Instancia activa</Label>
+            <div className="flex items-center justify-between rounded-xl border border-border p-3 sm:p-4 bg-muted/10">
+              <Label htmlFor="status" className="cursor-pointer">Instancia activa</Label>
               <Switch
                 id="status"
                 checked={status}
@@ -143,11 +143,11 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
             </div>
           </div>
 
-          <DialogFooter className="p-6 border-t border-border/50 gap-2">
-            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 bg-muted/20 shrink-0 flex flex-row items-center justify-between w-full gap-2">
+            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer">
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" disabled={isLoading} className="rounded-xl">
+            <Button type="submit" variant="primary" disabled={isLoading} className="rounded-xl h-10 sm:h-11 px-4 sm:px-6 cursor-pointer font-bold">
               {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
               {isEditing ? 'Guardar' : 'Crear'}
             </Button>
