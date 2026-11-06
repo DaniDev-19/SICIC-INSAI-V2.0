@@ -17,7 +17,28 @@ export default defineConfig({
         ],
       },
     }),
-    tailwindcss()
+    tailwindcss(),
+    {
+      name: 'apk-mime-type',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.includes('.apk')) {
+            res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+            res.setHeader('Content-Disposition', 'attachment; filename="SICIC-INSAI-v2.0.apk"');
+          }
+          next();
+        });
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.includes('.apk')) {
+            res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+            res.setHeader('Content-Disposition', 'attachment; filename="SICIC-INSAI-v2.0.apk"');
+          }
+          next();
+        });
+      }
+    }
   ],
   server: {
     host: true,

@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { AppSidebar } from "@/components/AppSidebar"
+import { BottomNav } from "@/components/BottomNav"
 import { Separator } from "@/components/ui/separator"
 import HelpButton from "@/components/HelpButton"
 import {
@@ -51,7 +52,8 @@ function LayoutContent() {
         if (pathname.includes('/usuarios')) return 'Gestión de Usuarios';
         if (pathname.includes('/instancias')) return 'Centro de instancias';
         if (pathname.includes('/perfil')) return 'Mi Perfil';
-        return 'SICIC INSAI V2.0';
+        if (pathname.includes('/help')) return 'Centro de Ayuda';
+        return 'SICIC INSAI';
     };
 
     return (
@@ -61,16 +63,16 @@ function LayoutContent() {
                 <header className="flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-4 md:px-6 transition-all bg-background gap-2">
                     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                         <SidebarTrigger
-                            className="-ml-1 cursor-pointer shrink-0"
+                            className="-ml-1 cursor-pointer shrink-0 hidden md:flex"
                             title={state === 'expanded' ? 'Ocultar barra lateral' : 'Abrir barra lateral'}
                         />
-                        <Separator orientation="vertical" className="mr-2 h-4 hidden sm:block" />
+                        <Separator orientation="vertical" className="mr-2 h-4 hidden md:block" />
                         <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground md:text-xl truncate">
                             {getPageTitle(location.pathname)}
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-8 sm:gap-4 md:gap-4 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                         <GlobalSearch />
                         <NotificationBell />
                         <HelpButton />
@@ -78,10 +80,11 @@ function LayoutContent() {
                     </div>
                 </header>
 
-                <main className="flex flex-1 flex-col overflow-y-auto bg-background/50">
+                <main className="flex flex-1 flex-col overflow-y-auto bg-background/50 pb-20 md:pb-0">
                     <Outlet />
                 </main>
             </SidebarInset>
+            <BottomNav />
         </>
     )
 }

@@ -1,8 +1,30 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
+export const getBaseApiUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const customApi = localStorage.getItem('custom_api_url');
+    if (customApi) return customApi;
+
+    const host = window.location.hostname;
+    // Si navegamos desde una IP (por ejemplo 192.168.31.46 desde el teléfono móvil)
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      const proto = window.location.protocol || 'http:';
+      return `${proto}//${host}:4000/api`;
+    }
+  }
+
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl;
+  }
+
+  // Fallback para red local móvil y APK
+  return 'http://192.168.31.46:4000/api';
+};
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL: getBaseApiUrl(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -10,6 +32,8 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.baseURL = getBaseApiUrl();
+
   if (config.data instanceof FormData) {
     delete config.headers['Content-Type'];
   }

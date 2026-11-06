@@ -1,0 +1,31 @@
+{
+  "short_name": "SICIC-INSAI",
+  "name": "SICIC-INSAI: Sistema de Información para el Control de Inspecciones de Campo",
+  "description": "Sistema de Información para el Control y Registro de Inspecciones de Campo, Vigilancia Epidemiológica, Fitosanitaria y Zoosanitaria del INSAI.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0d1f18",
+  "theme_color": "#00965e",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "es-VE",
+  "categories": [
+    "government",
+    "productivity",
+    "business"
+  ]
+}

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/home/Home';
 import Roles from './pages/roles/Roles';
@@ -12,6 +12,7 @@ import Plagas from './pages/plagas/Plagas';
 import Enfermedades from './pages/enfermedades/Enfermedades';
 import HelpMe from './pages/help/Help';
 import Login from './pages/login/Login';
+import LandingPage from './pages/landing/LandingPage';
 import Solicitudes from './pages/solicitudes/Solicitudes';
 import Clientes from './pages/clientes/Clientes';
 import Propiedades from './pages/propiedades/Propiedades';
@@ -57,7 +58,7 @@ function App() {
           <Toaster position="top-right" richColors closeButton />
           <Routes>
             <Route element={<PublicRoute />}>
-              <Route path='/' element={<Navigate to="/login" replace />} />
+              <Route path='/' element={<LandingPage />} />
               <Route path='/login' element={<Login />} />
             </Route>
 
