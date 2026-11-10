@@ -1,7 +1,7 @@
-# Presentación del Proyecto SICIC-INSAI V2.0
+# Presentación del Proyecto SICIZ-INSAI V2.0
 
 ## 1. Descripción general
-SICIC-INSAI V2.0 es un sistema integral diseñado para sistematizar y controlar las inspecciones de campo del Instituto Nacional de Salud Agrícola Integral (INSAI). El proyecto centraliza el flujo de trabajo de solicitudes, planificaciones, inspecciones y resultados técnicos, con trazabilidad de insumos y una arquitectura segura y escalable.
+SICIZ-INSAI V2.0 es un sistema integral diseñado para sistematizar y controlar las inspecciones de campo del Instituto Nacional de Salud Agrícola Integral (INSAI). El proyecto centraliza el flujo de trabajo de solicitudes, planificaciones, inspecciones y resultados técnicos, con trazabilidad de insumos y una arquitectura segura y escalable.
 
 ## 2. Objetivos principales
 - Digitalizar el flujo de inspecciones fitosanitarias.

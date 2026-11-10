@@ -1,6 +1,6 @@
-# SICIC-INSAI V2.0 - Backend Core
+# SICIZ-INSAI V2.0 - Backend Core
 
-Motor de servicios backend para el Sistema Integral de Control de Insumos y Certificaciones (SICIC) del INSAI. Implementado con una arquitectura **Multi-Tenant dinámica** y **PostgreSQL**.
+Motor de servicios backend para el Sistema Integral de Control de Insumos y Certificaciones (SICIZ) del INSAI. Implementado con una arquitectura **Multi-Tenant dinámica** y **PostgreSQL**.
 
 ## Arquitectura
 

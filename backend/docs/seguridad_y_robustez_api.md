@@ -1,4 +1,4 @@
-# Seguridad y Robustez de la API: Idempotencia y Rate Limiting
+﻿# Seguridad y Robustez de la API: Idempotencia y Rate Limiting
 
 Este documento detalla los mecanismos implementados para garantizar la integridad de los datos, evitar la duplicidad de registros y proteger la API contra abusos o ataques de denegación de servicio (DoS).
 
@@ -82,4 +82,4 @@ graph TD
 ---
 
 **Seguridad y Robustez de Datos**  
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

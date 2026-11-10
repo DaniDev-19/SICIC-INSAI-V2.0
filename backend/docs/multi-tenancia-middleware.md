@@ -1,9 +1,9 @@
-# Arquitectura de Multi-Tenancia con Middleware
+﻿# Arquitectura de Multi-Tenancia con Middleware
 
 Este documento explica el funcionamiento del sistema de multi-tenancia (multi-tenant) implementado en el backend, detallando la refactorización realizada para centralizar las conexiones a bases de datos dinámicas.
 
 ## 1. Concepto General
-El sistema SICIC-INSAI maneja múltiples instancias operativas (bases de datos independientes por inquilino). Para evitar código repetitivo en los controladores, se utiliza un **Middleware de Express** que identifica automáticamente la base de datos correcta y la inyecta en la petición.
+El sistema SICIZ-INSAI maneja múltiples instancias operativas (bases de datos independientes por inquilino). Para evitar código repetitivo en los controladores, se utiliza un **Middleware de Express** que identifica automáticamente la base de datos correcta y la inyecta en la petición.
 
 ## 2. Componentes Arquitectónicos
 
@@ -64,4 +64,4 @@ export const getDatos = async (req, res) => {
 3. **Manejo Centralizado de Errores:** Si un usuario no tiene una instancia seleccionada, el middleware corta la ejecución y lanza un error capturado por el `errorHandler` global.
 4. **Mantenibilidad:** Si mañana cambia la forma de obtener el nombre de la base de datos, solo se debe modificar un archivo (`dbConex.js`).
 
-_Arquitectura de Backend - SICIC-INSAI V2.0_
+_Arquitectura de Backend - SICIZ-INSAI V2.0_

@@ -247,7 +247,7 @@ function SiloFooter({
     <View style={styles.pageFooter}>
       <Image src={logoUrl} style={styles.footerLogo} />
       <Text>
-        SICIC • INSAI SILOS • {data.generado_el} • Página {page} de 2
+        SICIZ • INSAI SILOS • {data.generado_el} • Página {page} de 2
       </Text>
     </View>
   );

@@ -92,8 +92,8 @@ app.use('/api', (req, res, next) => {
 
 app.use('/uploads', express.static(path.resolve('uploads')));
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Servidor SICIC-INSAI online' });
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Servidor SICIZ-INSAI online' });
 });
 
 app.use('/api/auth', authLimiter, authRoutes);

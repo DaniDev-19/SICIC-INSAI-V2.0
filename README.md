@@ -1,5 +1,5 @@
-# SICIC-INSAI V2.0 
-### Sistema de Información para el Control de Inspecciones de Campo
+# SICIZ-INSAI V2.0 
+### Sistema de Información para el Control de Inspecciones Zoosanitarias y de Campo
 
 [![Vercel](https://img.shields.io/badge/Production-Live-success?logo=vercel&logoColor=white)](https://sicic-insai-v2-0.vercel.app)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-6DA55F?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -9,7 +9,7 @@
 
 ## Sobre el Proyecto
 
-**SICIC-INSAI V2.0** es la evolución integral de la plataforma de gestión fitosanitaria del **Instituto Nacional de Salud Agrícola Integral (INSAI)**. Diseñado como una solución robusta y escalable, este sistema centraliza y digitaliza el flujo de trabajo de las inspecciones agrícolas en Venezuela, permitiendo una trazabilidad total de las actividades de campo y optimizando la toma de decisiones basada en datos reales.
+**SICIZ-INSAI V2.0** es la evolución integral de la plataforma de gestión fitosanitaria y zoosanitaria del **Instituto Nacional de Salud Agrícola Integral (INSAI)**. Diseñado como una solución robusta y escalable, este sistema centraliza y digitaliza el flujo de trabajo de las inspecciones agrícolas y ganaderas en Venezuela, permitiendo una trazabilidad total de las actividades de campo y optimizando la toma de decisiones basada en datos reales.
 
 Esta versión 2.0 unifica el ecosistema tecnológico en una arquitectura **Multi-Tenant dinámica**, mejorando significativamente el rendimiento, la experiencia de usuario y la integridad de la información operativa.
 
@@ -20,7 +20,7 @@ Esta versión 2.0 unifica el ecosistema tecnológico en una arquitectura **Multi
 | Versión | Enfoque | Logros Clave |
 | :--- | :--- | :--- |
 | **V1.0** | Digitalización Inicial | Sentó las bases del modelo de datos fitosanitario y el registro básico de inspecciones. |
-| **V2.0 (Actual)** | **Sistema Integral - SICIC** | Arquitectura unificada, optimización de consultas, gestión dinámica de instancias y UI/UX premium. |
+| **V2.0 (Actual)** | **Sistema Integral - SICIZ** | Arquitectura unificada, optimización de consultas, gestión dinámica de instancias y UI/UX premium. |
 
 ---
 
@@ -37,17 +37,18 @@ El sistema se divide en una arquitectura desacoplada para máxima eficiencia:
 
 ### **Frontend (Interface)**
 - **Framework:** React.js + TypeScript.
-- **Móvil / PWA:** Capacitor 8 (Android) + Progressive Web App (Service Worker y Web Manifest).
+- **Móvil / PWA:** Progressive Web App (PWA) instalable y auto-actualizable con Service Worker y Web Manifest.
 - **Estilos:** Tailwind CSS 4 con arquitectura Mobile-First.
 - **Gestión de Estado:** TanStack Query v5, Context API y Hooks personalizados.
 
 ---
 
-## 📱 Aplicación Móvil y PWA (Capacitor / APK)
+## 📱 Aplicación Móvil (PWA Instalable y Auto-actualizable)
 
-El sistema cuenta con soporte para dispositivos móviles mediante **Progressive Web App (PWA)** y compilación nativa en **APK para Android** con **Capacitor**:
-* **Guía de Compilación de APK y PWA:** [Consulta la Guía Completa de Capacitor y APK en docs/CAPACITOR_PWA_GUIA.md](docs/CAPACITOR_PWA_GUIA.md)
-* **Descarga de APK en el Sistema:** Disponible en la Landing Page (`/`), en la pantalla de Login (`/login`) y en el Centro de Ayuda (`/home/help`).
+El sistema cuenta con soporte completo para dispositivos móviles mediante **Progressive Web App (PWA)**:
+* **Instalación Directa:** Banner interactivo institucional en el navegador para instalar en pantalla de inicio en 1 toque.
+* **Auto-actualización Instantánea:** El Service Worker detecta nuevas versiones y se actualiza automáticamente sin necesidad de recompilar ni descargar APKs externos.
+* **Diseño Mobile-First:** Barra de navegación inferior táctil tipo Play Store y formularios adaptados a campo.
 
 ---
 

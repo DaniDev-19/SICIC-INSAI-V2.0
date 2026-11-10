@@ -1,4 +1,4 @@
-# Motor de Generación de Reportes PDF y Excel - SICIC-INSAI V2.0
+﻿# Motor de Generación de Reportes PDF y Excel - SICIZ-INSAI V2.0
 
 Este documento describe la arquitectura de exportación y generación de documentos oficiales en formatos **PDF** (usando `pdfkit`) y **Excel** (usando `exceljs`) dentro del backend.
 
@@ -73,4 +73,4 @@ res.end();
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

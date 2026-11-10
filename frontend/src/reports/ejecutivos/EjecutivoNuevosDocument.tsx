@@ -401,7 +401,7 @@ export function CaracStatalPdfDocument({
 
         {/* Pie de Página Oficial */}
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL DEL INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI) • SICIC</Text>
+          <Text>DOCUMENTO OFICIAL DEL INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI) • SICIZ</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
@@ -466,7 +466,7 @@ export function RankingClientesPdfDocument({
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
@@ -557,7 +557,7 @@ export function InspeccionesEmpleadoPdfDocument({
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
@@ -637,7 +637,7 @@ export function AvalesSanitariosPdfDocument({
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
@@ -709,7 +709,7 @@ export function InspeccionesSilosPdfDocument({
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>
@@ -800,7 +800,7 @@ export function EmpleadosProgramasPdfDocument({
         </View>
 
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>

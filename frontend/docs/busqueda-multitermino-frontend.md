@@ -1,4 +1,4 @@
-# Búsqueda Multitérmino e Interfaz Global - SICIC-INSAI V2.0
+﻿# Búsqueda Multitérmino e Interfaz Global - SICIZ-INSAI V2.0
 
 Este documento detalla la implementación en el cliente web de la **Búsqueda Multitérmino Tokenizada**, la integración de Custom Hooks con **TanStack Query** y el funcionamiento del modal de **Búsqueda Global (Command Palette)**.
 
@@ -70,4 +70,4 @@ Al seleccionar cualquier elemento del modal, la interfaz realiza la navegación 
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

@@ -1,5 +1,5 @@
 {
-  "name": "backend-sicic-insai",
+  "name": "backend-siciz-insai",
   "version": "2.0.0",
   "main": "index.js",
   "type": "module",
@@ -15,6 +15,9 @@
     "prisma:pull:client": "prisma db pull --schema=prisma/schema.prisma",
     "prisma:pull:master": "prisma db pull --schema=prisma/master.prisma",
     "prisma:pull": "npm run prisma:pull:client && npm run prisma:pull:master",
+    "tunnel": "npx cloudflared tunnel --url http://localhost:4000",
+    "tunnel:lt": "npx localtunnel --port 4000",
+    "tunnel:subdomain": "npx localtunnel --port 4000 --subdomain backend-insai-ve",
     "hash:password": "node -e \"const bcrypt = require('bcrypt'); const pwd = process.argv[process.argv.length - 1]; if (!pwd || pwd === 'hash:password') throw new Error('Password missing'); bcrypt.hash(pwd, 10).then(console.log).catch(console.error);\""
   },
   "keywords": [],

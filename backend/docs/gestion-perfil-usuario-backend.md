@@ -1,4 +1,4 @@
-# Gestión de Perfil de Usuario — Backend
+﻿# Gestión de Perfil de Usuario — Backend
 
 Este documento describe los endpoints y la lógica de negocio para que un usuario autenticado pueda gestionar su propio perfil: actualizar sus datos de identificación y cambiar su contraseña de forma segura.
 
@@ -93,4 +93,4 @@ graph TD
 
 [Volver al índice de documentación](../WIKI.md)
 
-**Gestión de Perfil de Usuario — SICIC-INSAI V2.0**
+**Gestión de Perfil de Usuario — SICIZ-INSAI V2.0**

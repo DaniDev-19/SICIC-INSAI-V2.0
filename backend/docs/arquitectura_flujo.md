@@ -1,4 +1,4 @@
-# Arquitectura y Flujo de Peticiones - SICIC-INSAI V2.0
+﻿# Arquitectura y Flujo de Peticiones - SICIZ-INSAI V2.0
 
 Este documento detalla cómo viaja la información a través del backend, desde que llega del frontend hasta que se consulta la base de datos operativa.
 
@@ -68,4 +68,4 @@ Cualquier fallo (base de datos caída, error de servidor, validación fallida) e
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

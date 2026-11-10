@@ -1,6 +1,6 @@
-# Autenticación de Dos Factores (MFA/TOTP) — Backend
+﻿# Autenticación de Dos Factores (MFA/TOTP) — Backend
 
-Este documento describe la arquitectura e implementación del sistema de Autenticación de Dos Factores (MFA) basado en TOTP para el SICIC-INSAI V2.0, incluyendo la gestión de códigos de respaldo y los flujos de activación, verificación y desactivación.
+Este documento describe la arquitectura e implementación del sistema de Autenticación de Dos Factores (MFA) basado en TOTP para el SICIZ-INSAI V2.0, incluyendo la gestión de códigos de respaldo y los flujos de activación, verificación y desactivación.
 
 ---
 
@@ -116,4 +116,4 @@ flowchart TD
 
 [Volver al índice de documentación](../WIKI.md)
 
-**Seguridad MFA — SICIC-INSAI V2.0**
+**Seguridad MFA — SICIZ-INSAI V2.0**

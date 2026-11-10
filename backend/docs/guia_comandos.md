@@ -1,6 +1,6 @@
-# Guía de Comandos y Flujo de Trabajo - SICIC-INSAI V2.0
+﻿# Guía de Comandos y Flujo de Trabajo - SICIZ-INSAI V2.0
 
-Esta guía centraliza los comandos esenciales para operar, mantener y escalar el backend del sistema SICIC-INSAI. Como arquitectura Multi-Tenant, es crucial seguir estos pasos para mantener la integridad de las bases de datos Master y Operativas.
+Esta guía centraliza los comandos esenciales para operar, mantener y escalar el backend del sistema SICIZ-INSAI. Como arquitectura Multi-Tenant, es crucial seguir estos pasos para mantener la integridad de las bases de datos Master y Operativas.
 
 ---
 
@@ -84,4 +84,4 @@ Para pruebas rápidas e inserciones iniciales, utiliza los archivos en la carpet
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

@@ -53,7 +53,7 @@ function LayoutContent() {
         if (pathname.includes('/instancias')) return 'Centro de instancias';
         if (pathname.includes('/perfil')) return 'Mi Perfil';
         if (pathname.includes('/help')) return 'Centro de Ayuda';
-        return 'SICIC INSAI';
+        return 'SICIZ INSAI';
     };
 
     return (

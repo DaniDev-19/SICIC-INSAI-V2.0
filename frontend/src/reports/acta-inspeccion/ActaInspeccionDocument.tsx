@@ -315,7 +315,7 @@ function ActaFooter({
     <View style={styles.pageFooter}>
       <Image src={logoUrl} style={styles.footerLogo} />
       <Text>
-        SICIC • INSAI • {data.generado_el} • Página {page} de 2
+        SICIZ • INSAI • {data.generado_el} • Página {page} de 2
       </Text>
     </View>
   );

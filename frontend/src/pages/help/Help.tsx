@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   HelpCircle,
   Smartphone,
-  Download,
   FileText,
   Warehouse,
   ShieldCheck,
@@ -49,45 +48,46 @@ interface ModuleHelp {
 const MODULES_HELP: ModuleHelp[] = [
   {
     id: 'app',
-    name: 'Aplicación Móvil (APK & PWA)',
-    shortName: 'App Móvil / APK',
+    name: 'Aplicación Móvil (PWA Auto-actualizable)',
+    shortName: 'App Móvil (PWA)',
     icon: Smartphone,
     color: 'emerald',
     category: 'Acceso Móvil',
-    summary: 'Descarga, instalación y uso de la aplicación móvil para inspectores de campo.',
-    objective: 'Permitir a los técnicos e inspectores levantar actas, tomar fotografías in situ y consultar información sin depender exclusivamente de una computadora de escritorio.',
+    summary: 'Instalación en 1 clic y uso de la Progressive Web App para inspectores de campo.',
+    objective: 'Permitir a los técnicos e inspectores levantar actas, tomar fotografías in situ y consultar información sin depender de una computadora, con actualización automática instantánea.',
     steps: [
       {
-        title: 'Paso 1: Descargar el archivo APK',
-        desc: 'Haga clic en el botón "Descargar APK Android" ubicado en la parte superior o en la landing page del sistema para obtener el paquete de instalación oficial.',
+        title: 'Paso 1: Ingresar desde el navegador móvil',
+        desc: 'Abra la dirección del sistema en Chrome, Safari o su navegador móvil preferido.',
       },
       {
-        title: 'Paso 2: Habilitar orígenes desconocidos en Android',
-        desc: 'En su dispositivo Android, vaya a Ajustes > Seguridad (o en la notificación de descarga de Chrome) y autorice la instalación de aplicaciones desde este origen.',
+        title: 'Paso 2: Pulsar "Instalar en el dispositivo"',
+        desc: 'Aparecerá automáticamente un banner institucional en la parte inferior o superior con el botón "Instalar en el dispositivo". Si usa Safari (iOS), toque Compartir y luego "Agregar al inicio".',
       },
       {
-        title: 'Paso 3: Instalar y Abrir',
-        desc: 'Abra el archivo descargado (SICIC-INSAI-v2.0.apk) y presione "Instalar". Al finalizar, inicie sesión con su usuario y contraseña institucional.',
+        title: 'Paso 3: Acceso directo con icono oficial',
+        desc: 'La app se agregará a su pantalla de inicio con el escudo oficial del INSAI y se abrirá en pantalla completa directamente en el Login.',
       },
       {
-        title: 'Opción Alternativa: Instalación como PWA',
-        desc: 'Si prefiere no instalar el APK, abra la URL del sistema en Google Chrome desde su móvil, pulse los tres puntos del navegador y seleccione "Agregar a la pantalla principal" o "Instalar aplicación".',
+        title: 'Actualizaciones automáticas transparentes',
+        desc: 'Cada vez que el servidor publica una nueva versión o mejora, la PWA se actualiza automáticamente en segundo plano sin necesidad de reinstalar ni descargar archivos.',
       },
     ],
     features: [
-      'Acceso rápido desde el cajón de aplicaciones de Android.',
+      'Acceso rápido directo desde la pantalla principal de Android e iOS.',
+      'Auto-actualización inmediata sin compilar ni descargar APKs pesados.',
       'Captura de fotografías de evidencias directamente desde la cámara del dispositivo.',
-      'Diseño 100% Mobile-First adaptado a pantallas de teléfonos y tablets.',
+      'Diseño 100% Mobile-First adaptado con barra de navegación inferior optimizada.',
       'Sincronización segura con el servidor central INSAI mediante HTTPS.',
     ],
     tips: [
-      'Mantenga su teléfono con al menos 20% de batería al salir a jornadas extensas de inspección.',
-      'Para actualizar la app, simplemente descargue la nueva versión del APK e instálela sobre la existente; sus datos no se perderán.',
+      'Si el banner de instalación no aparece, pulse el menú de tres puntos de Chrome y seleccione "Instalar aplicación" o "Agregar a la pantalla principal".',
+      'No requiere habilitar orígenes desconocidos ni permisos de desarrollador.',
     ],
     mediaSlots: [
       {
-        label: 'Demostración de Instalación en Android',
-        desc: 'Captura de pantalla de la descarga del APK y pasos de instalación en el teléfono.',
+        label: 'Instalación PWA en Dispositivo',
+        desc: 'Banner de instalación oficial de SICIZ-INSAI en el navegador móvil.',
         type: 'image',
       },
       {
@@ -500,23 +500,9 @@ export default function Help() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed wrap-break-words">
-              Manual interactivo paso a paso, funcionalidades por módulo y descarga de la aplicación móvil APK.
+              Manual interactivo paso a paso, funcionalidades por módulo y guía de uso del sistema.
             </p>
           </div>
-        </div>
-
-        {/* Botón Destacado de Descarga de APK */}
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-          <a
-            href="/app-release.apk"
-            download="SICIC-INSAI-v2.0.apk"
-            type="application/vnd.android.package-archive"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm cursor-pointer shadow-md shadow-primary/20 transition-all hover:scale-[1.02]"
-          >
-            <Smartphone className="size-4 shrink-0" />
-            <span className="wrap-break-words">Descargar APK Móvil</span>
-            <Download className="size-3.5 opacity-80 shrink-0" />
-          </a>
         </div>
       </div>
 
@@ -635,18 +621,6 @@ export default function Help() {
                   </h2>
                 </div>
               </div>
-
-              {activeModule.id === 'app' && (
-                <a
-                  href="/app-release.apk"
-                  download="SICIC-INSAI-v2.0.apk"
-                  type="application/vnd.android.package-archive"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-sm transition-all shrink-0"
-                >
-                  <Download className="size-3.5" />
-                  <span>Descargar APK</span>
-                </a>
-              )}
             </div>
 
             <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed wrap-break-words bg-muted/20 p-3.5 rounded-2xl border border-border/50">

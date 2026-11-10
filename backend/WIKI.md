@@ -1,4 +1,4 @@
-# WIKI de Backend - SICIC-INSAI V2.0
+# WIKI de Backend - SICIZ-INSAI V2.0
 
 Esta Wiki contiene la documentación detallada para el motor de servicios del Backend.
 

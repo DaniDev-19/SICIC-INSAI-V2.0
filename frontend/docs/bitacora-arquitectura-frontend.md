@@ -1,6 +1,6 @@
-# Arquitectura de Auditoría e Interfaz de Bitácora - Frontend
+﻿# Arquitectura de Auditoría e Interfaz de Bitácora - Frontend
 
-Este manual detalla la implementación de la interfaz de usuario para el módulo de Bitácora, optimizada para alto rendimiento y consistencia visual en el SICIC-INSAI V2.0.
+Este manual detalla la implementación de la interfaz de usuario para el módulo de Bitácora, optimizada para alto rendimiento y consistencia visual en el SICIZ-INSAI V2.0.
 
 ---
 
@@ -46,4 +46,4 @@ _Para el funcionamiento interno del servidor, consulte la [Documentación de Bit
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

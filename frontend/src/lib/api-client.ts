@@ -6,11 +6,10 @@ export const getBaseApiUrl = (): string => {
     const customApi = localStorage.getItem('custom_api_url');
     if (customApi) return customApi;
 
-    const host = window.location.hostname;
-    // Si navegamos desde una IP (por ejemplo 192.168.31.46 desde el teléfono móvil)
-    if (host && host !== 'localhost' && host !== '127.0.0.1') {
-      const proto = window.location.protocol || 'http:';
-      return `${proto}//${host}:4000/api`;
+    // En desarrollo local (con Vite proxy configurado), usar /api relativo
+    // Esto garantiza que funcione tanto en HTTP como en HTTPS (PWA) sin errores de Mixed Content ni CORS
+    if (import.meta.env.DEV) {
+      return '/api';
     }
   }
 
@@ -19,8 +18,7 @@ export const getBaseApiUrl = (): string => {
     return envUrl;
   }
 
-  // Fallback para red local móvil y APK
-  return 'http://192.168.31.46:4000/api';
+  return '/api';
 };
 
 const apiClient = axios.create({

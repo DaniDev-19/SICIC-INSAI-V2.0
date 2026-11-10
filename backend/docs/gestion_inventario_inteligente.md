@@ -1,6 +1,6 @@
-# Gestión de Inventario Inteligente (Kardex)
+﻿# Gestión de Inventario Inteligente (Kardex)
 
-El sistema de inventario de SICIC-INSAI V2.0 está diseñado bajo el principio de "Trazabilidad Total", permitiendo saber exactamente quién sacó qué insumo, de qué oficina y para qué proceso.
+El sistema de inventario de SICIZ-INSAI V2.0 está diseñado bajo el principio de "Trazabilidad Total", permitiendo saber exactamente quién sacó qué insumo, de qué oficina y para qué proceso.
 
 ---
 
@@ -65,4 +65,4 @@ Esto permite generar reportes de costos y consumo de insumos por oficina o por t
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

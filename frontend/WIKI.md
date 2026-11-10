@@ -1,4 +1,4 @@
-#  WIKI de Frontend - SICIC-INSAI V2.0
+#  WIKI de Frontend - SICIZ-INSAI V2.0
 
 Esta Wiki detalla los estándares de diseño y flujos de usuario para la interfaz web.
 

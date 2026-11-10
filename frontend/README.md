@@ -1,6 +1,6 @@
-#  SICIC-INSAI V2.0 - Interfaz de Usuario (Frontend)
+#  SICIZ-INSAI V2.0 - Interfaz de Usuario (Frontend)
 
-Interfaz de usuario moderna y de alto rendimiento para el Sistema Integral de Control de Insumos y Certificaciones (SICIC) del INSAI. Construida con **Vite**, **React**, **TypeScript** y **TailwindCSS**.
+Interfaz de usuario moderna y de alto rendimiento para el Sistema Integral de Control de Insumos y Certificaciones (SICIZ) del INSAI. Construida con **Vite**, **React**, **TypeScript** y **TailwindCSS**.
 
 ##  Tecnología Utilizada
 *   **Vite:** Herramienta de construcción de última generación.

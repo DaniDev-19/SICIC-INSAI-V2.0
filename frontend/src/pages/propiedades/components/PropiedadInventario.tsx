@@ -34,7 +34,7 @@ interface PropiedadInventarioProps {
   propiedadId: number;
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:4000/api').replace('/api', '');
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace('/api', '');
 
 function resolveImageUrl(url: string): string {
   if (!url) return '';

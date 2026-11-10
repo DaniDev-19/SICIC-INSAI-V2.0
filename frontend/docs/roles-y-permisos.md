@@ -1,6 +1,6 @@
-# Gestión de Roles y Permisos
+﻿# Gestión de Roles y Permisos
 
-SICIC-INSAI V2.0 utiliza un sistema de control de acceso basado en roles (RBAC) dinámico, donde los permisos se definen mediante objetos JSON de alta granularidad.
+SICIZ-INSAI V2.0 utiliza un sistema de control de acceso basado en roles (RBAC) dinámico, donde los permisos se definen mediante objetos JSON de alta granularidad.
 
 ## 1. Estructura de un Rol
 
@@ -53,4 +53,4 @@ El campo `status` permite inhabilitar un rol globalmente sin afectar los registr
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

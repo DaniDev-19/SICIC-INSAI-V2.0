@@ -1,6 +1,6 @@
-# Guía de Navegación y Arquitectura UX (V2.0)
+﻿# Guía de Navegación y Arquitectura UX (V2.0)
 
-Este manual documenta la nueva arquitectura de interfaz del SICIC-INSAI, diseñada para ofrecer un entorno ERP de alto rendimiento con una jerarquía de información optimizada y herramientas de búsqueda avanzada.
+Este manual documenta la nueva arquitectura de interfaz del SICIZ-INSAI, diseñada para ofrecer un entorno ERP de alto rendimiento con una jerarquía de información optimizada y herramientas de búsqueda avanzada.
 
 ## 1. Sistema de Navegación por Dominios (Sidebar)
 La barra lateral ha sido evolucionada de un modelo estático a un sistema funcional de **Dominios Operativos**. Cada sección está diseñada para agrupar módulos con afinidad funcional:
@@ -40,5 +40,5 @@ Para optimizar el mantenimiento de grandes volúmenes de datos, se ha introducid
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**
 

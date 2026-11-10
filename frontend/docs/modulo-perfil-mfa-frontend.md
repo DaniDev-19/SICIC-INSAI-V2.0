@@ -1,6 +1,6 @@
-# Módulo de Perfil de Usuario — Frontend
+﻿# Módulo de Perfil de Usuario — Frontend
 
-Este documento describe la arquitectura, estructura de componentes y flujos de la página de gestión de perfil de usuario (`/perfil`) en el SICIC-INSAI V2.0, incluyendo la edición de datos, el cambio de contraseña y el módulo completo de MFA.
+Este documento describe la arquitectura, estructura de componentes y flujos de la página de gestión de perfil de usuario (`/perfil`) en el SICIZ-INSAI V2.0, incluyendo la edición de datos, el cambio de contraseña y el módulo completo de MFA.
 
 ---
 
@@ -94,7 +94,7 @@ Formulario de un solo paso que pide el código TOTP actual. Al confirmar con `us
 ### Descarga de Códigos de Respaldo
 La función `downloadBackupCodes` genera un archivo `.txt` con el siguiente formato:
 ```
-CÓDIGOS DE RESPALDO DE EMERGENCIA MFA - SICIC INSAI
+CÓDIGOS DE RESPALDO DE EMERGENCIA MFA - SICIZ INSAI
 Generado: [fecha y hora]
 
 1. ABCD-1234
@@ -148,4 +148,4 @@ graph TD
 
 [Volver al índice de documentación](../WIKI.md)
 
-**Módulo de Perfil y MFA — Frontend SICIC-INSAI V2.0**
+**Módulo de Perfil y MFA — Frontend SICIZ-INSAI V2.0**

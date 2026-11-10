@@ -72,10 +72,10 @@ class MailService {
       const htmlContent = getPlanificacionEmailHtml({ tipoEvento, planificacion, inspectores });
       const codigoPlan = planificacion.codigo || `PLAN-${planificacion.id}`;
       const subjectText = tipoEvento === 'CREACION'
-        ? `[SICIC-INSAI] Asignación de Inspección de Campo: ${codigoPlan}`
-        : `[SICIC-INSAI] Actualización de Inspección Planificada: ${codigoPlan}`;
+        ? `[SICIZ-INSAI] Asignación de Inspección de Campo: ${codigoPlan}`
+        : `[SICIZ-INSAI] Actualización de Inspección Planificada: ${codigoPlan}`;
 
-      const fromAddress = process.env.SMTP_FROM || '"SICIC-INSAI Notificaciones" <baddevprograming@gmail.com>';
+      const fromAddress = process.env.SMTP_FROM || '"SICIZ-INSAI Notificaciones" <baddevprograming@gmail.com>';
 
       // Modo de simulación si no hay contraseña SMTP configurada
       if (!pass) {

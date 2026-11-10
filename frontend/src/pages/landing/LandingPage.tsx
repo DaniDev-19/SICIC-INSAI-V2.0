@@ -1,8 +1,8 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
   Smartphone,
-  Download,
   LogIn,
   CheckCircle2,
   FileText,
@@ -17,6 +17,20 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Si la app está en modo standalone (instalada en móvil/escritorio) o es móvil, redirige directamente al login
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth < 768;
+
+    if (isStandalone || isMobile) {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20 selection:text-primary">
@@ -93,17 +107,6 @@ export default function LandingPage() {
               <span>Acceder al Sistema Web</span>
               <ArrowRight className="size-4" />
             </Button>
-
-            <a
-              href="/app-release.apk"
-              download="SICIC-INSAI-v2.0.apk"
-              type="application/vnd.android.package-archive"
-              className="inline-flex items-center justify-center gap-2 h-12 sm:h-13 px-6 rounded-2xl bg-card hover:bg-muted/60 border border-border/80 text-foreground font-bold text-sm cursor-pointer shadow-sm transition-all hover:border-primary/40"
-            >
-              <Smartphone className="size-4 text-emerald-500" />
-              <span>Descargar App Android (APK)</span>
-              <Download className="size-3.5 text-muted-foreground" />
-            </a>
           </div>
 
           {/* Mini info de compatibilidad móvil */}
@@ -226,38 +229,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── BANNER DESCARGA DE APP MÓVIL (CAPACITOR / PWA) ───────────── */}
+      {/* ── BANNER ACCESO WEB / PWA ───────────── */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 border-t border-border/40 bg-muted/20">
         <div className="max-w-4xl mx-auto rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xl p-6 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
           <div className="space-y-2 text-center md:text-left min-w-0">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">
               <Smartphone className="size-3.5" />
-              <span>Capacitor & Progressive Web App (PWA)</span>
+              <span>Progressive Web App (PWA) Auto-actualizable</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-black text-foreground">
               Lleva el SICIZ en tu Dispositivo Móvil
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-lg leading-relaxed">
-              Genera actas en el campo, adjunta evidencias fotográficas desde la cámara y consulta datos de productores sin retrasos.
+              Genera actas en el campo, adjunta evidencias fotográficas desde la cámara y consulta datos de productores sin retrasos. Puedes instalar la aplicación directamente desde tu navegador sin descargas externas.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
-            <a
-              href="/app-release.apk"
-              download="SICIC-INSAI-v2.0.apk"
-              type="application/vnd.android.package-archive"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm shadow-lg shadow-primary/20 cursor-pointer transition-all"
-            >
-              <Download className="size-4" />
-              <span>Descargar APK Android</span>
-            </a>
             <Button
               onClick={() => navigate('/login')}
-              variant="outline"
-              className="w-full sm:w-auto h-12 px-5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer"
+              size="lg"
+              className="w-full sm:w-auto h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm shadow-lg shadow-primary/20 cursor-pointer transition-all gap-2"
             >
-              <span>Acceder Web</span>
+              <span>Acceder al Sistema</span>
+              <ArrowRight className="size-4" />
             </Button>
           </div>
         </div>

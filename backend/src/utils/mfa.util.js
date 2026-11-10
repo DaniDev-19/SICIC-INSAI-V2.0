@@ -2,7 +2,7 @@ import { TOTP, NobleCryptoPlugin, ScureBase32Plugin } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 
-const ISSUER = 'SICIC-INSAI';
+const ISSUER = 'SICIZ-INSAI';
 
 // Instancia TOTP con plugins crypto/base32 compatibles con Node.js (ESM)
 // La API de otplib v13 requiere que se pasen los plugins explícitamente

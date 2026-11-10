@@ -1,4 +1,4 @@
-# Servicios Globales y Flujos Optimizados - SICIC-INSAI V2.0
+﻿# Servicios Globales y Flujos Optimizados - SICIZ-INSAI V2.0
 
 Este documento explica el funcionamiento de los servicios transversales de **Imágenes** y **Excel**, así como el patrón de diseño implementado para la gestión eficiente de recursos con tablas puente.
 
@@ -67,4 +67,4 @@ En lugar de tener endpoints separados para "Vincular Plaga" o "Agregar Direcció
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**
