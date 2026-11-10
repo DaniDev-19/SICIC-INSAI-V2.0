@@ -323,7 +323,7 @@ export function EmpleadoFichaDocument({
           </View>
           <View style={styles.headerCenter}>
             <Text style={styles.instName}>INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL</Text>
-            <Text style={styles.subInstName}>SISTEMA DE INFORMACIÓN PARA EL CONTROL DE INSPECCIONES DE CAMPO (SICIC)</Text>
+            <Text style={styles.subInstName}>SISTEMA DE INFORMACIÓN PARA EL CONTROL DE INSPECCIONES DE CAMPO (SICIZ)</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={{ fontSize: 6.5, color: '#666666' }}>FECHA DE EMISIÓN</Text>
@@ -485,7 +485,7 @@ export function EmpleadoFichaDocument({
 
         {/* Pie de Página */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>INSAI • Sistema SICIC V2.0 • Expediente Electrónico</Text>
+          <Text style={styles.footerText}>INSAI • Sistema SICIZ V2.0 • Expediente Electrónico</Text>
           <Text style={styles.footerText}>Página 1 de 1</Text>
         </View>
       </Page>

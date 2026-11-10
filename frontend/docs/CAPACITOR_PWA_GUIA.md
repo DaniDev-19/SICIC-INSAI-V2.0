@@ -1,6 +1,6 @@
-# Guía Oficial de PWA y Generación de APK con Capacitor — SICIC-INSAI v2.0
+﻿# Guía Oficial de PWA y Generación de APK con Capacitor — SICIZ-INSAI v2.0
 
-Esta guía explica en detalle cómo funciona la arquitectura móvil de **SICIC-INSAI**, cómo opera la **Progressive Web App (PWA)** y cuáles son los pasos exactos para compilar y generar el archivo instalable **APK para dispositivos Android** utilizando **Capacitor**.
+Esta guía explica en detalle cómo funciona la arquitectura móvil de **SICIZ-INSAI**, cómo opera la **Progressive Web App (PWA)** y cuáles son los pasos exactos para compilar y generar el archivo instalable **APK para dispositivos Android** utilizando **Capacitor**.
 
 ---
 
@@ -37,7 +37,7 @@ Los archivos principales de configuración móvil se encuentran en la carpeta `f
 
 | Archivo / Carpeta | Propósito |
 | :--- | :--- |
-| `frontend/capacitor.config.ts` | Configuración principal de Capacitor (ID de paquete: `ve.gob.insai.sicic`, nombre: `SICIC INSAI`, carpeta web: `dist`). |
+| `frontend/capacitor.config.ts` | Configuración principal de Capacitor (ID de paquete: `ve.gob.insai.sicic`, nombre: `SICIZ INSAI`, carpeta web: `dist`). |
 | `frontend/android/` | Proyecto nativo de Android autogenerado con Gradle, manifest y código Java/Kotlin. |
 | `frontend/public/manifest.json` | Web App Manifest para que los navegadores móviles reconozcan la app como PWA instalable. |
 | `frontend/public/sw.js` | Service Worker para caché inteligente de recursos estáticos e interfaz offline. |
@@ -160,7 +160,7 @@ Si la plataforma está publicada en un servidor o accesible en red local:
 4. ¡Listo! Se creará el acceso directo con el icono del INSAI y se comportará como una app nativa a pantalla completa y con caché offline.
 
 ### Vía 2: Instalación manual del archivo APK
-1. Descargue el archivo `SICIC-INSAI-v2.0.apk` desde la plataforma web.
+1. Descargue el archivo `SICIZ-INSAI-v2.0.apk` desde la plataforma web.
 2. Al abrirlo, Android mostrará una advertencia de seguridad indicando que la aplicación proviene de una fuente externa.
 3. Pulse **"Configuración"** o **"Ajustes"** y active la casilla **"Permitir desde esta fuente"**.
 4. Regrese y presione **"Instalar"**.

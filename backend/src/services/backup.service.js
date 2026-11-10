@@ -135,7 +135,7 @@ class BackupService {
                 return `"${candidate}"`;
               }
             }
-          } catch {}
+          } catch { }
         }
       }
     }
@@ -172,10 +172,10 @@ class BackupService {
 
       // Cabecera SQL
       const header = `-- =====================================================================
--- SICIC-INSAI V2.0 - Respaldo Estructurado de Base de Datos
+-- SICIZ-INSAI V2.0 - Respaldo Estructurado de Base de Datos
 -- Base de Datos: ${dbName}
 -- Fecha de Generación: ${new Date().toLocaleString('es-VE')}
--- Generador: Motor Nativo SICIC-INSAI PostgreSQL Engine
+-- Generador: Motor Nativo SICIZ-INSAI PostgreSQL Engine
 -- =====================================================================
 
 SET statement_timeout = 0;
@@ -330,7 +330,7 @@ SET session_replication_role = 'replica';
       const footer = `\n-- Restaurar modo de disparadores y claves foráneas
 SET session_replication_role = 'DEFAULT';
 
--- Fin del Respaldo SICIC-INSAI
+-- Fin del Respaldo SICIZ-INSAI
 `;
       writeStream.write(footer);
 
@@ -506,12 +506,12 @@ SET session_replication_role = 'DEFAULT';
       espacioOcupadoFormatted: this.formatBytes(totalBytes),
       ultimoRespaldo: lastBackup
         ? {
-            filename: lastBackup.filename,
-            fecha: lastBackup.createdAt,
-            tipo: lastBackup.tipo,
-            target: lastBackup.target,
-            sizeFormatted: lastBackup.sizeFormatted,
-          }
+          filename: lastBackup.filename,
+          fecha: lastBackup.createdAt,
+          tipo: lastBackup.tipo,
+          target: lastBackup.target,
+          sizeFormatted: lastBackup.sizeFormatted,
+        }
         : null,
       autoEnabled: config.enabled,
       autoFrequency: config.frequency,
@@ -593,7 +593,7 @@ SET session_replication_role = 'DEFAULT';
           const config = this.getConfiguracion();
           config.lastStatus = `ERROR: ${err.message}`;
           this.guardarConfiguracion(config);
-        } catch {}
+        } catch { }
       }
     }, 60000);
 

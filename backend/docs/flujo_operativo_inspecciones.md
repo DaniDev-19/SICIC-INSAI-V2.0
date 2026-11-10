@@ -1,6 +1,6 @@
-# Ciclo de Vida Operativo: De Solicitud a Inspección
+﻿# Ciclo de Vida Operativo: De Solicitud a Inspección
 
-Este documento detalla el flujo de trabajo (workflow) principal del sistema SICIC-INSAI V2.0, desde que nace una necesidad hasta que se emite un aval o se realiza un seguimiento.
+Este documento detalla el flujo de trabajo (workflow) principal del sistema SICIZ-INSAI V2.0, desde que nace una necesidad hasta que se emite un aval o se realiza un seguimiento.
 
 ---
 
@@ -51,5 +51,5 @@ Para más detalles sobre el inventario, consulta el manual de [Gestión de Inven
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**
 

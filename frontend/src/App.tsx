@@ -42,6 +42,7 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { PWAInstallBanner } from '@/components/PWAInstallBanner';
 import { useAuth } from './hooks/use-auth';
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
       <TooltipProvider>
         <BrowserRouter>
           <Toaster position="top-right" richColors closeButton />
+          <PWAInstallBanner />
           <Routes>
             <Route element={<PublicRoute />}>
               <Route path='/' element={<LandingPage />} />

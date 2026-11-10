@@ -118,7 +118,7 @@ export const MfaSetupModal: React.FC<MfaSetupModalProps> = ({ isOpen, isMfaEnabl
   };
 
   const downloadBackupCodes = () => {
-    const textContent = `CÓDIGOS DE RESPALDO DE EMERGENCIA MFA - SICIC INSAI\nGenerado: ${new Date().toLocaleString()}\n\n` +
+    const textContent = `CÓDIGOS DE RESPALDO DE EMERGENCIA MFA - SICIZ INSAI\nGenerado: ${new Date().toLocaleString()}\n\n` +
       backupCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n') +
       `\n\n* Guarde estos 8 códigos en un lugar seguro. Cada código solo puede ser utilizado una vez en el login en lugar del token de 6 dígitos.`;
     

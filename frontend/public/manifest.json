@@ -1,6 +1,7 @@
 {
-  "short_name": "SICIC-INSAI",
-  "name": "SICIC-INSAI: Sistema de Información para el Control de Inspecciones de Campo",
+  "id": "/",
+  "short_name": "SICIZ-INSAI",
+  "name": "SICIZ-INSAI: Sistema de Información para el Control de Inspecciones de Campo",
   "description": "Sistema de Información para el Control y Registro de Inspecciones de Campo, Vigilancia Epidemiológica, Fitosanitaria y Zoosanitaria del INSAI.",
   "icons": [
     {
@@ -10,13 +11,25 @@
       "purpose": "any"
     },
     {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/login",
   "background_color": "#0d1f18",
   "theme_color": "#00965e",
   "display": "standalone",

@@ -1,4 +1,4 @@
-# Gestión de Tipos y Estructura de Archivos (Frontend)
+﻿# Gestión de Tipos y Estructura de Archivos (Frontend)
 
 Este documento detalla cómo se organizan los tipos de TypeScript y la jerarquía de archivos para mantener una base de código escalable, robusta y fácil de auditar.
 
@@ -57,4 +57,4 @@ Recientemente se han integrado archivos clave para mejorar la estabilidad del si
 ---
 
 **Arquitectura de Tipos y Estructura**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

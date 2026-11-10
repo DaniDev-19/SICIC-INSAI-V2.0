@@ -1,4 +1,4 @@
-# Diagrama de login del frontend SICIC-INSAI V2.0
+# Diagrama de login del frontend SICIZ-INSAI V2.0
 
 ## 1. Flujo general de peticiones de login
 

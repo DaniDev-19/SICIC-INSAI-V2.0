@@ -19,11 +19,11 @@ export const getPlanificacionEmailHtml = ({ tipoEvento = 'CREACION', planificaci
   const fechaInspeccion = planificacion.fecha_programada || planificacion.fecha_inspeccion;
   const fechaFormateada = fechaInspeccion
     ? new Date(fechaInspeccion).toLocaleDateString('es-VE', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
     : 'Por definir';
 
   // Sincronización robusta con esquema Prisma (plural y singular)
@@ -52,15 +52,15 @@ export const getPlanificacionEmailHtml = ({ tipoEvento = 'CREACION', planificaci
 
   const listaInspectoresHtml = inspectores.length > 0
     ? inspectores
-        .map(
-          (insp) => `
+      .map(
+        (insp) => `
           <tr style="border-bottom: 1px solid #e5e7eb;">
             <td style="padding: 10px 14px; font-weight: 600; color: #111827; font-size: 13px;">${insp.nombre || 'Inspector'} ${insp.apellido || ''}</td>
             <td style="padding: 10px 14px; color: #374151; font-size: 13px; font-family: monospace;">V-${insp.cedula || 'N/A'}</td>
             <td style="padding: 10px 14px; color: #4b5563; font-size: 13px;">${insp.cargos?.nombre || 'Técnico Oficial'}</td>
           </tr>`
-        )
-        .join('')
+      )
+      .join('')
     : `<tr><td colspan="3" style="padding: 14px; text-align: center; color: #6b7280; font-size: 13px; font-style: italic;">Sin inspectores asignados</td></tr>`;
 
   return `
@@ -91,7 +91,7 @@ export const getPlanificacionEmailHtml = ({ tipoEvento = 'CREACION', planificaci
                       INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI)
                     </div>
                     <div style="font-size: 11px; color: #d1fae5; font-weight: 500; margin-top: 2px;">
-                      Sistema de Información para el Control de Inspecciones de Campo (SICIC-INSAI)
+                      Sistema de Información para el Control de Inspecciones de Campo (SICIZ-INSAI)
                     </div>
                   </td>
                 </tr>
@@ -177,9 +177,8 @@ export const getPlanificacionEmailHtml = ({ tipoEvento = 'CREACION', planificaci
           </tr>
 
           <!-- Observations Section -->
-          ${
-            planificacion.objetivo || planificacion.observaciones
-              ? `
+          ${planificacion.objetivo || planificacion.observaciones
+      ? `
           <tr>
             <td style="padding: 0 30px 20px 30px;">
               <div style="background-color: #fcf8e3; border: 1px solid #fbeed5; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #8a6d3b;">
@@ -188,15 +187,15 @@ export const getPlanificacionEmailHtml = ({ tipoEvento = 'CREACION', planificaci
               </div>
             </td>
           </tr>`
-              : ''
-          }
+      : ''
+    }
 
           <!-- Footer Notice -->
           <tr>
             <td style="background-color: #1f2937; padding: 20px 30px; text-align: center; color: #9ca3af; font-size: 11px; line-height: 1.5;">
               <strong style="color: #ffffff;">INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL (INSAI)</strong><br>
               Dirección de Epidemiología y Salud Agrícola • Gobierno Bolivariana de Venezuela<br>
-              <span style="color: #6b7280; font-size: 10px;">Este es un mensaje institucional automático generado por el sistema SICIC-INSAI V2.0.</span>
+              <span style="color: #6b7280; font-size: 10px;">Este es un mensaje institucional automático generado por el sistema SICIZ-INSAI V2.0.</span>
             </td>
           </tr>
 

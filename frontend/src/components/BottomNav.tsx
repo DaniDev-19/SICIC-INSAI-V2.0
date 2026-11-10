@@ -198,7 +198,7 @@ export function BottomNav() {
                     {user?.username || 'Usuario INSAI'}
                   </h3>
                   <Badge variant="secondary" className="text-[10px] uppercase font-bold py-0 h-4">
-                    SICIC v2.0
+                    SICIZ v2.0
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground truncate">

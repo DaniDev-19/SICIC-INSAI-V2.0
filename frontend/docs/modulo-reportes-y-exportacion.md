@@ -1,4 +1,4 @@
-# Módulo de Reportes, Visualización PDF y Exportación - SICIC-INSAI V2.0
+﻿# Módulo de Reportes, Visualización PDF y Exportación - SICIZ-INSAI V2.0
 
 Este documento detalla la arquitectura de la sección de **Reportes** (`/reportes`), la previsualización interactiva de documentos PDF y la exportación masiva de datos a hojas de cálculo Excel desde el frontend.
 
@@ -52,4 +52,4 @@ En cada listado principal (Clientes, Propiedades, Inventario, Empleados), la bar
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

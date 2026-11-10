@@ -1,4 +1,4 @@
-# Flujo de Autenticación MFA (2FA) — Frontend
+﻿# Flujo de Autenticación MFA (2FA) — Frontend
 
 Este documento describe el flujo completo de autenticación de dos factores desde la perspectiva del frontend, abarcando el paso adicional de verificación TOTP durante el login y los servicios de red involucrados.
 
@@ -119,4 +119,4 @@ sequenceDiagram
 
 [Volver al índice de documentación](../WIKI.md)
 
-**Flujo MFA en Login — Frontend SICIC-INSAI V2.0**
+**Flujo MFA en Login — Frontend SICIZ-INSAI V2.0**

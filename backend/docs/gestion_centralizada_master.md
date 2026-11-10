@@ -1,6 +1,6 @@
-# Gestión Centralizada: Usuarios e Instancias (Master)
+﻿# Gestión Centralizada: Usuarios e Instancias (Master)
 
-El sistema SICIC-INSAI V2.0 utiliza una arquitectura de base de datos maestra (`insai_master`) para gestionar la identidad global de los usuarios y su acceso a múltiples bases de datos operativas (instancias).
+El sistema SICIZ-INSAI V2.0 utiliza una arquitectura de base de datos maestra (`insai_master`) para gestionar la identidad global de los usuarios y su acceso a múltiples bases de datos operativas (instancias).
 
 ---
 
@@ -46,4 +46,4 @@ Toda la gestión de la Master DB está protegida por el prefijo `/api/master/`.
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

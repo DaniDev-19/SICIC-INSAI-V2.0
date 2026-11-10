@@ -1,4 +1,4 @@
-# Integración de Seguridad y Robustez en el Frontend
+﻿# Integración de Seguridad y Robustez en el Frontend
 
 Este documento explica cómo el frontend interactúa con las medidas de seguridad del backend para garantizar una experiencia de usuario fluida y libre de duplicidad de datos.
 
@@ -83,5 +83,5 @@ graph LR
 ---
 
 **Arquitectura de Robustez Frontend**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**
 

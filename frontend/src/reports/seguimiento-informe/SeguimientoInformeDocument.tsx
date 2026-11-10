@@ -472,7 +472,7 @@ export function SeguimientoInformeDocument({
 
         {/* PIE DE PÁGINA */}
         <View style={styles.footer} fixed>
-          <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIC</Text>
+          <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIZ</Text>
           <Text
             render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
           />
@@ -504,7 +504,7 @@ export function SeguimientoInformeDocument({
           </View>
 
           <View style={styles.footer} fixed>
-            <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIC</Text>
+            <Text>Documento Oficial del Instituto Nacional de Salud Agrícola Integral (INSAI) • SICIZ</Text>
             <Text
               render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
             />

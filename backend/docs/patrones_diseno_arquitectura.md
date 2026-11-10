@@ -1,4 +1,4 @@
-# Patrones de Diseño y Arquitectura - SICIC-INSAI V2.0
+﻿# Patrones de Diseño y Arquitectura - SICIZ-INSAI V2.0
 
 Este documento describe los patrones de diseño de software implementados en el backend para asegurar una arquitectura robusta, escalable y de fácil mantenimiento.
 
@@ -42,4 +42,4 @@ Utilizamos las capacidades atómicas de **Prisma** para gestionar relaciones com
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

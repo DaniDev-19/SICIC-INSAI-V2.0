@@ -1,6 +1,6 @@
-# Manual de Arquitectura de Validación y Capa de Resiliencia
+﻿# Manual de Arquitectura de Validación y Capa de Resiliencia
 
-Este documento describe la arquitectura de seguridad y la lógica de validación unificada del backend, diseñada para garantizar la integridad de los datos y la estabilidad operativa del SICIC-INSAI.
+Este documento describe la arquitectura de seguridad y la lógica de validación unificada del backend, diseñada para garantizar la integridad de los datos y la estabilidad operativa del SICIZ-INSAI.
 
 ## 1. Matriz de Validación Unificada (validateSchema)
 
@@ -27,4 +27,4 @@ La arquitectura de seguridad se basa en una jerarquía de middlewares que deben 
 
 ---
 
-_Arquitectura de Backend - SICIC-INSAI V2.0_
+_Arquitectura de Backend - SICIZ-INSAI V2.0_

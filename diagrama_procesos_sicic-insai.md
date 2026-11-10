@@ -1,4 +1,4 @@
-# Diagrama de Procesos SICIC-INSAI V2.0
+# Diagrama de Procesos SICIZ-INSAI V2.0
 
 ## 1. Diagrama de flujo general
 

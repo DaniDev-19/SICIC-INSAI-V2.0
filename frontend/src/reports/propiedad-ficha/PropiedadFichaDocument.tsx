@@ -295,7 +295,7 @@ export function PropiedadFichaDocument({
           </View>
           <View style={styles.headerCenter}>
             <Text style={styles.instName}>INSTITUTO NACIONAL DE SALUD AGRÍCOLA INTEGRAL</Text>
-            <Text style={styles.subInstName}>SISTEMA DE INFORMACIÓN PARA EL CONTROL DE INSPECCIONES DE CAMPO (SICIC)</Text>
+            <Text style={styles.subInstName}>SISTEMA DE INFORMACIÓN PARA EL CONTROL DE INSPECCIONES DE CAMPO (SICIZ)</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={{ fontSize: 6.5, color: '#666666' }}>FECHA DE EMISIÓN</Text>
@@ -503,7 +503,7 @@ export function PropiedadFichaDocument({
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIC - INSAI</Text>
+          <Text>DOCUMENTO OFICIAL GENERADO POR SISTEMA SICIZ - INSAI</Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>

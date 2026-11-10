@@ -17,9 +17,24 @@ const BRAND = {
 class PdfService {
   resolveCintilloPath(customPath) {
     if (customPath && fs.existsSync(customPath)) return customPath;
-    const directPath = '/home/jp/Escritorio/SICIC-INSAI-V2.0/frontend/public/cintillo nuevo.png';
-    if (fs.existsSync(directPath)) return directPath;
+
+    // 1. Activo empaquetado directamente en el backend (src/assets)
     if (fs.existsSync(CINTILLO_PATH)) return CINTILLO_PATH;
+
+    // 2. Ruta relativa al directorio del backend hacia frontend/public
+    const frontendPublicPath = path.resolve(__dirname, '../../../frontend/public/cintillo nuevo.png');
+    if (fs.existsSync(frontendPublicPath)) return frontendPublicPath;
+
+    // 3. Rutas relativas al proceso de ejecución actual (process.cwd())
+    const cwdBackendAsset = path.resolve(process.cwd(), 'src/assets/cintillo-nuevo.png');
+    if (fs.existsSync(cwdBackendAsset)) return cwdBackendAsset;
+
+    const cwdFrontendRelative = path.resolve(process.cwd(), '../frontend/public/cintillo nuevo.png');
+    if (fs.existsSync(cwdFrontendRelative)) return cwdFrontendRelative;
+
+    const cwdFrontendDirect = path.resolve(process.cwd(), 'frontend/public/cintillo nuevo.png');
+    if (fs.existsSync(cwdFrontendDirect)) return cwdFrontendDirect;
+
     return null;
   }
 
@@ -81,7 +96,7 @@ class PdfService {
         .fillColor(BRAND.text)
         .text(
           subtitle ||
-          `SICIC • INSAI • Generado: ${new Date().toLocaleString('es-VE')}`,
+          `SICIZ • INSAI • Generado: ${new Date().toLocaleString('es-VE')}`,
           { align: 'center' }
         );
 
@@ -102,14 +117,14 @@ class PdfService {
       let colWidths;
       const remainingWidth = Math.max(0, pageWidth - totalDefinedWidth);
       const defaultColWidth = undefinedCount > 0 ? remainingWidth / undefinedCount : 0;
-      
+
       colWidths = columns.map(col => {
         if (col.width) {
           return col.width < 38 ? col.width * 6 : col.width;
         }
         return defaultColWidth;
       });
-      
+
       // Ensure all columns perfectly fit within the printable page width
       const sumWidths = colWidths.reduce((sum, w) => sum + w, 0);
       if (sumWidths > 0) {

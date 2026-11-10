@@ -1,6 +1,6 @@
-# Servicio de Notificaciones y Envío de Correo Electrónico - SICIC-INSAI V2.0
+﻿# Servicio de Notificaciones y Envío de Correo Electrónico - SICIZ-INSAI V2.0
 
-Este documento detalla el funcionamiento técnico del módulo de correos electrónicos y notificaciones del sistema SICIC-INSAI.
+Este documento detalla el funcionamiento técnico del módulo de correos electrónicos y notificaciones del sistema SICIZ-INSAI.
 
 ---
 
@@ -51,4 +51,4 @@ Cada correo enviado o intento fallido de transmisión genera automáticamente un
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

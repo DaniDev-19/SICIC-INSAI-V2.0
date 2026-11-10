@@ -11,7 +11,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 app.listen(PORT, HOST, () => {
   backupService.iniciarScheduler();
   console.log(`
-     Servidor SICIC-INSAI V2.0 en funcionamiento
+     Servidor SICIZ-INSAI V2.0 en funcionamiento
      Puerto: ${PORT}
      Host: ${HOST}
      Modo: ${process.env.NODE_ENV || 'development'}

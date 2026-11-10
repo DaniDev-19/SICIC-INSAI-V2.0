@@ -1,4 +1,4 @@
-# Gestión de Errores Estandarizada - SICIC-INSAI V2.0
+﻿# Gestión de Errores Estandarizada - SICIZ-INSAI V2.0
 
 El backend implementa un sistema centralizado de captura de errores (`errorHandler`) que garantiza respuestas consistentes, seguras y descriptivas para el frontend.
 
@@ -50,4 +50,4 @@ Para maximizar la seguridad sin perder capacidad de depuración, el `errorHandle
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

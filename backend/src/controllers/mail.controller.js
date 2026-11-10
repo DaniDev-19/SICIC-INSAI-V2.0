@@ -28,7 +28,7 @@ Agradecemos su puntual asistencia y compromiso con el desarrollo agroalimentario
     descripcion: 'Avisos oficiales, normativas internas, circulares o boletines para todo el equipo.',
     cuerpo: `Estimado(a) funcionario(a) <strong>{nombre}</strong>,<br/><br/>
 Le saludamos cordialmente desde la Dirección General del <strong>INSAI</strong>. Hacemos de su conocimiento la siguiente información de carácter institucional:<br/><br/>
-<em>Se recuerda a todo el personal técnico y administrativo mantener al día los registros de bitácora, solicitudes e inspecciones asignadas en el sistema SICIC-INSAI V2.0.</em><br/><br/>
+<em>Se recuerda a todo el personal técnico y administrativo mantener al día los registros de bitácora, solicitudes e inspecciones asignadas en el sistema SICIZ-INSAI V2.0.</em><br/><br/>
 Para cualquier duda o requerimiento técnico, por favor comunicarse con la coordinación de su oficina (<strong>{oficina}</strong>).`
   },
   {
@@ -39,7 +39,7 @@ Para cualquier duda o requerimiento técnico, por favor comunicarse con la coord
     asunto: '[RECORDATORIO] Inspecciones y Reportes Pendientes en Sistema',
     descripcion: 'Notificación para recordar la entrega de actas, informes epidemiológicos e inspecciones programadas.',
     cuerpo: `Estimado(a) <strong>{nombre}</strong> ({cargo}),<br/><br/>
-Le recordamos amablemente revisar sus tareas y visitas programadas en la plataforma <strong>SICIC-INSAI</strong>.<br/><br/>
+Le recordamos amablemente revisar sus tareas y visitas programadas en la plataforma <strong>SICIZ-INSAI</strong>.<br/><br/>
 Es fundamental cargar a tiempo las actas de inspección, evaluaciones de silos y seguimiento de avales sanitarios para mantener la continuidad del servicio institucional.<br/><br/>
 Fecha del recordatorio: <strong>{fecha}</strong>.`
   },
@@ -93,7 +93,7 @@ function buildHtmlWrapper({ asunto, mensaje, motivo }) {
 <body>
   <div class="card">
     <div class="header">
-      <div class="badge">SICIC-INSAI</div>
+      <div class="badge">SICIZ-INSAI</div>
       <h1>${asunto}</h1>
       <p>${headerSub}</p>
     </div>
@@ -149,7 +149,7 @@ export const sendComunicado = async (req, res) => {
   }
 
   const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
-  const fromAddress = process.env.SMTP_FROM || '"SICIC-INSAI Comunicados" <baddevprograming@gmail.com>';
+  const fromAddress = process.env.SMTP_FROM || '"SICIZ-INSAI Comunicados" <baddevprograming@gmail.com>';
 
   const fechaActual = new Date().toLocaleDateString('es-VE', {
     weekday: 'long',

@@ -1,6 +1,6 @@
-# Manual Técnico: Flujo de Datos y Seguridad (Backend V2.0)
+﻿# Manual Técnico: Flujo de Datos y Seguridad (Backend V2.0)
 
-Este documento describe el funcionamiento interno del motor de roles y permisos del servidor SICIC-INSAI, detallando la interacción entre la base de datos, el ORM y los mecanismos de integridad referencial.
+Este documento describe el funcionamiento interno del motor de roles y permisos del servidor SICIZ-INSAI, detallando la interacción entre la base de datos, el ORM y los mecanismos de integridad referencial.
 
 ## 1. Ciclo de Vida de una Petición (Roles API)
 
@@ -47,4 +47,4 @@ El motor de filtrado en el backend asegura que un usuario no pueda degradar su p
 
 [Volver al índice de documentación](../WIKI.md)
 
-**Arquitectura de Backend - SICIC-INSAI V2.0**
+**Arquitectura de Backend - SICIZ-INSAI V2.0**

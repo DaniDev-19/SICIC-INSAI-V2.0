@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 've.gob.insai.sicic',
-  appName: 'SICIC INSAI',
+  appId: 've.gob.insai.siciz',
+  appName: 'SICIZ INSAI',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

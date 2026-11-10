@@ -1,10 +1,10 @@
-# Flujo de Autenticación y Multi-Tenancy
+﻿# Flujo de Autenticación y Multi-Tenancy
 
 Este documento detalla cómo funciona el sistema de acceso y la arquitectura multi-instancia desde la perspectiva del Frontend.
 
 ## 1. El Proceso de Login
 
-A diferencia de un login tradicional, SICIC-INSAI V2.0 requiere que el usuario especifique a qué instancia (oficina/sede/estado) desea acceder.
+A diferencia de un login tradicional, SICIZ-INSAI V2.0 requiere que el usuario especifique a qué instancia (oficina/sede/estado) desea acceder.
 
 ### Paso A: Carga de Instancias
 Al cargar la página de login, el frontend realiza una petición a:
@@ -45,4 +45,4 @@ Toda la lógica de "a qué base de datos consultar" es transparente para el fron
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

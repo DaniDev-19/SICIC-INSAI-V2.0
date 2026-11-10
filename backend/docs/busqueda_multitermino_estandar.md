@@ -1,4 +1,4 @@
-# Estándar de Búsqueda Multitérmino Tokenizada y Búsqueda Global - SICIC-INSAI V2.0
+﻿# Estándar de Búsqueda Multitérmino Tokenizada y Búsqueda Global - SICIZ-INSAI V2.0
 
 Este manual documenta el estándar de búsqueda multitérmino implementado en el backend para todos los controladores del sistema, así como el funcionamiento del motor de Búsqueda Global (`/api/search`).
 
@@ -102,4 +102,4 @@ Los siguientes módulos integran este estándar de búsqueda tokenizada:
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

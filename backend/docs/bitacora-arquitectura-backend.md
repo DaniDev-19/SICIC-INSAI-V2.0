@@ -1,6 +1,6 @@
-# Arquitectura de Auditoría y Bitácora - Backend
+﻿# Arquitectura de Auditoría y Bitácora - Backend
 
-Este manual describe el funcionamiento técnico del motor de auditoría (Bitácora) del sistema SICIC-INSAI V2.0.
+Este manual describe el funcionamiento técnico del motor de auditoría (Bitácora) del sistema SICIZ-INSAI V2.0.
 
 ---
 
@@ -42,4 +42,4 @@ _Para la implementación visual de estos datos, consulte la [Documentación de B
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

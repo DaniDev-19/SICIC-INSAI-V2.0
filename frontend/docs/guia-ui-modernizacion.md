@@ -1,6 +1,6 @@
-# Manual Técnico: Gestión de Roles y UI (Frontend)
+﻿# Manual Técnico: Gestión de Roles y UI (Frontend)
 
-Este documento describe la arquitectura funcional y los flujos lógicos del módulo de Roles en el frontend del sistema SICIC-INSAI.
+Este documento describe la arquitectura funcional y los flujos lógicos del módulo de Roles en el frontend del sistema SICIZ-INSAI.
 
 ## 1. Estructura del Componente Principal (`Roles.tsx`)
 
@@ -39,4 +39,4 @@ La interfaz se rige por variables CSS definidas en `index.css`:
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**

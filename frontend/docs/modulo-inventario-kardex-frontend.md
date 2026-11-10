@@ -1,4 +1,4 @@
-# Módulo de Inventario Agrícola y Trazabilidad Kardex - SICIC-INSAI V2.0
+﻿# Módulo de Inventario Agrícola y Trazabilidad Kardex - SICIZ-INSAI V2.0
 
 Este documento describe la arquitectura y componentes del módulo de **Inventario y Control de Insumos** (`/inventario`) en la interfaz de usuario.
 
@@ -51,4 +51,4 @@ La interfaz aplica resaltados de color basados en los umbrales de stock:
 [Volver al índice de documentación](../WIKI.md)
 
 **Documentación Técnica Funcional**
-**SICIC-INSAI V2.0**
+**SICIZ-INSAI V2.0**
