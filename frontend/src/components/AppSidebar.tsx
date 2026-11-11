@@ -57,7 +57,7 @@ export const navigationGroups = [
       { title: "Productores", url: "/home/clientes", icon: Users, screen: "clientes" },
       { title: "Propiedades", url: "/home/propiedades", icon: Building2, screen: "propiedades" },
       { title: "Empleados", url: "/home/empleados", icon: Briefcase, screen: "empleados" },
-      { title: "Comunicados / Correos", url: "/home/comunicados", icon: Mail, screen: "empleados" },
+      { title: "Comunicados / Correos", url: "/home/comunicados", icon: Mail, screen: "mail" },
     ]
   },
   {

@@ -37,16 +37,20 @@ export interface AvalHallazgosOtras {
 export interface AvalBiologico {
   id?: number;
   aval_id?: number;
-  insumo_id: number;
+  insumo_id?: number | null;
   oficina_id?: number;
   cantidad?: number;
   lote?: string;
   fecha_vacunacion?: string;
   pruebas_diagnosticas?: string;
+  es_manual?: boolean;
+  vacuna_manual?: string;
+  marca_manual?: string;
   insumos?: {
     id: number;
     nombre: string;
     codigo?: string;
+    marca?: string;
     t_unidades?: {
       nombre: string;
     };
@@ -111,9 +115,13 @@ export interface CreateAvalDTO {
   hallazgos_bov_buf?: AvalHallazgosBovBuf;
   hallazgos_otras?: AvalHallazgosOtras[];
   biologicos?: {
-    insumo_id: number;
-    oficina_id: number;
-    cantidad: number;
+    modo?: 'inventario' | 'manual';
+    es_manual?: boolean;
+    insumo_id?: number | null;
+    oficina_id?: number | null;
+    cantidad?: number;
+    vacuna_manual?: string;
+    marca_manual?: string;
     lote?: string;
     fecha_vacunacion?: string;
     pruebas_diagnosticas?: string;

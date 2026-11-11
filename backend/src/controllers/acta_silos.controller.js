@@ -221,16 +221,6 @@ export const getActaSiloById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Acta de Silo no encontrada' });
   }
 
-  if (isInspectorUser(req)) {
-    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
-    const isAssigned = acta.planificaciones?.planificacion_empleados?.some(
-      pe => pe.empleado_id === empleadoId
-    );
-    if (!isAssigned) {
-      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección de silo.' });
-    }
-  }
-
   res.status(200).json({ status: 'success', data: acta });
 };
 
@@ -249,6 +239,27 @@ export const createActaSilo = async (req, res) => {
       await requireInspectorEnPlanificacion(tx, req, planificacion_id);
 
       const empleado_id = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tx));
+
+      if (isInspectorUser(req)) {
+        const asignados = await tx.planificacion_empleados.findMany({
+          where: { planificacion_id: Number(planificacion_id) },
+          orderBy: { id: 'asc' },
+          select: { empleado_id: true }
+        });
+        if (!asignados || asignados.length === 0) {
+          const error = new Error('Esta planificación no tiene inspectores asignados.');
+          error.statusCode = 400;
+          throw error;
+        }
+        const jefe = asignados[0];
+        if (jefe.empleado_id !== empleado_id) {
+          const error = new Error(
+            'Solo el Inspector Jefe/Encargado de esta comisión técnica está facultado para realizar el vaciado y registro del acta de silo. Los inspectores acompañantes tienen acceso de visualización.'
+          );
+          error.statusCode = 403;
+          throw error;
+        }
+      }
 
       // Evitar duplicados de acta para la misma planificación
       const existing = await tx.acta_silos.findFirst({

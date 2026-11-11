@@ -167,10 +167,16 @@ export async function buildAvalReporte(aval, tenantPrisma) {
 
   // 5. Resolver Otras Especies
   const otrasList = aval.aval_hallazgos_otras || [];
-  const findEspecie = (nameKeywords) => {
+  const cleanStr = (s) =>
+    String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const findEspecie = (keywords) => {
     const found = otrasList.find((o) => {
-      const nom = (o.t_animales?.nombre || '').toLowerCase();
-      return nameKeywords.some((k) => nom.includes(k));
+      const nom = cleanStr(o.t_animales?.nombre);
+      return keywords.some((k) => nom.includes(cleanStr(k)));
     });
     if (!found) return { machos: '', hembras: '', crias: '', total: 0 };
     const m = Number(found.machos) || 0;
@@ -188,18 +194,24 @@ export async function buildAvalReporte(aval, tenantPrisma) {
   const ovinos = findEspecie(['ovino', 'oveja', 'carnero']);
   const caprinos = findEspecie(['caprino', 'cabra', 'chivo']);
   const porcinos = findEspecie(['porcino', 'cerdo', 'cochino']);
-  const aves = findEspecie(['ave', 'gallina', 'pollo']);
-  const equinos = findEspecie(['equino', 'caballo', 'yegua', 'mula', 'asno']);
+  const aves = findEspecie(['ave', 'avicol', 'gallina', 'pollo', 'ponedora']);
+  const equinos = findEspecie(['equino', 'caballo', 'yegua', 'mula', 'asno', 'burro']);
 
-  // Especie personalizada o "Otros / Queso"
-  const standardKeywords = ['ovino', 'oveja', 'caprino', 'cabra', 'porcino', 'cerdo', 'ave', 'gallina', 'pollo', 'equino', 'caballo'];
+  // Especie personalizada o "Otros"
+  const standardKeywords = [
+    'ovino', 'oveja', 'carnero',
+    'caprino', 'cabra', 'chivo',
+    'porcino', 'cerdo', 'cochino',
+    'ave', 'avicol', 'gallina', 'pollo', 'ponedora',
+    'equino', 'caballo', 'yegua', 'mula', 'asno', 'burro'
+  ];
   const customOther = otrasList.find((o) => {
-    const nom = (o.t_animales?.nombre || '').toLowerCase();
-    return !standardKeywords.some((k) => nom.includes(k));
+    const nom = cleanStr(o.t_animales?.nombre);
+    return !standardKeywords.some((k) => nom.includes(cleanStr(k)));
   });
 
   const otrosEspecie = {
-    nombre: customOther?.t_animales?.nombre || 'queso',
+    nombre: customOther?.t_animales?.nombre || '',
     machos: Number(customOther?.machos) || '',
     hembras: Number(customOther?.hembras) || '',
     crias: Number(customOther?.crias) || '',
@@ -222,14 +234,34 @@ export async function buildAvalReporte(aval, tenantPrisma) {
 
   const biologicosRaw = aval.aval_biologicos || [];
   const biologicosFormatted = biologicosRaw.map((b) => {
+    let vacuna = b.insumos?.nombre || '';
+    let marca = b.insumos?.marca || '';
+    let lote = b.lote || '';
+    let pruebas = b.pruebas_diagnosticas || '';
+
+    if (!b.insumo_id && b.pruebas_diagnosticas) {
+      try {
+        const parsed = JSON.parse(b.pruebas_diagnosticas);
+        if (parsed && typeof parsed === 'object' && parsed.manual) {
+          vacuna = parsed.vacuna || vacuna;
+          marca = parsed.marca || marca;
+          lote = parsed.lote || lote;
+          pruebas = parsed.detalle || '';
+        }
+      } catch {
+        // Formato texto plano
+      }
+    }
+
     const matchedMov = movimientos.find((m) => m.insumo_id === b.insumo_id);
-    const lote = b.lote || matchedMov?.lote || '';
+    if (!lote && matchedMov?.lote) lote = matchedMov.lote;
+
     return {
-      vacuna: b.insumos?.nombre || '',
-      lote: lote,
-      marca: b.insumos?.marca || '',
+      vacuna,
+      lote,
+      marca,
       fecha_vacunacion: formatFecha(b.fecha_vacunacion),
-      pruebas_diagnosticas: b.pruebas_diagnosticas || '',
+      pruebas_diagnosticas: pruebas,
     };
   });
 

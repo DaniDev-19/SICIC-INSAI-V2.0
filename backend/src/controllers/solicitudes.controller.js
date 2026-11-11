@@ -79,6 +79,7 @@ export const getSolicitudes = async (req, res) => {
         propiedades: { select: { id: true, nombre: true, codigo_insai: true } },
         t_solicitud: { select: { id: true, nombre: true } },
         empleados: { select: { id: true, nombre: true, apellido: true } },
+        planificaciones: { select: { id: true, codigo: true, status: true } },
       }
     }),
     tenantPrisma.solicitudes.count({ where }),

@@ -31,6 +31,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { useInspecciones } from '@/hooks/use-inspecciones';
 import { useEmpleados } from '@/hooks/use-empleados';
@@ -105,9 +106,12 @@ export function AvalFormModal({
 
   const [biologicos, setBiologicos] = useState<
     {
+      modo: 'inventario' | 'manual';
       insumo_id: number;
       oficina_id: number;
       cantidad: number;
+      vacuna_manual?: string;
+      marca_manual?: string;
       lote?: string;
       fecha_vacunacion?: string;
       pruebas_diagnosticas?: string;
@@ -155,13 +159,40 @@ export function AvalFormModal({
 
         if (aval.aval_biologicos) {
           setBiologicos(
-            aval.aval_biologicos.map((b) => ({
-              insumo_id: b.insumo_id,
-              oficina_id: oficinas[0]?.id || 1,
-              cantidad: 1,
-              fecha_vacunacion: b.fecha_vacunacion ? b.fecha_vacunacion.substring(0, 10) : undefined,
-              pruebas_diagnosticas: b.pruebas_diagnosticas || undefined,
-            }))
+            aval.aval_biologicos.map((b) => {
+              let modo: 'inventario' | 'manual' = b.insumo_id ? 'inventario' : 'manual';
+              let vacuna_manual = '';
+              let marca_manual = '';
+              let lote = b.lote || '';
+              let pruebas_diagnosticas = b.pruebas_diagnosticas || '';
+
+              if (!b.insumo_id && b.pruebas_diagnosticas) {
+                try {
+                  const p = JSON.parse(b.pruebas_diagnosticas);
+                  if (p && typeof p === 'object' && p.manual) {
+                    modo = 'manual';
+                    vacuna_manual = p.vacuna || '';
+                    marca_manual = p.marca || '';
+                    lote = p.lote || lote;
+                    pruebas_diagnosticas = p.detalle || '';
+                  }
+                } catch {
+                  // Texto plano existente
+                }
+              }
+
+              return {
+                modo,
+                insumo_id: b.insumo_id || (insumos[0]?.id || 0),
+                oficina_id: oficinas[0]?.id || 1,
+                cantidad: 1,
+                vacuna_manual,
+                marca_manual,
+                lote,
+                fecha_vacunacion: b.fecha_vacunacion ? b.fecha_vacunacion.substring(0, 10) : undefined,
+                pruebas_diagnosticas,
+              };
+            })
           );
         }
       } else {
@@ -247,6 +278,15 @@ export function AvalFormModal({
     setOtrasEspecies((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const diasVigencia = React.useMemo(() => {
+    if (!fechaEmision || !fechaVencimiento) return null;
+    const start = new Date(fechaEmision + 'T00:00:00');
+    const end = new Date(fechaVencimiento + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+    const diffTime = end.getTime() - start.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  }, [fechaEmision, fechaVencimiento]);
+
   const handleAddBiologico = () => {
     const defaultInsumoId = insumos.length > 0 ? insumos[0].id : 0;
     const defaultOficinaId = oficinas.length > 0 ? oficinas[0].id : 0;
@@ -254,9 +294,12 @@ export function AvalFormModal({
     setBiologicos((prev) => [
       ...prev,
       {
+        modo: 'inventario',
         insumo_id: defaultInsumoId,
         oficina_id: defaultOficinaId,
         cantidad: 1,
+        vacuna_manual: '',
+        marca_manual: '',
         fecha_vacunacion: new Date().toISOString().substring(0, 10),
         pruebas_diagnosticas: '',
       },
@@ -289,6 +332,33 @@ export function AvalFormModal({
     const selectedMedId = medicoResponsableId && medicoResponsableId !== 'none' ? Number(medicoResponsableId) : null;
     const selectedJefeId = jefeOsaId && jefeOsaId !== 'none' ? Number(jefeOsaId) : null;
 
+    const cleanBiologicos = biologicos.map((b) => {
+      if (b.modo === 'manual') {
+        return {
+          modo: 'manual' as const,
+          es_manual: true,
+          insumo_id: null,
+          oficina_id: null,
+          cantidad: 1,
+          vacuna_manual: b.vacuna_manual || 'Biológico Manual',
+          marca_manual: b.marca_manual || '',
+          lote: b.lote || '',
+          fecha_vacunacion: b.fecha_vacunacion || undefined,
+          pruebas_diagnosticas: b.pruebas_diagnosticas || undefined,
+        };
+      }
+      return {
+        modo: 'inventario' as const,
+        es_manual: false,
+        insumo_id: b.insumo_id,
+        oficina_id: b.oficina_id,
+        cantidad: b.cantidad || 1,
+        lote: b.lote || undefined,
+        fecha_vacunacion: b.fecha_vacunacion || undefined,
+        pruebas_diagnosticas: b.pruebas_diagnosticas || undefined,
+      };
+    });
+
     await onSave({
       numero_aval: numeroAval.trim(),
       codigo_predio: codigoPredio.trim() || undefined,
@@ -301,7 +371,7 @@ export function AvalFormModal({
       observaciones: observaciones.trim() || undefined,
       hallazgos_bov_buf: totalBovBuf > 0 ? bovBuf : undefined,
       hallazgos_otras: otrasEspecies.length > 0 ? otrasEspecies : undefined,
-      biologicos: biologicos.length > 0 ? biologicos : undefined,
+      biologicos: cleanBiologicos.length > 0 ? cleanBiologicos : undefined,
       hierros: hierros.length > 0 ? hierros : undefined,
     });
     onClose();
@@ -349,486 +419,401 @@ export function AvalFormModal({
                 </TabsList>
               </div>
 
-            {/* TAB 1: DATOS GENERALES */}
-            <TabsContent value="generales" className="space-y-5 pt-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">Número de Aval *</label>
-                  <Input
-                    required
-                    value={numeroAval}
-                    onChange={(e) => setNumeroAval(e.target.value)}
-                    placeholder="Ej. AVAL-2026-0001"
-                    className="h-12 rounded-xl font-mono font-bold text-sm bg-card border-border"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Building2 className="size-4 text-emerald-500" />
-                    Código de Predio / Finca
-                  </label>
-                  <Input
-                    value={codigoPredio}
-                    onChange={(e) => setCodigoPredio(e.target.value)}
-                    placeholder="Ej. FINCA-LA-ESPERANZA-01"
-                    className="h-12 rounded-xl font-mono text-sm bg-card border-border"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">Fecha de Emisión</label>
-                  <Input
-                    type="date"
-                    value={fechaEmision}
-                    onChange={(e) => setFechaEmision(e.target.value)}
-                    className="h-12 rounded-xl text-sm bg-card border-border"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">Fecha de Vencimiento</label>
-                  <Input
-                    type="date"
-                    value={fechaVencimiento}
-                    onChange={(e) => setFechaVencimiento(e.target.value)}
-                    className="h-12 rounded-xl text-sm bg-card border-border"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">N° Certificado Vacunación</label>
-                  <Input
-                    value={certificadoVacunacionN}
-                    onChange={(e) => setCertificadoVacunacionN(e.target.value)}
-                    placeholder="Ej. CERT-VAC-984"
-                    className="h-12 rounded-xl font-mono text-sm bg-card border-border"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">
-                    Inspección de Origen (Solo Aprobadas / Seguimiento / Cuarentena)
-                  </label>
-                  <Select value={inspeccionId} onValueChange={setInspeccionId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
-                      <SelectValue placeholder="Seleccione Inspección" />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
-                      <SelectItem value="none">Sin inspección vinculada (Directo)</SelectItem>
-                      {inspeccionesElegibles.map((insp) => (
-                        <SelectItem key={insp.id} value={String(insp.id)}>
-                          Inspección #{insp.n_control} ({insp.status}) - {new Date(insp.fecha_inspeccion).toLocaleDateString()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2 min-w-0">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Stethoscope className="size-4 text-blue-500" /> Médico Veterinario
-                  </label>
-                  <Select value={medicoResponsableId} onValueChange={setMedicoResponsableId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
-                      <SelectValue placeholder="Seleccione Médico" />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
-                      <SelectItem value="none">No asignado</SelectItem>
-                      {empleados.map((emp) => (
-                        <SelectItem key={emp.id} value={String(emp.id)}>
-                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2 min-w-0">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <UserCheck className="size-4 text-purple-500" /> Inspector Jefe (OSA)
-                  </label>
-                  <Select value={jefeOsaId} onValueChange={setJefeOsaId}>
-                    <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
-                      <SelectValue placeholder="Seleccione Jefe OSA" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No asignado</SelectItem>
-                      {empleados.map((emp) => (
-                        <SelectItem key={emp.id} value={String(emp.id)}>
-                          {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider">Observaciones Generales</label>
-                <Textarea
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  placeholder="Escriba aquí observaciones del estado zoosanitario, recomendaciones o detalles del predio..."
-                  className="rounded-2xl min-h-25 text-xs p-4 bg-card border-border"
-                />
-              </div>
-            </TabsContent>
-
-            {/* TAB 2: REBAÑO BOVINO Y BUFALINO */}
-            <TabsContent value="rebaño" className="space-y-6 pt-5">
-              <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border shadow-sm">
-                <div>
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Sparkles className="size-4 text-amber-500" /> Matriz Epidemiológica de Rebaño Auditado
-                  </span>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Total de cabezas registradas según la clasificación zoosanitaria oficial.
-                  </p>
-                </div>
-                <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-base px-4 py-1.5 rounded-xl">
-                  TOTAL: {totalBovBuf} Cabezas
-                </Badge>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-xs font-extrabold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                  <CheckCircle2 className="size-4" /> 1. Especie Bovino (Vacuno)
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Toros</label>
+              {/* TAB 1: DATOS GENERALES */}
+              <TabsContent value="generales" className="space-y-5 pt-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider">Número de Aval *</label>
                     <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_toros || 0}
-                      onChange={(e) => handleBovBufChange('t_toros', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
+                      required
+                      value={numeroAval}
+                      onChange={(e) => setNumeroAval(e.target.value)}
+                      placeholder="Ej. AVAL-2026-0001"
+                      className="h-12 rounded-xl font-mono font-bold text-sm bg-card border-border"
                     />
                   </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Vacas</label>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Building2 className="size-4 text-emerald-500" />
+                      Código de Predio / Finca
+                    </label>
                     <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_vacas || 0}
-                      onChange={(e) => handleBovBufChange('t_vacas', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Novillos</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_novillos || 0}
-                      onChange={(e) => handleBovBufChange('t_novillos', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Novillas</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_novillas || 0}
-                      onChange={(e) => handleBovBufChange('t_novillas', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Mautes (Machos)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_mautes_m || 0}
-                      onChange={(e) => handleBovBufChange('t_mautes_m', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Mautes (Hembras)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_mautes_h || 0}
-                      onChange={(e) => handleBovBufChange('t_mautes_h', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Becerros</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_becerros || 0}
-                      onChange={(e) => handleBovBufChange('t_becerros', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Becerras</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_becerras || 0}
-                      onChange={(e) => handleBovBufChange('t_becerras', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
+                      value={codigoPredio}
+                      onChange={(e) => setCodigoPredio(e.target.value)}
+                      placeholder="Ej. FINCA-LA-ESPERANZA-01"
+                      className="h-12 rounded-xl font-mono text-sm bg-card border-border"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h4 className="text-xs font-extrabold text-blue-500 uppercase tracking-widest flex items-center gap-2">
-                  <CheckCircle2 className="size-4" /> 2. Especie Bufalino (Búfalos)
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Búfalos</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider">Fecha de Emisión</label>
                     <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bufalos || 0}
-                      onChange={(e) => handleBovBufChange('t_bufalos', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
+                      type="date"
+                      value={fechaEmision}
+                      onChange={(e) => setFechaEmision(e.target.value)}
+                      className="h-12 rounded-xl text-sm bg-card border-border"
                     />
                   </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Búfalas</label>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider">Fecha de Vencimiento</label>
                     <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bufalas || 0}
-                      onChange={(e) => handleBovBufChange('t_bufalas', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
+                      type="date"
+                      value={fechaVencimiento}
+                      onChange={(e) => setFechaVencimiento(e.target.value)}
+                      className="h-12 rounded-xl text-sm bg-card border-border"
                     />
                   </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Buvillos</label>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider">N° Certificado Vacunación</label>
                     <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_buvillos || 0}
-                      onChange={(e) => handleBovBufChange('t_buvillos', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Buvillas</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_buvillas || 0}
-                      onChange={(e) => handleBovBufChange('t_buvillas', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Bumautes (Machos)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bumautes_m || 0}
-                      onChange={(e) => handleBovBufChange('t_bumautes_m', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Bumautes (Hembras)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bumautes_h || 0}
-                      onChange={(e) => handleBovBufChange('t_bumautes_h', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Bucerros</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bucerros || 0}
-                      onChange={(e) => handleBovBufChange('t_bucerros', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
-                    <label className="text-xs text-muted-foreground font-bold uppercase">Bucerras</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={bovBuf.t_bucerras || 0}
-                      onChange={(e) => handleBovBufChange('t_bucerras', e.target.value)}
-                      className="h-11 rounded-xl text-center font-black text-sm"
+                      value={certificadoVacunacionN}
+                      onChange={(e) => setCertificadoVacunacionN(e.target.value)}
+                      placeholder="Ej. CERT-VAC-984"
+                      className="h-12 rounded-xl font-mono text-sm bg-card border-border"
                     />
                   </div>
                 </div>
-              </div>
-            </TabsContent>
 
-            {/* TAB 3: OTRAS ESPECIES */}
-            <TabsContent value="especies" className="space-y-5 pt-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Desglose de Otras Especies (Porcina, Equina, Avícola, Caprina, etc.)
-                </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddOtrasEspecies}
-                  className="rounded-xl h-10 px-4 text-xs font-bold cursor-pointer border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
-                >
-                  <Plus className="size-4 mr-1.5" /> Añadir Especie
-                </Button>
-              </div>
-
-              {otrasEspecies.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-xs border border-dashed border-border rounded-2xl bg-card">
-                  No hay otras especies registradas. Haga clic en "Añadir Especie" para agregar porcinos, equinos, etc.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {otrasEspecies.map((esp, i) => (
-                    <div key={i} className="p-4 border border-border rounded-2xl bg-card grid grid-cols-1 sm:grid-cols-5 gap-4 items-center shadow-sm">
-                      <div className="sm:col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-muted-foreground">Tipo de Animal</label>
-                        <Select
-                          value={String(esp.tipo_animal_id)}
-                          onValueChange={(val) => {
-                            const copy = [...otrasEspecies];
-                            copy[i].tipo_animal_id = Number(val);
-                            setOtrasEspecies(copy);
-                          }}
-                        >
-                          <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
-                            <SelectValue placeholder="Seleccione Especie" />
-                          </SelectTrigger>
-                          <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-                            {tiposAnimales.map((t) => (
-                              <SelectItem key={t.id} value={String(t.id)}>
-                                {t.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                {/* Cálculo y Expresión de Días de Vigencia UI/UX */}
+                {diasVigencia !== null && (
+                  <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <Clock className="size-4" />
                       </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-muted-foreground">Machos</label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={esp.machos}
-                          onChange={(e) => {
-                            const copy = [...otrasEspecies];
-                            copy[i].machos = Number(e.target.value);
-                            setOtrasEspecies(copy);
-                          }}
-                          className="h-11 text-xs rounded-xl text-center font-bold"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-muted-foreground">Hembras</label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={esp.hembras}
-                          onChange={(e) => {
-                            const copy = [...otrasEspecies];
-                            copy[i].hembras = Number(e.target.value);
-                            setOtrasEspecies(copy);
-                          }}
-                          className="h-11 text-xs rounded-xl text-center font-bold"
-                        />
-                      </div>
-
-                      <div className="flex items-end justify-between gap-3">
-                        <div className="space-y-1.5 flex-1">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Crías</label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={esp.crias}
-                            onChange={(e) => {
-                              const copy = [...otrasEspecies];
-                              copy[i].crias = Number(e.target.value);
-                              setOtrasEspecies(copy);
-                            }}
-                            className="h-11 text-xs rounded-xl text-center font-bold"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveOtrasEspecies(i)}
-                          className="size-11 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
-                        >
-                          <Trash2 className="size-5" />
-                        </Button>
+                      <div>
+                        <p className="text-xs font-bold text-foreground">Tiempo de Vigencia Zoosanitaria</p>
+                        <p className="text-[11px] text-muted-foreground">Calculado entre la fecha de emisión y vencimiento del aval.</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+                    <div className="flex items-center gap-2">
+                      {diasVigencia > 0 ? (
+                        <Badge variant="outline" className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black text-xs">
+                          ⏱️ Vigencia: {diasVigencia} {diasVigencia === 1 ? 'día' : 'días'}
+                        </Badge>
+                      ) : diasVigencia === 0 ? (
+                        <Badge variant="outline" className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 font-black text-xs">
+                          ⏱️ Vigencia: Mismo día (24 hrs)
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="px-3 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-black text-xs">
+                          ⚠️ Fecha de vencimiento inválida ({Math.abs(diasVigencia)} días antes)
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-            {/* TAB 4: BIOLÓGICOS Y VACUNACIÓN */}
-            <TabsContent value="biologicos" className="space-y-5 pt-5">
-              <div className="flex items-center justify-between bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 shadow-sm">
-                <div>
-                  <p className="text-xs font-black text-blue-500 flex items-center gap-2 uppercase tracking-wide">
-                    <Syringe className="size-5" /> Inmunización y Vacunación de Ganado
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Los biológicos despachados descontarán existencias reales del Kardex de la sede seleccionada.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddBiologico}
-                  className="rounded-xl h-10 px-4 text-xs font-bold cursor-pointer border-blue-500/30 text-blue-500 hover:bg-blue-500/20"
-                >
-                  <Plus className="size-4 mr-1.5" /> Añadir Vacuna
-                </Button>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      Inspección de Origen (Solo Aprobadas / Seguimiento / Cuarentena)
+                    </label>
+                    <Select value={inspeccionId} onValueChange={setInspeccionId}>
+                      <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
+                        <SelectValue placeholder="Seleccione Inspección" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
+                        <SelectItem value="none">Sin inspección vinculada (Directo)</SelectItem>
+                        {inspeccionesElegibles.map((insp) => (
+                          <SelectItem key={insp.id} value={String(insp.id)}>
+                            Inspección #{insp.n_control} ({insp.status}) - {new Date(insp.fecha_inspeccion).toLocaleDateString()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {biologicos.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-xs border border-dashed border-border rounded-2xl bg-card">
-                  No se han aplicado vacunas o biológicos en este aval. Haga clic en "Añadir Vacuna".
+                  <div className="space-y-2 min-w-0">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Stethoscope className="size-4 text-blue-500" /> Médico Veterinario
+                    </label>
+                    <Select value={medicoResponsableId} onValueChange={setMedicoResponsableId}>
+                      <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
+                        <SelectValue placeholder="Seleccione Médico" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-xl">
+                        <SelectItem value="none">No asignado</SelectItem>
+                        {empleados.map((emp) => (
+                          <SelectItem key={emp.id} value={String(emp.id)}>
+                            {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 min-w-0">
+                    <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <UserCheck className="size-4 text-purple-500" /> Inspector Jefe (OSA)
+                    </label>
+                    <Select value={jefeOsaId} onValueChange={setJefeOsaId}>
+                      <SelectTrigger className="h-12 rounded-xl text-xs bg-card border-border w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block">
+                        <SelectValue placeholder="Seleccione Jefe OSA" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No asignado</SelectItem>
+                        {empleados.map((emp) => (
+                          <SelectItem key={emp.id} value={String(emp.id)}>
+                            {emp.nombre} {emp.apellido} (C.I. {emp.cedula}){emp.cargos?.nombre ? ` — ${emp.cargos.nombre}` : emp.profesiones?.nombre ? ` — ${emp.profesiones.nombre}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              ) : (
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wider">Observaciones Generales</label>
+                  <Textarea
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    placeholder="Escriba aquí observaciones del estado zoosanitario, recomendaciones o detalles del predio..."
+                    className="rounded-2xl min-h-25 text-xs p-4 bg-card border-border"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* TAB 2: REBAÑO BOVINO Y BUFALINO */}
+              <TabsContent value="rebaño" className="space-y-6 pt-5">
+                <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border shadow-sm">
+                  <div>
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <Sparkles className="size-4 text-amber-500" /> Matriz Epidemiológica de Rebaño Auditado
+                    </span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Total de cabezas registradas según la clasificación zoosanitaria oficial.
+                    </p>
+                  </div>
+                  <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-base px-4 py-1.5 rounded-xl">
+                    TOTAL: {totalBovBuf} Cabezas
+                  </Badge>
+                </div>
+
                 <div className="space-y-4">
-                  {biologicos.map((bio, i) => (
-                    <div key={i} className="p-4 border border-border rounded-2xl bg-card space-y-4 shadow-sm">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Insumo / Biológico</label>
+                  <h4 className="text-xs font-extrabold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                    <CheckCircle2 className="size-4" /> 1. Especie Bovino (Vacuno)
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Toros</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_toros || 0}
+                        onChange={(e) => handleBovBufChange('t_toros', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Vacas</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_vacas || 0}
+                        onChange={(e) => handleBovBufChange('t_vacas', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Novillos</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_novillos || 0}
+                        onChange={(e) => handleBovBufChange('t_novillos', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Novillas</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_novillas || 0}
+                        onChange={(e) => handleBovBufChange('t_novillas', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Mautes (Machos)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_mautes_m || 0}
+                        onChange={(e) => handleBovBufChange('t_mautes_m', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Mautes (Hembras)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_mautes_h || 0}
+                        onChange={(e) => handleBovBufChange('t_mautes_h', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Becerros</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_becerros || 0}
+                        onChange={(e) => handleBovBufChange('t_becerros', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Becerras</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_becerras || 0}
+                        onChange={(e) => handleBovBufChange('t_becerras', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-border">
+                  <h4 className="text-xs font-extrabold text-blue-500 uppercase tracking-widest flex items-center gap-2">
+                    <CheckCircle2 className="size-4" /> 2. Especie Bufalino (Búfalos)
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Búfalos</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bufalos || 0}
+                        onChange={(e) => handleBovBufChange('t_bufalos', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Búfalas</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bufalas || 0}
+                        onChange={(e) => handleBovBufChange('t_bufalas', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Buvillos</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_buvillos || 0}
+                        onChange={(e) => handleBovBufChange('t_buvillos', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Buvillas</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_buvillas || 0}
+                        onChange={(e) => handleBovBufChange('t_buvillas', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Bumautes (Machos)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bumautes_m || 0}
+                        onChange={(e) => handleBovBufChange('t_bumautes_m', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Bumautes (Hembras)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bumautes_h || 0}
+                        onChange={(e) => handleBovBufChange('t_bumautes_h', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Bucerros</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bucerros || 0}
+                        onChange={(e) => handleBovBufChange('t_bucerros', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 bg-card p-3 rounded-2xl border border-border">
+                      <label className="text-xs text-muted-foreground font-bold uppercase">Bucerras</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={bovBuf.t_bucerras || 0}
+                        onChange={(e) => handleBovBufChange('t_bucerras', e.target.value)}
+                        className="h-11 rounded-xl text-center font-black text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* TAB 3: OTRAS ESPECIES */}
+              <TabsContent value="especies" className="space-y-5 pt-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Desglose de Otras Especies (Porcina, Equina, Avícola, Caprina, etc.)
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddOtrasEspecies}
+                    className="rounded-xl h-10 px-4 text-xs font-bold cursor-pointer border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+                  >
+                    <Plus className="size-4 mr-1.5" /> Añadir Especie
+                  </Button>
+                </div>
+
+                {otrasEspecies.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-xs border border-dashed border-border rounded-2xl bg-card">
+                    No hay otras especies registradas. Haga clic en "Añadir Especie" para agregar porcinos, equinos, etc.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {otrasEspecies.map((esp, i) => (
+                      <div key={i} className="p-4 border border-border rounded-2xl bg-card grid grid-cols-1 sm:grid-cols-5 gap-4 items-center shadow-sm">
+                        <div className="sm:col-span-2 space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Tipo de Animal</label>
                           <Select
-                            value={String(bio.insumo_id)}
+                            value={String(esp.tipo_animal_id)}
                             onValueChange={(val) => {
-                              const copy = [...biologicos];
-                              copy[i].insumo_id = Number(val);
-                              setBiologicos(copy);
+                              const copy = [...otrasEspecies];
+                              copy[i].tipo_animal_id = Number(val);
+                              setOtrasEspecies(copy);
                             }}
                           >
                             <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
-                              <SelectValue placeholder="Seleccione Vacuna" />
+                              <SelectValue placeholder="Seleccione Especie" />
                             </SelectTrigger>
                             <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-                              {insumos.map((ins) => (
-                                <SelectItem key={ins.id} value={String(ins.id)}>
-                                  {ins.nombre} ({ins.codigo || 'Sin código'})
+                              {tiposAnimales.map((t) => (
+                                <SelectItem key={t.id} value={String(t.id)}>
+                                  {t.nombre}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -836,81 +821,274 @@ export function AvalFormModal({
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Sede / Oficina de Inventario</label>
-                          <Select
-                            value={String(bio.oficina_id)}
-                            onValueChange={(val) => {
-                              const copy = [...biologicos];
-                              copy[i].oficina_id = Number(val);
-                              setBiologicos(copy);
-                            }}
-                          >
-                            <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
-                              <SelectValue placeholder="Seleccione Oficina" />
-                            </SelectTrigger>
-                            <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-                              {oficinas.map((of) => {
-                                const stockMatch = stock.find(
-                                  (s) => s.insumo_id === bio.insumo_id && s.oficina_id === of.id
-                                );
-                                const stockQty = stockMatch ? Number(stockMatch.stock_actual) : 0;
-                                return (
-                                  <SelectItem key={of.id} value={String(of.id)}>
-                                    {of.nombre} {stockQty > 0 ? `— [Stock: ${stockQty}]` : '— (Sin stock disponible)'}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Cantidad Aplicada</label>
+                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Machos</label>
                           <Input
                             type="number"
-                            min="1"
-                            value={bio.cantidad}
+                            min="0"
+                            value={esp.machos}
                             onChange={(e) => {
-                              const copy = [...biologicos];
-                              copy[i].cantidad = Number(e.target.value);
-                              setBiologicos(copy);
+                              const copy = [...otrasEspecies];
+                              copy[i].machos = Number(e.target.value);
+                              setOtrasEspecies(copy);
                             }}
-                            className="h-11 text-xs rounded-xl font-bold"
+                            className="h-11 text-xs rounded-xl text-center font-bold"
                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Hembras</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={esp.hembras}
+                            onChange={(e) => {
+                              const copy = [...otrasEspecies];
+                              copy[i].hembras = Number(e.target.value);
+                              setOtrasEspecies(copy);
+                            }}
+                            className="h-11 text-xs rounded-xl text-center font-bold"
+                          />
+                        </div>
+
+                        <div className="flex items-end justify-between gap-3">
+                          <div className="space-y-1.5 flex-1">
+                            <label className="text-[10px] font-bold uppercase text-muted-foreground">Crías</label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={esp.crias}
+                              onChange={(e) => {
+                                const copy = [...otrasEspecies];
+                                copy[i].crias = Number(e.target.value);
+                                setOtrasEspecies(copy);
+                              }}
+                              className="h-11 text-xs rounded-xl text-center font-bold"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveOtrasEspecies(i)}
+                            className="size-11 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer"
+                          >
+                            <Trash2 className="size-5" />
+                          </Button>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Lote N°</label>
-                          <Input
-                            value={bio.lote || ''}
-                            onChange={(e) => {
-                              const copy = [...biologicos];
-                              copy[i].lote = e.target.value;
-                              setBiologicos(copy);
-                            }}
-                            placeholder="Ej. LOT-2026-X"
-                            className="h-11 text-xs rounded-xl font-mono"
-                          />
+              {/* TAB 4: BIOLÓGICOS Y VACUNACIÓN */}
+              <TabsContent value="biologicos" className="space-y-5 pt-5">
+                <div className="flex items-center justify-between bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 shadow-sm">
+                  <div>
+                    <p className="text-xs font-black text-blue-500 flex items-center gap-2 uppercase tracking-wide">
+                      <Syringe className="size-5" /> Inmunización y Vacunación de Ganado
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Los biológicos despachados descontarán existencias reales del Kardex de la sede seleccionada.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddBiologico}
+                    className="rounded-xl h-10 px-4 text-xs font-bold cursor-pointer border-blue-500/30 text-blue-500 hover:bg-blue-500/20"
+                  >
+                    <Plus className="size-4 mr-1.5" /> Añadir Vacuna
+                  </Button>
+                </div>
+
+                {biologicos.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-xs border border-dashed border-border rounded-2xl bg-card">
+                    No se han aplicado vacunas o biológicos en este aval. Haga clic en "Añadir Vacuna".
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {biologicos.map((bio, i) => (
+                      <div key={i} className="p-4 border border-border rounded-2xl bg-card space-y-4 shadow-sm">
+                        {/* Selector de Modo: Inventario vs Entrada Manual */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-border/40 gap-2">
+                          <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl w-fit">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copy = [...biologicos];
+                                copy[i].modo = 'inventario';
+                                setBiologicos(copy);
+                              }}
+                              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${bio.modo === 'inventario'
+                                  ? 'bg-primary text-primary-foreground shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                              Del Inventario
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copy = [...biologicos];
+                                copy[i].modo = 'manual';
+                                setBiologicos(copy);
+                              }}
+                              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${bio.modo === 'manual'
+                                  ? 'bg-blue-600 text-white shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                              Entrada Manual
+                            </button>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveBiologico(i)}
+                            className="h-8 px-2.5 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 text-muted-foreground font-bold text-xs cursor-pointer self-end sm:self-auto gap-1"
+                          >
+                            <Trash2 className="size-4" />
+                            <span>Eliminar vacuna</span>
+                          </Button>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground">Fecha Vacunación</label>
-                          <Input
-                            type="date"
-                            value={bio.fecha_vacunacion || ''}
-                            onChange={(e) => {
-                              const copy = [...biologicos];
-                              copy[i].fecha_vacunacion = e.target.value;
-                              setBiologicos(copy);
-                            }}
-                            className="h-11 text-xs rounded-xl"
-                          />
-                        </div>
+                        {bio.modo === 'manual' ? (
+                          /* Campos de Entrada Manual */
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">Nombre de la Vacuna / Biológico *</label>
+                              <Input
+                                value={bio.vacuna_manual || ''}
+                                onChange={(e) => {
+                                  const copy = [...biologicos];
+                                  copy[i].vacuna_manual = e.target.value;
+                                  setBiologicos(copy);
+                                }}
+                                placeholder="Ej. Vacuna contra la Fiebre Aftosa"
+                                className="h-11 text-xs rounded-xl font-bold"
+                              />
+                            </div>
 
-                        <div className="flex items-center gap-3">
-                          <div className="space-y-1.5 flex-1">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">Marca / Laboratorio</label>
+                              <Input
+                                value={bio.marca_manual || ''}
+                                onChange={(e) => {
+                                  const copy = [...biologicos];
+                                  copy[i].marca_manual = e.target.value;
+                                  setBiologicos(copy);
+                                }}
+                                placeholder="Ej. Aftosan / Biogénesis Bagó"
+                                className="h-11 text-xs rounded-xl"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          /* Campos de Selección de Inventario */
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">Insumo / Biológico *</label>
+                              <Select
+                                value={String(bio.insumo_id)}
+                                onValueChange={(val) => {
+                                  const copy = [...biologicos];
+                                  copy[i].insumo_id = Number(val);
+                                  setBiologicos(copy);
+                                }}
+                              >
+                                <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
+                                  <SelectValue placeholder="Seleccione Vacuna" />
+                                </SelectTrigger>
+                                <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+                                  {insumos.map((ins) => (
+                                    <SelectItem key={ins.id} value={String(ins.id)}>
+                                      {ins.nombre} ({ins.codigo || 'Sin código'})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">Sede / Oficina de Inventario</label>
+                              <Select
+                                value={String(bio.oficina_id)}
+                                onValueChange={(val) => {
+                                  const copy = [...biologicos];
+                                  copy[i].oficina_id = Number(val);
+                                  setBiologicos(copy);
+                                }}
+                              >
+                                <SelectTrigger className="h-11 text-xs rounded-xl w-full min-w-0 max-w-full [&>span]:truncate [&>span]:block [&>span]:text-left">
+                                  <SelectValue placeholder="Seleccione Oficina" />
+                                </SelectTrigger>
+                                <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+                                  {oficinas.map((of) => {
+                                    const stockMatch = stock.find(
+                                      (s) => s.insumo_id === bio.insumo_id && s.oficina_id === of.id
+                                    );
+                                    const stockQty = stockMatch ? Number(stockMatch.stock_actual) : 0;
+                                    return (
+                                      <SelectItem key={of.id} value={String(of.id)}>
+                                        {of.nombre} {stockQty > 0 ? `— [Stock: ${stockQty}]` : '— (Sin stock disponible)'}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold uppercase text-muted-foreground">Cantidad Aplicada</label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={bio.cantidad}
+                                onChange={(e) => {
+                                  const copy = [...biologicos];
+                                  copy[i].cantidad = Number(e.target.value);
+                                  setBiologicos(copy);
+                                }}
+                                className="h-11 text-xs rounded-xl font-bold"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold uppercase text-muted-foreground">Lote N°</label>
+                            <Input
+                              value={bio.lote || ''}
+                              onChange={(e) => {
+                                const copy = [...biologicos];
+                                copy[i].lote = e.target.value;
+                                setBiologicos(copy);
+                              }}
+                              placeholder="Ej. LOT-2026-X"
+                              className="h-11 text-xs rounded-xl font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold uppercase text-muted-foreground">Fecha Vacunación</label>
+                            <Input
+                              type="date"
+                              value={bio.fecha_vacunacion || ''}
+                              onChange={(e) => {
+                                const copy = [...biologicos];
+                                copy[i].fecha_vacunacion = e.target.value;
+                                setBiologicos(copy);
+                              }}
+                              className="h-11 text-xs rounded-xl"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
                             <label className="text-[10px] font-bold uppercase text-muted-foreground">Pruebas Diagnósticas</label>
                             <Input
                               value={bio.pruebas_diagnosticas || ''}
@@ -923,109 +1101,98 @@ export function AvalFormModal({
                               className="h-11 text-xs rounded-xl"
                             />
                           </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveBiologico(i)}
-                            className="size-11 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer mt-6"
-                          >
-                            <Trash2 className="size-5" />
-                          </Button>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* TAB 5: HIERROS Y MARCAS */}
-            <TabsContent value="hierros" className="space-y-5 pt-5">
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Upload className="size-4 text-emerald-500" /> Carga de Marcas y Hierros Registrados
-                </label>
-                <div className="border-2 border-dashed border-border hover:border-emerald-500/50 p-8 rounded-2xl text-center bg-card transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleHierrosChange}
-                    className="hidden"
-                    id="hierro-file-input"
-                  />
-                  <label
-                    htmlFor="hierro-file-input"
-                    className="cursor-pointer flex flex-col items-center justify-center gap-2"
-                  >
-                    <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
-                      <Upload className="size-8" />
-                    </div>
-                    <span className="text-sm font-bold text-foreground">
-                      Haga clic para subir fotografías de Hierros o Marcas
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Formatos soportados: PNG, JPG, WEBP. Puede seleccionar múltiples imágenes.
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {hierroPreviews.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Imágenes listadas para registrar ({hierroPreviews.length})
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                    {hierroPreviews.map((src, i) => (
-                      <div
-                        key={i}
-                        className="relative size-32 rounded-2xl border border-border overflow-hidden group bg-muted/20"
-                      >
-                        <img src={src} alt="Hierro preview" className="size-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveHierro(i)}
-                          className="absolute top-2 right-2 p-1.5 rounded-xl bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+                )}
+              </TabsContent>
 
-        <DialogFooter className="p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full bg-background/50 backdrop-blur-sm gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            className="rounded-xl h-11 px-4 sm:px-6 text-xs font-bold cursor-pointer"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSaving}
-            className="rounded-xl h-11 px-5 sm:px-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-lg shadow-emerald-600/20"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" /> Guardando...
-              </>
-            ) : (
-              aval ? 'Guardar Cambios' : 'Emitir Aval Sanitario'
-            )}
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
+              {/* TAB 5: HIERROS Y MARCAS */}
+              <TabsContent value="hierros" className="space-y-5 pt-5">
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Upload className="size-4 text-emerald-500" /> Carga de Marcas y Hierros Registrados
+                  </label>
+                  <div className="border-2 border-dashed border-border hover:border-emerald-500/50 p-8 rounded-2xl text-center bg-card transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleHierrosChange}
+                      className="hidden"
+                      id="hierro-file-input"
+                    />
+                    <label
+                      htmlFor="hierro-file-input"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                    >
+                      <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
+                        <Upload className="size-8" />
+                      </div>
+                      <span className="text-sm font-bold text-foreground">
+                        Haga clic para subir fotografías de Hierros o Marcas
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Formatos soportados: PNG, JPG, WEBP. Puede seleccionar múltiples imágenes.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {hierroPreviews.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Imágenes listadas para registrar ({hierroPreviews.length})
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                      {hierroPreviews.map((src, i) => (
+                        <div
+                          key={i}
+                          className="relative size-32 rounded-2xl border border-border overflow-hidden group bg-muted/20"
+                        >
+                          <img src={src} alt="Hierro preview" className="size-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveHierro(i)}
+                            className="absolute top-2 right-2 p-1.5 rounded-xl bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <DialogFooter className="p-3 sm:p-4 border-t border-border/50 shrink-0 flex flex-row items-center justify-between w-full bg-background/50 backdrop-blur-sm gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-xl h-11 px-4 sm:px-6 text-xs font-bold cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="rounded-xl h-11 px-5 sm:px-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-lg shadow-emerald-600/20"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="size-4 mr-2 animate-spin" /> Guardando...
+                </>
+              ) : (
+                aval ? 'Guardar Cambios' : 'Emitir Aval Sanitario'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }

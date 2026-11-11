@@ -66,11 +66,12 @@ async function resolveEmpleadoId(req, tx) {
   }
 }
 
-function canAccessInspeccion(inspeccion, req) {
+async function canAccessInspeccion(inspeccion, req, tx) {
   if (!isInspectorUser(req)) return true;
-  const empleadoId = req.user?.currentInstance?.empleado_id;
-  if (!empleadoId) return false;
-  return inspeccion.planificaciones?.planificacion_empleados?.some(
+  const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tx || req.db));
+  if (!empleadoId) return true;
+  if (!inspeccion.planificaciones?.planificacion_empleados?.length) return true;
+  return inspeccion.planificaciones.planificacion_empleados.some(
     (pe) => pe.empleado_id === empleadoId
   );
 }
@@ -109,16 +110,24 @@ async function requireInspectorEnPlanificacion(tx, req, planificacionId) {
     throw error;
   }
 
-  const asignacion = await tx.planificacion_empleados.findFirst({
+  const asignados = await tx.planificacion_empleados.findMany({
     where: {
       planificacion_id: Number(planificacionId),
-      empleado_id: empleadoId,
     },
+    orderBy: { id: 'asc' },
+    select: { empleado_id: true },
   });
 
-  if (!asignacion) {
+  if (!asignados || asignados.length === 0) {
+    const error = new Error('Esta planificación no tiene inspectores asignados.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const jefe = asignados[0];
+  if (jefe.empleado_id !== empleadoId) {
     const error = new Error(
-      'No está asignado a esta planificación. Solo puede registrar inspecciones de visitas donde figura como inspector.'
+      'Solo el Inspector Jefe/Encargado de esta comisión técnica está facultado para realizar el vaciado y registro del acta de inspección. Los inspectores acompañantes tienen acceso de visualización.'
     );
     error.statusCode = 403;
     throw error;
@@ -800,18 +809,14 @@ export const getInspeccionReporte = async (req, res) => {
   });
 
   if (!inspeccion) {
-    return res.status(404).json({ status: 'error', message: 'Inspecci?n no encontrada' });
-  }
-
-  if (!canAccessInspeccion(inspeccion, req)) {
-    return res.status(403).json({ status: 'error', message: 'Acceso denegado a esta inspecci?n.' });
+    return res.status(404).json({ status: 'error', message: 'Inspección no encontrada' });
   }
 
   try {
     const reporte = await inspeccionReporteService.buildInspeccionReporte(inspeccion);
     res.status(200).json({ status: 'success', data: reporte });
   } catch (error) {
-    console.error('Error preparando reporte de inspecci?n:', error);
+    console.error('Error preparando reporte de inspección:', error);
     res.status(500).json({ status: 'error', message: 'No se pudo preparar el acta' });
   }
 };

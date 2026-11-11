@@ -1,5 +1,5 @@
-# SICIZ-INSAI V2.0 
-### Sistema de Información para el Control de Inspecciones Zoosanitarias y de Campo
+# SICIZ-INSAI V2.0
+### Sistema de Información para el Control de Insumos y Certificaciones
 
 [![Vercel](https://img.shields.io/badge/Production-Live-success?logo=vercel&logoColor=white)](https://sicic-insai-v2-0.vercel.app)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-6DA55F?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -9,9 +9,9 @@
 
 ## Sobre el Proyecto
 
-**SICIZ-INSAI V2.0** es la evolución integral de la plataforma de gestión fitosanitaria y zoosanitaria del **Instituto Nacional de Salud Agrícola Integral (INSAI)**. Diseñado como una solución robusta y escalable, este sistema centraliza y digitaliza el flujo de trabajo de las inspecciones agrícolas y ganaderas en Venezuela, permitiendo una trazabilidad total de las actividades de campo y optimizando la toma de decisiones basada en datos reales.
+SICIZ-INSAI V2.0 es la plataforma integral de gestión fitosanitaria y zoosanitaria del Instituto Nacional de Salud Agrícola Integral (INSAI). El sistema centraliza y digitaliza el ciclo operativo de las inspecciones agrícolas y ganaderas en Venezuela, garantizando trazabilidad total de las actividades de campo, control de inventario de biológicos y emisión oficial de avales y actas.
 
-Esta versión 2.0 unifica el ecosistema tecnológico en una arquitectura **Multi-Tenant dinámica**, mejorando significativamente el rendimiento, la experiencia de usuario y la integridad de la información operativa.
+La versión 2.0 unifica el ecosistema bajo una arquitectura Multi-Tenant dinámica, soporte para despliegue híbrido (servidor local seguro con túneles Cloudflare Zero Trust o despliegue completo en la nube) y compatibilidad móvil dual mediante Progressive Web App (PWA) y empaquetado nativo con Capacitor para Android.
 
 ---
 
@@ -20,91 +20,107 @@ Esta versión 2.0 unifica el ecosistema tecnológico en una arquitectura **Multi
 | Versión | Enfoque | Logros Clave |
 | :--- | :--- | :--- |
 | **V1.0** | Digitalización Inicial | Sentó las bases del modelo de datos fitosanitario y el registro básico de inspecciones. |
-| **V2.0 (Actual)** | **Sistema Integral - SICIZ** | Arquitectura unificada, optimización de consultas, gestión dinámica de instancias y UI/UX premium. |
+| **V2.0 (Actual)** | **Sistema Integral - SICIZ** | Arquitectura Multi-Tenant dinámica, conectividad híbrida con Cloudflare Zero Trust, soporte PWA/Capacitor, control granular de roles y permisos (RBAC), kardex de insumos y reportes PDF/Excel oficiales. |
 
 ---
 
-##  Stack Tecnológico
+## Arquitectura del Ecosistema
 
-El sistema se divide en una arquitectura desacoplada para máxima eficiencia:
+El proyecto se estructura en dos capas principales totalmente desacopladas:
 
-### **Backend (Core Services)**
-- **Runtime:** Node.js (v18+) con Express.js.
-- **Base de Datos:** PostgreSQL (v17+).
-- **ORM:** Prisma (Gestión de esquema dual: Maestro y Operativo).
-- **Seguridad:** JWT (Auth), Middleware de permisos (RBAC), Helmet y CORS modularizado.
-- **Validación:** Esquemas estrictos con Zod.
-
-### **Frontend (Interface)**
-- **Framework:** React.js + TypeScript.
-- **Móvil / PWA:** Progressive Web App (PWA) instalable y auto-actualizable con Service Worker y Web Manifest.
-- **Estilos:** Tailwind CSS 4 con arquitectura Mobile-First.
-- **Gestión de Estado:** TanStack Query v5, Context API y Hooks personalizados.
-
----
-
-## 📱 Aplicación Móvil (PWA Instalable y Auto-actualizable)
-
-El sistema cuenta con soporte completo para dispositivos móviles mediante **Progressive Web App (PWA)**:
-* **Instalación Directa:** Banner interactivo institucional en el navegador para instalar en pantalla de inicio en 1 toque.
-* **Auto-actualización Instantánea:** El Service Worker detecta nuevas versiones y se actualiza automáticamente sin necesidad de recompilar ni descargar APKs externos.
-* **Diseño Mobile-First:** Barra de navegación inferior táctil tipo Play Store y formularios adaptados a campo.
-
----
-
-## Estructura del Proyecto
-
-```bash
+```
 SICIC-INSAI-V2.0/
-├── backend/        # API REST, Lógica de Negocio y Conexión Multi-Tenant
-├── frontend/       # Interfaz de Usuario, Dashboard, PWA y Capacitor
-│   └── android/    # Proyecto Nativo Android (Gradle / APK)
-├── docs/           # Documentación Técnica, Diagramas y Guías
+|-- backend/                 # API REST, Logica de Negocio y Multi-Tenancia
+|   |-- docs/                # Documentacion tecnica especializada de backend
+|   +-- README.md            # Guia y manual de referencia del backend
+|-- frontend/                # Aplicacion React, TypeScript, Vite, PWA y Capacitor
+|   |-- android/             # Proyecto nativo Android (Gradle / APK)
+|   |-- docs/                # Documentacion tecnica especializada de frontend
+|   +-- README.md            # Guia y manual de referencia del frontend
++-- README.md                # Indice general del repositorio
 ```
 
 ---
 
-## 🚀 Inicio Rápido
+## Modelo de Despliegue Híbrido (Nube y Servidor Local)
+
+El sistema soporta operación flexible según los requerimientos de conectividad e infraestructura de la institución:
+
+1. **Servidor Local con Conector Cloudflare Zero Trust:**
+   * El backend y la base de datos PostgreSQL residen en la infraestructura física institucional en la red local (`http://localhost:4000`).
+   * El servicio `cloudflared` establece un túnel encriptado saliente hacia la red de Cloudflare sin requerir apertura de puertos en el router, IP pública estática ni configuraciones de firewall complejas.
+   * La API se expone al exterior de forma protegida bajo el dominio institucional (por ejemplo, `https://sicic-backend.zymtaxis.com/api`).
+
+2. **Despliegue Completo en la Nube:**
+   * El backend puede alojarse en contenedores Docker o plataformas PaaS/VPS (como Render, Railway o AWS).
+   * Bases de datos PostgreSQL gestionadas en la nube (Neon, Supabase o RDS).
+   * Almacenamiento de archivos mediante Cloudflare R2 o buckets compatibles con S3 (`STORAGE_MODE=r2`).
+
+3. **Frontend Desacoplado:**
+   * Alojadable en Vercel, Cloudflare Pages o servido directamente desde el servidor local.
+   * La utilidad `media-url.ts` resuelve automáticamente las rutas multimedia adaptándose al entorno de ejecución.
+
+---
+
+## Ecosistema Móvil para Inspectores de Campo
+
+Para facilitar el registro de inspecciones en zonas rurales o de difícil acceso, el frontend cuenta con soporte móvil dual:
+
+1. **Progressive Web App (PWA):**
+   * Instalable directamente desde el navegador (Google Chrome, Edge, Safari) con un solo toque mediante el banner institucional.
+   * Actualización automática en segundo plano mediante Service Worker sin requerir descargas manuales de nuevos archivos ni intervención técnica.
+   * Interfaz optimizada con enfoque Mobile-First y barra de navegación inferior táctil.
+
+2. **Aplicacion Nativa Android (Capacitor):**
+   * Empaquetado nativo mediante Capacitor en la carpeta `frontend/android/`.
+   * Integración con la cámara del dispositivo para captura de evidencias fotográficas georreferenciadas y soporte de almacenamiento local.
+   * Compilable directamente a formato APK mediante Gradle y Android Studio.
+
+---
+
+## Stack Tecnologico Global
+
+### Backend
+* **Runtime:** Node.js (v18+) con Express.js 5.x.
+* **Bases de Datos:** PostgreSQL con arquitectura dual (Base de Datos Master `db_sicic_insai_master` y Bases Operativas por sede territorial).
+* **ORM:** Prisma 6.x con generación dual de clientes.
+* **Seguridad:** JWT, bcrypt, Rate Limiting progresivo, Helmet, CORS dinámico y middleware de idempotencia.
+* **Validacion:** Zod.
+* **Trazabilidad:** Bitácora inmutable de eventos y sistema de notificaciones por correo.
+
+### Frontend
+* **Framework:** React 19 con TypeScript.
+* **Herramienta de Construccion:** Vite 7.x.
+* **Estilos:** Tailwind CSS v4 con diseno Mobile-First y efecto vidrio institucional.
+* **Componentes:** Radix UI y Shadcn/ui.
+* **Estado y Cache:** TanStack Query v5 (React Query).
+* **Móvil:** Capacitor 8.x + Service Worker PWA.
+* **Reportes:** Generación de documentos oficiales PDF con `@react-pdf/renderer` y exportaciones tabulares.
+
+---
+
+## Inicio Rapido
 
 ### 1. Requisitos Previos
-*   **Node.js** (v18 o superior)
-*   **PostgreSQL** (v17 o superior)
-*   Un gestor de paquetes (npm o yarn)
+* Node.js (v18 o superior).
+* PostgreSQL (v16 o superior).
+* Gestor de paquetes npm.
+* Android Studio con JDK 17/21 (requerido únicamente si se compilará el APK nativo).
 
-### 2. Clonación y Configuración
+### 2. Clonacion
 ```bash
-# Clonar repositorio
 git clone https://github.com/DaniDev-19/SICIC-INSAI-V2.0.git
 cd SICIC-INSAI-V2.0
 ```
 
-### 3. Instalación de Dependencias
-Debes instalar las dependencias en ambos directorios:
-```bash
-# Backend
-cd backend && npm install
-
-# Frontend
-cd ../frontend && npm install
-```
-
-### 4. Variables de Env torno
-Crea un archivo `.env` en las carpetas `backend/` y `frontend/` siguiendo los ejemplos proporcionados en sus respectivas carpetas.
-
-### 5. Ejecución en Desarrollo
-```bash
-# En terminal 1 (Backend)
-cd backend && npm run dev
-
-# En terminal 2 (Frontend)
-cd frontend && npm run dev
-```
+### 3. Instalacion y Puesta en Marcha
+Consulte los manuales específicos de cada componente para instrucciones detalladas:
+* **[Manual y Documentacion del Backend](./backend/README.md)**
+* **[Manual y Documentacion del Frontend](./frontend/README.md)**
 
 ---
 
-## 🔗 Enlaces Importantes
-- **Producción:** [https://sicic-insai-v2-0.vercel.app](https://sicic-insai-v2-0.vercel.app)
-- **Repositorio Original:** [DaniDev-19 GitHub](https://github.com/DaniDev-19)
+## Documentacion Detallada
 
----
-*Desarrollado con ❤️*
+* **Backend:** Consulte el [Indice de Documentacion de Backend](./backend/README.md#indice-de-documentacion-tecnica-backenddocs) para guías sobre arquitectura, roles, túneles y multi-tenancia.
+* **Frontend:** Consulte el [Indice de Documentacion de Frontend](./frontend/README.md#indice-de-documentacion-tecnica-frontenddocs) para guías sobre Capacitor, PWA, interfaz mobile-first y componentes UI.

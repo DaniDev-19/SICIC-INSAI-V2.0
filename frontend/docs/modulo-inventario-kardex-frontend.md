@@ -1,4 +1,4 @@
-﻿# Módulo de Inventario Agrícola y Trazabilidad Kardex - SICIZ-INSAI V2.0
+# Módulo de Inventario Agrícola y Trazabilidad Kardex - SICIZ-INSAI V2.0
 
 Este documento describe la arquitectura y componentes del módulo de **Inventario y Control de Insumos** (`/inventario`) en la interfaz de usuario.
 
@@ -42,13 +42,13 @@ La comunicación de datos se gestiona mediante el hook `use-inventario.ts`, el c
 ## 4. Alertas Visuales de Stock Crítico
 
 La interfaz aplica resaltados de color basados en los umbrales de stock:
-- 🔴 **Rojo (Stock Crítico / Agotado):** `stock_actual <= stock_minimo`.
-- 🟡 **Amarillo (Próximo a Vencer):** `fecha_vencimiento` dentro de los próximos 30 días.
-- 🟢 **Verde (Stock Adecuado):** Existencias normales.
+- **Rojo (Stock Crítico / Agotado):** `stock_actual <= stock_minimo`.
+- **Amarillo (Próximo a Vencer):** `fecha_vencimiento` dentro de los próximos 30 días.
+- **Verde (Stock Adecuado):** Existencias normales.
 
 ---
 
-[Volver al índice de documentación](../WIKI.md)
+[Volver al índice de documentación](../README.md)
 
 **Documentación Técnica Funcional**
 **SICIZ-INSAI V2.0**

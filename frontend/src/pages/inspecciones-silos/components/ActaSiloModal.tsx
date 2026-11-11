@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/Stepper';
 import { useActaSilos } from '@/hooks/use-acta-silos';
+import { useAuth } from '@/hooks/use-auth';
+import { usePermissions } from '@/hooks/use-permissions';
 import { planificacionesService } from '@/services/planificaciones.service';
 import apiClient from '@/lib/api-client';
 import type { ActaSilo, SiloFoto } from '@/types/acta_silos';
@@ -123,6 +125,8 @@ export function ActaSiloModal({
   initialPlanificacionId,
 }: ActaSiloModalProps) {
   const { createActaSilo, updateActaSilo, isCreating, isUpdating } = useActaSilos();
+  const { currentInstance } = useAuth();
+  const { isAdmin } = usePermissions();
   const isEditing = !!actaSilo;
   const formSchema = useMemo(() => buildFormSchema(), []);
   const [step, setStep] = useState(0);
@@ -210,11 +214,27 @@ export function ActaSiloModal({
       }
     }
 
+    const CLOSED_STATUSES = ['FINALIZADA', 'COMPLETADA', 'CANCELADA', 'NO_ATENDIDA'];
+    const currentEmpId = currentInstance?.empleado_id;
+
     return raw.filter((p) => {
       if (targetPlanId && Number(p.id) === Number(targetPlanId)) return true;
-      return !p.acta_silos || p.acta_silos.length === 0;
+      
+      const hasActaSilo = Array.isArray(p.acta_silos) && p.acta_silos.length > 0;
+      const hasInspeccion = Array.isArray(p.inspecciones) && p.inspecciones.length > 0;
+      const isClosed = CLOSED_STATUSES.includes(String(p.status || '').toUpperCase());
+
+      if (hasActaSilo || hasInspeccion || isClosed) return false;
+
+      // Si es rol Inspector (no Admin), solo puede vaciar planificaciones donde sea el Jefe/Encargado (índice 0)
+      if (!isAdmin && currentEmpId) {
+        const jefeId = p.planificacion_empleados?.[0]?.empleado_id;
+        if (jefeId && jefeId !== currentEmpId) return false;
+      }
+
+      return true;
     });
-  }, [planificacionesRes?.data, actaSilo, initialPlanificacionId]);
+  }, [planificacionesRes?.data, actaSilo, initialPlanificacionId, isAdmin, currentInstance]);
   const catalogEventos = eventosList || [];
   const catalogUnidades = unidadesList || [];
   const isLoading = isCreating || isUpdating;

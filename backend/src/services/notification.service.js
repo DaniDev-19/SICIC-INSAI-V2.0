@@ -214,7 +214,7 @@ class NotificationService {
 
   /**
    * Verifica avales sanitarios que ya hayan alcanzado su fecha de vencimiento
-   * y genera la notificación de aviso correspondiente sin emojis ni duplicados.
+   * y genera la notificación de aviso correspondiente.
    */
   async verificarAvalesVencidos({ db, usuario_global_id }) {
     if (!usuario_global_id) return;

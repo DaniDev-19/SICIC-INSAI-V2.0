@@ -21,9 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Mail, Lock } from 'lucide-react';
+import { Loader2, User, Mail, Lock, Server } from 'lucide-react';
 import { Stepper } from '@/components/ui/Stepper';
-import { useUsers } from '@/hooks/use-users';
+import { useUsers, useMasterUser } from '@/hooks/use-users';
 import { useInstancesOptions } from '@/hooks/use-instances';
 import { roleService } from '@/services/role.service';
 import type { MasterUser } from '@/types/user';
@@ -62,17 +62,21 @@ interface UsuarioModalProps {
 }
 
 export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
-  const { createUser, updateUser, isCreating, isUpdating } = useUsers();
+  const { createUser, updateUser, assignInstance, removeInstance, isCreating, isUpdating, isAssigning } = useUsers();
   const isEditing = !!user;
   const [step, setStep] = useState(0);
   const [instanciaId, setInstanciaId] = useState('');
   const [rolId, setRolId] = useState('');
 
-  const { data: instances = [] } = useInstancesOptions(isOpen && !isEditing);
+  // Cargar detalles completos del usuario para asegurar datos frescos de asignación
+  const { data: userDetail } = useMasterUser(isOpen && user ? user.id : null);
+  const activeUser = userDetail ?? user;
+
+  const { data: instances = [] } = useInstancesOptions(isOpen);
   const { data: roles = [] } = useQuery({
     queryKey: ['roles-options'],
     queryFn: () => roleService.getRoles({ limit: 200, status: 'true' }),
-    enabled: isOpen && !isEditing,
+    enabled: isOpen,
     select: (res) => res.data || [],
   });
 
@@ -95,24 +99,39 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
   });
 
   const status = watch('status');
-  const isLoading = isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating || isAssigning;
 
   useEffect(() => {
-    if (!isOpen) return;
-    setStep(0);
-    setInstanciaId('');
-    setRolId('');
-    if (user) {
+    if (!isOpen) {
+      setStep(0);
+      setInstanciaId('');
+      setRolId('');
+      return;
+    }
+
+    if (activeUser) {
       reset({
-        username: user.username,
-        email: user.email,
+        username: activeUser.username,
+        email: activeUser.email,
         password: '',
-        status: user.status,
+        status: activeUser.status,
       });
+
+      // Precargar la primera instancia y rol asignados
+      const currentAssignment = activeUser.usuario_instancia?.[0];
+      if (currentAssignment) {
+        setInstanciaId(String(currentAssignment.instancia_id));
+        setRolId(String(currentAssignment.rol_id));
+      } else {
+        setInstanciaId('');
+        setRolId('');
+      }
     } else {
       reset({ username: '', email: '', password: '', status: true });
+      setInstanciaId('');
+      setRolId('');
     }
-  }, [user, reset, isOpen]);
+  }, [activeUser, reset, isOpen]);
 
   const handleNextStep = async () => {
     const valid = await trigger(['username', 'email', 'password']);
@@ -130,6 +149,26 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
         payload.password = values.password;
       }
       await updateUser({ id: user.id, ...payload });
+
+      // Actualizar o asignar sede y rol si se seleccionaron
+      if (instanciaId && rolId) {
+        const prevAssignment = activeUser?.usuario_instancia?.[0];
+        const hasChanged =
+          !prevAssignment ||
+          prevAssignment.instancia_id !== Number(instanciaId) ||
+          prevAssignment.rol_id !== Number(rolId);
+
+        if (hasChanged) {
+          if (prevAssignment && prevAssignment.instancia_id !== Number(instanciaId)) {
+            await removeInstance({ userId: user.id, instanciaId: prevAssignment.instancia_id });
+          }
+          await assignInstance({
+            userId: user.id,
+            instancia_id: Number(instanciaId),
+            rol_id: Number(rolId),
+          });
+        }
+      }
     } else {
       if (!values.password || values.password.length < 6) return;
       const payload: Parameters<typeof createUser>[0] = {
@@ -153,7 +192,7 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[520px] glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-135 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
         <form
           key={user?.id ?? 'new'}
           onSubmit={isEditing ? handleSubmit((values) => onFormSubmit(values)) : (e) => e.preventDefault()}
@@ -207,7 +246,7 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="password">
-                    Contraseña {isEditing ? '(opcional)' : '*'}
+                    Contraseña {isEditing ? '(dejar en blanco para mantener la actual)' : '*'}
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -215,6 +254,7 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
                       id="password"
                       type="password"
                       autoComplete="new-password"
+                      placeholder={isEditing ? '••••••••' : ''}
                       {...register('password')}
                       className={cn('h-11 pl-11 rounded-xl', errors.password && 'border-rose-500')}
                     />
@@ -232,6 +272,55 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
                     onCheckedChange={(v) => setValue('status', v)}
                   />
                 </div>
+
+                {/* Sección de Sede y Rol en edición */}
+                {isEditing && (
+                  <div className="space-y-3.5 rounded-2xl border border-border/80 p-3.5 sm:p-4 bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Server className="size-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                        Sede y Rol Asignados
+                      </span>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Sede / Instancia</Label>
+                        <Select value={instanciaId} onValueChange={setInstanciaId}>
+                          <SelectTrigger className="h-11 rounded-xl bg-background">
+                            <SelectValue placeholder="Seleccionar sede" />
+                          </SelectTrigger>
+                          <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                            {instances.map((inst) => (
+                              <SelectItem key={inst.id} value={String(inst.id)}>
+                                {inst.nombre_mostrable}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Rol en el sistema</Label>
+                        <Select value={rolId} onValueChange={setRolId}>
+                          <SelectTrigger className="h-11 rounded-xl bg-background">
+                            <SelectValue placeholder="Seleccionar rol" />
+                          </SelectTrigger>
+                          <SelectContent position="popper" sideOffset={6} align="start" className="glass-effect border-border max-w-[calc(100vw-2rem)] sm:max-w-xs">
+                            {roles.map((rol) => (
+                              <SelectItem key={rol.id} value={String(rol.id)}>
+                                {rol.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Define a qué sede accede este usuario y qué rol tiene asignado en el sistema.
+                    </p>
+                  </div>
+                )}
               </>
             )}
 
@@ -241,7 +330,7 @@ export function UsuarioModal({ isOpen, onClose, user }: UsuarioModalProps) {
                   Asigne una sede y rol para que el usuario pueda iniciar sesión. Puede omitir este paso y configurarlo después.
                 </p>
                 <div className="space-y-2">
-                  <Label>Instancia</Label>
+                  <Label>Instancia / Sede</Label>
                   <Select value={instanciaId} onValueChange={setInstanciaId}>
                     <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Seleccionar sede" />

@@ -270,3 +270,102 @@ export const sendComunicado = async (req, res) => {
     }
   });
 };
+
+/**
+ * Envia el feedback y valoracion del usuario al correo institucional
+ */
+export const sendFeedbackEmail = async (req, res) => {
+  try {
+    const { estrellas = 5, categoria = 'Valoración General', comentario = '', nombre = '', email = '', sede = '' } = req.body;
+
+    const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '').trim();
+    const fromAddress = process.env.SMTP_FROM || '"SICIZ-INSAI Feedback" <baddevprograming@gmail.com>';
+    const targetEmail = 'baddevprograming@gmail.com';
+
+    const fechaActual = new Date().toLocaleString('es-VE', { timeZone: 'America/Caracas' });
+    const usuarioNombre = nombre || req.user?.nombre || req.user?.username || 'Usuario Institucional';
+    const usuarioEmail = email || req.user?.email || 'No especificado';
+    const userSede = sede || req.tenant?.nombre || req.user?.instance || 'Sede INSAI';
+
+    const starsHtml = `${estrellas} de 5 Estrellas (${estrellas}/5)`;
+    const subject = `[VALORACION SICIZ-INSAI] ${categoria} - ${estrellas}/5 Estrellas (${usuarioNombre})`;
+
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #ffffff;">
+        <div style="background: #047857; color: #ffffff; padding: 24px; text-align: center;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 0.5px;">INSAI - Sistema SICIZ V2.0</h2>
+          <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Nueva Valoración y Opinión Recibida desde el Centro de Ayuda</p>
+        </div>
+        <div style="padding: 24px; color: #1f2937;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
+            <div style="font-size: 24px; color: #eab308; margin-bottom: 4px;">${starsHtml}</div>
+            <div style="font-size: 14px; font-weight: bold; color: #166534;">Calificación: ${estrellas} de 5 Estrellas</div>
+            <div style="font-size: 12px; color: #15803d; margin-top: 2px;">Categoría: <strong>${categoria}</strong></div>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280; width: 140px;"><strong>Usuario / Remitente:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">${usuarioNombre}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;"><strong>Correo Electrónico:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">${usuarioEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;"><strong>Sede / Dependencia:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">${userSede}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;"><strong>Fecha y Hora:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">${fechaActual}</td>
+            </tr>
+          </table>
+
+          <div style="margin-top: 16px;">
+            <div style="font-size: 13px; font-weight: bold; color: #374151; margin-bottom: 8px;">Mensaje / Opinión:</div>
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; color: #111827; white-space: pre-wrap;">${comentario || 'Sin comentarios adicionales.'}</div>
+          </div>
+        </div>
+        <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 14px; text-align: center; font-size: 11px; color: #6b7280;">
+          SICIZ-INSAI V2.0 - Notificación Automática de Feedback Institucional
+        </div>
+      </div>
+    `;
+
+    if (pass) {
+      mailService.initTransporter();
+      await mailService.transporter.sendMail({
+        from: fromAddress,
+        to: targetEmail,
+        subject,
+        html: htmlBody
+      });
+      console.log(`[Feedback] Correo enviado exitosamente a ${targetEmail}`);
+    } else {
+      console.log(`[Feedback - Simulado] Correo preparado para ${targetEmail}: ${subject}`);
+    }
+
+    try {
+      bitacoraService.registrar({
+        req,
+        accion: 'REGISTRO_FEEDBACK_SISTEMA',
+        modulo: 'Centro de Ayuda',
+        payload_nuevo: { estrellas, categoria, comentario, usuario: usuarioNombre }
+      });
+    } catch (e) {
+      // Ignorar error no bloqueante de bitacora
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Valoración recibida exitosamente. Muchas gracias por su retroalimentación.'
+    });
+  } catch (error) {
+    console.error('Error en sendFeedbackEmail:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'No fue posible registrar la valoración vía correo en este momento.'
+    });
+  }
+};

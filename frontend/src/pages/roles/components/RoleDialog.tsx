@@ -99,9 +99,18 @@ export function RoleDialog({
 
   const handleTogglePermission = (screen: string, action: string) => {
     const currentPermissions = (permisos as Record<string, string[]>)[screen] || [];
-    const newPermissions = currentPermissions.includes(action)
-      ? currentPermissions.filter((a) => a !== action)
-      : [...currentPermissions, action];
+    const screenDef = PANTALLAS.find(p => p.key === screen);
+
+    let actionsToToggle = [action];
+    if (action === 'update' || action === 'edit') {
+      actionsToToggle = ['update'];
+      if (screenDef?.ACCIONES.includes('edit')) actionsToToggle.push('edit');
+    }
+
+    const hasAny = actionsToToggle.some(a => currentPermissions.includes(a));
+    const newPermissions = hasAny
+      ? currentPermissions.filter((a) => !actionsToToggle.includes(a))
+      : Array.from(new Set([...currentPermissions, ...actionsToToggle]));
 
     setValue('permisos', {
       ...permisos,

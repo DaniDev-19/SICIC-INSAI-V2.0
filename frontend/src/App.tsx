@@ -138,7 +138,9 @@ function App() {
                 <Route element={<PermissionRoute screen="configuraciones" />}>
                   <Route path='configuraciones' element={<Configuraciones />} />
                 </Route>
-                <Route path='comunicados' element={<MailPage />} />
+                <Route element={<PermissionRoute screen="mail" />}>
+                  <Route path='comunicados' element={<MailPage />} />
+                </Route>
                 <Route path='perfil' element={<PerfilPage />} />
                 <Route path='help' element={<HelpMe />} />
               </Route>

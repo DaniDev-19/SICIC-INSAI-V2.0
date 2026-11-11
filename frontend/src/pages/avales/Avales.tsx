@@ -40,7 +40,7 @@ import { AvalFormModal } from './components/AvalFormModal';
 import type { AvalSanitario } from '@/types/avales';
 
 const Avales: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     avales,
     pagination,
@@ -74,8 +74,10 @@ const Avales: React.FC = () => {
       setInitialInspeccionId(Number(inspeccionIdParam));
       setEditingAval(null);
       setIsFormModalOpen(true);
+      // Limpiar parámetros para evitar reaperturas involuntarias o URL estancada
+      setSearchParams({}, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, setSearchParams]);
 
   const handleOpenCreate = () => {
     setEditingAval(null);

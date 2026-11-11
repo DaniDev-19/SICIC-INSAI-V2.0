@@ -8,6 +8,7 @@ import {
   Car,
   FileText,
   UserPlus,
+  Crown,
 } from 'lucide-react';
 import { CrudTableActions } from '@/components/auth/CrudTableActions';
 import { Button } from '@/components/ui/button';
@@ -185,15 +186,29 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
               <div className="flex items-center gap-2 min-w-0">
                 <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                   {inspectors.length > 0 ? (
-                    inspectors.map((pe) => (
-                      <div
-                        key={pe.id}
-                        className="inline-flex items-center gap-1 bg-muted/60 border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
-                      >
-                        <User className="size-3 text-muted-foreground/80 shrink-0" />
-                        {pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.
-                      </div>
-                    ))
+                    inspectors.map((pe, idx) => {
+                      const isJefe = idx === 0;
+                      return (
+                        <div
+                          key={pe.id}
+                          className={cn(
+                            "inline-flex items-center gap-1 border px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap",
+                            isJefe
+                              ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40 shadow-xs"
+                              : "bg-muted/60 text-foreground border-border/80"
+                          )}
+                          title={isJefe ? "Inspector Jefe / Encargado de la visita (Vaciado)" : "Inspector Acompañante"}
+                        >
+                          {isJefe ? (
+                            <Crown className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                          ) : (
+                            <User className="size-3 text-muted-foreground/80 shrink-0" />
+                          )}
+                          <span>{pe.empleados?.nombre || 'Inspector'} {pe.empleados?.apellido?.charAt(0) || ''}.</span>
+                          {isJefe && <span className="text-[9px] font-black uppercase opacity-85">(Jefe)</span>}
+                        </div>
+                      );
+                    })
                   ) : (
                     <span className="text-xs text-muted-foreground italic flex items-center gap-1">
                       <Users className="size-3.5" /> Sin inspectores asignados
@@ -323,16 +338,29 @@ export const PlanificacionTable: React.FC<PlanificacionTableProps> = ({
                     <div className="flex items-center gap-2 w-full min-w-0">
                       <div className="flex flex-nowrap gap-1.5 max-w-45 overflow-hidden text-ellipsis items-center">
                         {inspectors.length > 0 ? (
-                          inspectors.map((pe) => (
-                            <div
-                              key={pe.id}
-                              className="inline-flex items-center gap-1 bg-muted/60 text-foreground border border-border/80 px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs hover:bg-muted transition-colors whitespace-nowrap"
-                            >
-                              <User className="size-3 text-muted-foreground/80 shrink-0" />
-                              {pe.empleados?.nombre || 'Inspector'}{' '}
-                              {pe.empleados?.apellido?.charAt(0) || ''}.
-                            </div>
-                          ))
+                          inspectors.map((pe, idx) => {
+                            const isJefe = idx === 0;
+                            return (
+                              <div
+                                key={pe.id}
+                                className={cn(
+                                  "inline-flex items-center gap-1 border px-2 py-0.5 rounded text-[10px] font-bold shadow-2xs whitespace-nowrap transition-colors",
+                                  isJefe
+                                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40"
+                                    : "bg-muted/60 text-foreground border-border/80 hover:bg-muted"
+                                )}
+                                title={isJefe ? "Inspector Jefe / Encargado de la visita (Vaciado)" : "Inspector Acompañante"}
+                              >
+                                {isJefe ? (
+                                  <Crown className="size-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                ) : (
+                                  <User className="size-3 text-muted-foreground/80 shrink-0" />
+                                )}
+                                <span>{pe.empleados?.nombre || 'Inspector'}{' '}{pe.empleados?.apellido?.charAt(0) || ''}.</span>
+                                {isJefe && <span className="text-[9px] font-black uppercase opacity-85">(Jefe)</span>}
+                              </div>
+                            );
+                          })
                         ) : (
                           <span className="text-xs text-muted-foreground italic flex items-center gap-1 whitespace-nowrap">
                             <Users className="size-3.5" /> Sin asignar

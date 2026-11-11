@@ -53,6 +53,11 @@ export interface Solicitud {
     nombre: string;
     apellido: string;
   };
+  planificaciones?: {
+    id: number;
+    codigo: string | null;
+    status: string | null;
+  } | null;
 }
 
 export type CreateSolicitudDto = Omit<Solicitud,

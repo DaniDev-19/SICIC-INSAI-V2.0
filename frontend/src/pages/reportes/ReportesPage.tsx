@@ -40,6 +40,7 @@ import { avalesService } from '@/services/avales.service';
 import { actaSilosService } from '@/services/acta-silos.service';
 import { caracStatalService } from '@/services/carac-statal.service';
 import { ubicacionService } from '@/services/ubicacion.service';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   openRankingClientesPdf,
   openInspeccionesEmpleadoPdf,
@@ -49,6 +50,7 @@ import {
 } from '@/reports/ejecutivos/generateEjecutivoNuevosPdf';
 
 export default function ReportesPage() {
+  const { canSee } = usePermissions();
   const [selectedInspectorId, setSelectedInspectorId] = useState<string>('todos');
   const [selectedEstadoId, setSelectedEstadoId] = useState<string>('todos');
 
@@ -61,44 +63,59 @@ export default function ReportesPage() {
   const { data: inspeccionesResp, isLoading: loadingInsp } = useQuery({
     queryKey: ['reportes-real-inspecciones'],
     queryFn: () => inspectionsService.getAll({ limit: 100 }),
+    enabled: canSee('inspecciones'),
   });
 
   const { data: solicitudesResp, isLoading: loadingSol } = useQuery({
     queryKey: ['reportes-real-solicitudes'],
     queryFn: () => solicitudesService.getAll({ limit: 100 }),
+    enabled: canSee('solicitudes'),
   });
 
   const { data: clientesResp, isLoading: loadingCli } = useQuery({
     queryKey: ['reportes-real-clientes'],
     queryFn: () => clientesService.getAll({ limit: 100 }),
+    enabled: canSee('clientes'),
   });
 
   const { isLoading: loadingProp } = useQuery({
     queryKey: ['reportes-real-propiedades'],
     queryFn: () => propiedadesService.getAll({ limit: 100 }),
+    enabled: canSee('propiedades'),
   });
 
   const { data: empleadosResp, isLoading: loadingEmp } = useQuery({
     queryKey: ['reportes-real-empleados'],
     queryFn: () => empleadosService.getAll({ limit: 100 }),
+    enabled: canSee('empleados'),
   });
 
   const { data: caracStatalResp, isLoading: loadingCarac } = useQuery({
     queryKey: ['reportes-real-carac-statal', selectedEstadoId],
     queryFn: () => caracStatalService.getReporte(selectedEstadoId === 'todos' ? undefined : selectedEstadoId),
+    enabled: canSee('reportes'),
   });
 
   const { data: avalesResp, isLoading: loadingAvales } = useQuery({
     queryKey: ['reportes-real-avales'],
     queryFn: () => avalesService.getAll({ limit: 100 }),
+    enabled: canSee('avales'),
   });
 
   const { data: silosResp, isLoading: loadingSilos } = useQuery({
     queryKey: ['reportes-real-silos'],
     queryFn: () => actaSilosService.getAll({ limit: 100 }),
+    enabled: canSee('acta_silos'),
   });
 
-  const isLoadingGlobal = loadingInsp || loadingSol || loadingCli || loadingProp || loadingEmp || loadingCarac || loadingAvales || loadingSilos;
+  const isLoadingGlobal = (canSee('inspecciones') && loadingInsp) ||
+    (canSee('solicitudes') && loadingSol) ||
+    (canSee('clientes') && loadingCli) ||
+    (canSee('propiedades') && loadingProp) ||
+    (canSee('empleados') && loadingEmp) ||
+    (canSee('reportes') && loadingCarac) ||
+    (canSee('avales') && loadingAvales) ||
+    (canSee('acta_silos') && loadingSilos);
 
   // Real KPI Aggregations
   const totalInspecciones = inspeccionesResp?.pagination?.totalCount || inspeccionesResp?.data?.length || 0;

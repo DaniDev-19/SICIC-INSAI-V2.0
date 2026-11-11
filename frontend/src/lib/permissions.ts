@@ -1,10 +1,17 @@
 export const SCREEN_ALIASES: Record<string, string> = {
   planificacion: 'planificaciones',
   inspecciones_silos: 'acta_silos',
+  silos: 'acta_silos',
+  actasilos: 'acta_silos',
   configuraciones: 'configuracion',
+  configuracion_global: 'configuracion',
   inventario: 'insumos',
+  comunicados: 'mail',
+  correos: 'mail',
+  correo: 'mail',
   user: 'usuarios',
   auditoria: 'bitacora',
+  productores: 'clientes',
 };
 
 export function resolveScreenKey(screen: string): string {
@@ -20,8 +27,7 @@ export type PermissionAction =
   | 'edit'
   | 'delete'
   | 'disable'
-  | 'export'
-  | 'clear';
+  | 'export';
 
 export interface ModulePermissions {
   screen: string;
