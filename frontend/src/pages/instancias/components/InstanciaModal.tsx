@@ -29,6 +29,18 @@ const schema = z.object({
   status: z.boolean(),
 });
 
+const editSchema = z.object({
+  nombre_mostrable: z.string().min(3, 'Mínimo 3 caracteres'),
+  db_name: z.string().optional(),
+  status: z.boolean(),
+});
+
+type InstanciaFormValues = {
+  nombre_mostrable: string;
+  db_name?: string;
+  status: boolean;
+};
+
 interface InstanciaModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -46,8 +58,8 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
     setValue,
     watch,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
+  } = useForm<InstanciaFormValues>({
+    resolver: zodResolver(isEditing ? editSchema : schema),
     defaultValues: { nombre_mostrable: '', db_name: '', status: true },
   });
 
@@ -55,7 +67,10 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
   const isLoading = isCreating || isUpdating;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      reset({ nombre_mostrable: '', db_name: '', status: true });
+      return;
+    }
     if (instance) {
       reset({
         nombre_mostrable: instance.nombre_mostrable,
@@ -67,7 +82,7 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
     }
   }, [instance, reset, isOpen]);
 
-  const onFormSubmit = async (values: z.infer<typeof schema>) => {
+  const onFormSubmit = async (values: InstanciaFormValues) => {
     if (instance) {
       await updateInstance({
         id: instance.id,
@@ -75,7 +90,12 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
         status: values.status,
       });
     } else {
-      await createInstance(values);
+      if (!values.db_name) return;
+      await createInstance({
+        nombre_mostrable: values.nombre_mostrable,
+        db_name: values.db_name,
+        status: values.status,
+      });
     }
     onClose();
   };
@@ -83,7 +103,11 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-120 glass-effect border-border shadow-2xl rounded-3xl overflow-hidden p-0 flex flex-col max-h-[min(92vh,48rem)]">
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+        <form
+          key={instance?.id ?? 'new'}
+          onSubmit={handleSubmit(onFormSubmit)}
+          className="flex flex-col flex-1 overflow-hidden min-h-0"
+        >
           <div className="bg-primary/5 p-4 sm:p-6 pr-12 pb-4 border-b border-border/50 shrink-0">
             <DialogHeader>
               <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2 truncate">
@@ -114,12 +138,12 @@ export function InstanciaModal({ isOpen, onClose, instance }: InstanciaModalProp
                 <Input
                   id="db_name"
                   {...register('db_name')}
-                  disabled={isEditing}
+                  readOnly={isEditing}
                   placeholder="db_insai_operativa"
                   className={cn(
                     'h-11 pl-11 rounded-xl font-mono text-sm',
                     errors.db_name && 'border-rose-500',
-                    isEditing && 'opacity-60'
+                    isEditing && 'opacity-70 bg-muted/40 cursor-not-allowed'
                   )}
                 />
               </div>

@@ -49,20 +49,35 @@ export const InsumosCatalogTable: React.FC<InsumosCatalogTableProps> = ({
     );
   }
 
-  const allSelected = insumos.length > 0 && selectedInsumoIds.length === insumos.length;
+  const allSelected = insumos.length > 0 && insumos.every((i) => selectedInsumoIds.includes(i.id));
 
   return (
     <div className="overflow-hidden">
       {/* ── Vista Móvil / Tablet (< lg): Tarjetas ── */}
       <div className="lg:hidden p-3 sm:p-4 space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-border/40 px-1">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-muted-foreground select-none">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={onToggleSelectAll}
+              className="rounded border-border cursor-pointer accent-emerald-600 shrink-0 size-4"
+            />
+            <span>Seleccionar todos ({insumos.length})</span>
+          </label>
+          {selectedInsumoIds.length > 0 && (
+            <span className="text-[11px] font-black text-primary">
+              {selectedInsumoIds.length} seleccionados
+            </span>
+          )}
+        </div>
         {insumos.map((i) => {
           const isSelected = selectedInsumoIds.includes(i.id);
           return (
             <article
               key={i.id}
-              className={`rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5 shadow-sm space-y-3.5 min-w-0 max-w-full overflow-hidden transition-all ${
-                isSelected ? 'bg-primary/5 border-primary/40' : ''
-              }`}
+              className={`rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5 shadow-sm space-y-3.5 min-w-0 max-w-full overflow-hidden transition-all ${isSelected ? 'bg-primary/5 border-primary/40' : ''
+                }`}
             >
               <div className="flex items-start justify-between gap-3 min-w-0">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -76,7 +91,7 @@ export const InsumosCatalogTable: React.FC<InsumosCatalogTableProps> = ({
                     <Package className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-foreground text-sm sm:text-base break-words whitespace-normal">
+                    <p className="font-bold text-foreground text-sm sm:text-base wrap-break-words whitespace-normal">
                       {i.nombre}
                     </p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
@@ -91,7 +106,7 @@ export const InsumosCatalogTable: React.FC<InsumosCatalogTableProps> = ({
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       {i.c_insumos && (
-                        <Badge variant="outline" className="bg-background/80 text-[10px] font-semibold break-words max-w-full whitespace-normal">
+                        <Badge variant="outline" className="bg-background/80 text-[10px] font-semibold wrap-break-words max-w-full whitespace-normal">
                           {i.c_insumos.nombre}
                         </Badge>
                       )}

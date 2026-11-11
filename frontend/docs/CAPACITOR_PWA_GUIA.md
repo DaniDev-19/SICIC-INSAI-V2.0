@@ -1,4 +1,4 @@
-﻿# Guía Oficial de PWA y Generación de APK con Capacitor — SICIZ-INSAI v2.0
+# Guía Oficial de PWA y Generación de APK con Capacitor — SICIZ-INSAI v2.0
 
 Esta guía explica en detalle cómo funciona la arquitectura móvil de **SICIZ-INSAI**, cómo opera la **Progressive Web App (PWA)** y cuáles son los pasos exactos para compilar y generar el archivo instalable **APK para dispositivos Android** utilizando **Capacitor**.
 
@@ -97,7 +97,7 @@ La primera vez que abra el proyecto, Android Studio descargará los componentes 
 
 #### Paso 4: Generar el archivo APK
 1. En el menú superior de Android Studio, haga clic en:
-   **`Build` ➔ `Build Bundle(s) / APK(s)` ➔ `Build APK(s)`**
+   **`Build` -> `Build Bundle(s) / APK(s)` -> `Build APK(s)`**
 2. Android Studio comenzará a compilar el proyecto.
 3. Cuando finalice, aparecerá una notificación flotante en la esquina inferior derecha con el mensaje:
    `APK(s) generated successfully for module 'app'`.

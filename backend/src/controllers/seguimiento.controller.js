@@ -205,19 +205,6 @@ export const getSeguimientoById = async (req, res) => {
     return res.status(404).json({ status: 'error', message: 'Seguimiento no encontrado' });
   }
 
-  if (isInspectorUser(req)) {
-    const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
-    const isAssignedInspeccion = seguimiento.inspecciones?.planificaciones?.planificacion_empleados?.some(
-      pe => pe.empleado_id === empleadoId
-    );
-    const isAssignedSilo = seguimiento.acta_silos?.planificaciones?.planificacion_empleados?.some(
-      pe => pe.empleado_id === empleadoId
-    );
-    if (!isAssignedInspeccion && !isAssignedSilo) {
-      return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a esta inspección o seguimiento.' });
-    }
-  }
-
   res.status(200).json({ status: 'success', data: seguimiento });
 };
 

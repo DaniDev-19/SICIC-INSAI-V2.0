@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import type { AvalSanitario } from '@/types/avales';
 import { avalesService } from '@/services/avales.service';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 interface AvalDetailsModalProps {
   isOpen: boolean;
@@ -33,6 +35,21 @@ interface AvalDetailsModalProps {
 
 export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Hook siempre al inicio antes de cualquier return temprano (Reglas de Hooks de React)
+  const diasVigenciaTotal = useMemo(() => {
+    if (!aval?.fecha_emision || !aval?.fecha_vencimiento) return null;
+    try {
+      const strStart = String(aval.fecha_emision).slice(0, 10);
+      const strEnd = String(aval.fecha_vencimiento).slice(0, 10);
+      const start = new Date(strStart + 'T00:00:00');
+      const end = new Date(strEnd + 'T00:00:00');
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+      return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    } catch {
+      return null;
+    }
+  }, [aval?.fecha_emision, aval?.fecha_vencimiento]);
 
   if (!aval) return null;
 
@@ -53,7 +70,7 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-full max-w-5xl mx-auto bg-background/95 backdrop-blur-xl border-border rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto p-8">
         <DialogHeader className="border-b border-border pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -84,9 +101,9 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
                     )}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                   Certificación de Sanidad Animal e Inspección Ganadera
-                </p>
+                </DialogDescription>
               </div>
             </div>
 
@@ -130,6 +147,11 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
                   {aval.fecha_vencimiento ? new Date(aval.fecha_vencimiento).toLocaleDateString() : 'Sin vencimiento'}
                 </span>
               </p>
+              {diasVigenciaTotal !== null && (
+                <p className="text-[10px] font-black mt-1 text-primary">
+                  ⏱️ {diasVigenciaTotal} {diasVigenciaTotal === 1 ? 'día de vigencia' : 'días de vigencia'}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
@@ -285,21 +307,43 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {aval.aval_biologicos.map((bio, i) => (
-                      <tr key={i}>
-                        <td className="p-3 font-semibold text-foreground">
-                          {bio.insumos?.nombre || `Insumo #${bio.insumo_id}`}
-                        </td>
-                        <td className="p-3 text-muted-foreground">
-                          {bio.fecha_vacunacion
-                            ? new Date(bio.fecha_vacunacion).toLocaleDateString()
-                            : '-'}
-                        </td>
-                        <td className="p-3 text-muted-foreground">
-                          {bio.pruebas_diagnosticas || 'Ninguna'}
-                        </td>
-                      </tr>
-                    ))}
+                    {aval.aval_biologicos.map((bio, i) => {
+                      let nombreVacuna = bio.insumos?.nombre || (bio.insumo_id ? `Insumo #${bio.insumo_id}` : 'Vacuna Manual');
+                      let pruebasTexto = bio.pruebas_diagnosticas || 'Ninguna';
+                      let marcaTexto = bio.insumos?.marca || '';
+
+                      if (!bio.insumo_id && bio.pruebas_diagnosticas) {
+                        try {
+                          const p = JSON.parse(bio.pruebas_diagnosticas);
+                          if (p && typeof p === 'object' && p.manual) {
+                            nombreVacuna = p.vacuna || nombreVacuna;
+                            marcaTexto = p.marca || '';
+                            pruebasTexto = p.detalle || 'Ninguna';
+                          }
+                        } catch {
+                          // Texto plano
+                        }
+                      }
+
+                      return (
+                        <tr key={i}>
+                          <td className="p-3 font-semibold text-foreground">
+                            <div>{nombreVacuna}</div>
+                            {marcaTexto && (
+                              <div className="text-[11px] text-muted-foreground font-normal">Marca: {marcaTexto}</div>
+                            )}
+                          </td>
+                          <td className="p-3 text-muted-foreground">
+                            {bio.fecha_vacunacion
+                              ? new Date(bio.fecha_vacunacion).toLocaleDateString()
+                              : '-'}
+                          </td>
+                          <td className="p-3 text-muted-foreground">
+                            {pruebasTexto}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -318,12 +362,12 @@ export function AvalDetailsModal({ isOpen, onClose, aval }: AvalDetailsModalProp
                     className="size-24 rounded-xl border border-border bg-muted/20 overflow-hidden relative group"
                   >
                     <img
-                      src={h.hierro_img_url}
+                      src={resolveMediaUrl(h.hierro_img_url)}
                       alt={`Hierro ${i + 1}`}
                       className="size-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <a
-                      href={h.hierro_img_url}
+                      href={resolveMediaUrl(h.hierro_img_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"

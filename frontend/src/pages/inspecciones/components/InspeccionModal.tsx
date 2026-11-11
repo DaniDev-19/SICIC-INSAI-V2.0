@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/Stepper';
 import { useInspecciones } from '@/hooks/use-inspecciones';
+import { useAuth } from '@/hooks/use-auth';
+import { usePermissions } from '@/hooks/use-permissions';
 import { planificacionesService } from '@/services/planificaciones.service';
 import { finalidadesService } from '@/services/finalidades.service';
 import { ubicacionService } from '@/services/ubicacion.service';
@@ -178,6 +180,8 @@ export function InspeccionModal({
   initialPlanificacionId,
 }: InspeccionModalProps) {
   const { createInspeccion, updateInspeccion, isCreating, isUpdating } = useInspecciones();
+  const { currentInstance } = useAuth();
+  const { isAdmin } = usePermissions();
   const isEditing = !!inspeccion;
   const formSchema = useMemo(() => buildFormSchema(isEditing), [isEditing]);
   const [step, setStep] = useState(0);
@@ -246,12 +250,28 @@ export function InspeccionModal({
 
   const planificaciones = useMemo(() => {
     const raw = planificacionesRes?.data || [];
+    const CLOSED_STATUSES = ['FINALIZADA', 'COMPLETADA', 'CANCELADA', 'NO_ATENDIDA'];
+    const currentEmpId = currentInstance?.empleado_id;
+
     return raw.filter((p) => {
       if (inspeccion && p.id === inspeccion.planificacion_id) return true;
       if (initialPlanificacionId && p.id === initialPlanificacionId) return true;
-      return !p.inspecciones || p.inspecciones.length === 0;
+      
+      const hasInspeccion = Array.isArray(p.inspecciones) && p.inspecciones.length > 0;
+      const hasActaSilo = Array.isArray(p.acta_silos) && p.acta_silos.length > 0;
+      const isClosed = CLOSED_STATUSES.includes(String(p.status || '').toUpperCase());
+
+      if (hasInspeccion || hasActaSilo || isClosed) return false;
+
+      // Si es rol Inspector (no Admin), solo puede vaciar planificaciones donde sea el Jefe/Encargado (índice 0)
+      if (!isAdmin && currentEmpId) {
+        const jefeId = p.planificacion_empleados?.[0]?.empleado_id;
+        if (jefeId && jefeId !== currentEmpId) return false;
+      }
+
+      return true;
     });
-  }, [planificacionesRes, inspeccion, initialPlanificacionId]);
+  }, [planificacionesRes, inspeccion, initialPlanificacionId, isAdmin, currentInstance]);
   const catalogFinalidades = finalidadesRes?.data || [];
   const isLoading = isCreating || isUpdating;
 

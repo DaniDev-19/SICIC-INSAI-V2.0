@@ -39,5 +39,17 @@ export const mailService = {
   sendComunicado: async (payload: SendComunicadoPayload): Promise<SendComunicadoResponse> => {
     const response = await apiClient.post<SendComunicadoResponse>('/mail/send-comunicado', payload);
     return response.data;
+  },
+
+  sendFeedback: async (payload: {
+    estrellas: number;
+    categoria: string;
+    nombre: string;
+    email?: string;
+    sede?: string;
+    comentario: string;
+  }): Promise<{ status: string; message: string }> => {
+    const response = await apiClient.post<{ status: string; message: string }>('/mail/feedback', payload);
+    return response.data;
   }
 };

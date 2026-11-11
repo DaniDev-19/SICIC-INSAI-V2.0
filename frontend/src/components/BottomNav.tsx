@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -10,6 +10,9 @@ import {
   User,
   ChevronRight,
   HelpCircle,
+  Package,
+  BarChart3,
+  Settings,
 } from 'lucide-react';
 import {
   Sheet,
@@ -32,61 +35,121 @@ interface TabItem {
   isMenuTrigger?: boolean;
 }
 
-const TABS: TabItem[] = [
+interface NavigationCategory {
+  id: string;
+  label: string;
+  icon: typeof Home;
+  matchPrefixes: string[];
+  candidates: { screen: string; path: string; label: string }[];
+}
+
+/**
+ * Categorías del sistema evaluadas en orden de relevancia operativa para personal de campo y usuarios.
+ * Para cada categoría, la primera pantalla para la que el rol tenga permiso 'see' se convierte en su destino.
+ */
+const CATEGORIES: NavigationCategory[] = [
   {
-    id: 'inicio',
-    label: 'Inicio',
-    icon: Home,
-    path: '/home',
-    matchPrefixes: ['/home$'],
+    id: 'vigilancia',
+    label: 'Vigilancia',
+    icon: Activity,
+    matchPrefixes: [
+      '/home/inspecciones',
+      '/home/programas',
+      '/home/plagas',
+      '/home/enfermedades',
+      '/home/cultivos',
+      '/home/animales',
+    ],
+    candidates: [
+      // Prioridad máxima: Inspecciones (Actas de Inspección con fines de vigilancia)
+      { screen: 'inspecciones', path: '/home/inspecciones', label: 'Inspecciones' },
+      { screen: 'programas', path: '/home/programas', label: 'Programas' },
+      { screen: 'plagas', path: '/home/plagas', label: 'Plagas' },
+      { screen: 'enfermedades', path: '/home/enfermedades', label: 'Enfermedades' },
+      { screen: 'cultivos', path: '/home/cultivos', label: 'Cultivos' },
+      { screen: 'animales', path: '/home/animales', label: 'Animales' },
+    ],
   },
   {
     id: 'operaciones',
     label: 'Operaciones',
     icon: ClipboardList,
-    path: '/home/solicitudes',
     matchPrefixes: [
       '/home/solicitudes',
       '/home/planificacion',
-      '/home/inspecciones',
       '/home/inspecciones-silos',
       '/home/avales',
       '/home/seguimientos',
     ],
-  },
-  {
-    id: 'vigilancia',
-    label: 'Vigilancia',
-    icon: Activity,
-    path: '/home/cultivos',
-    matchPrefixes: [
-      '/home/cultivos',
-      '/home/animales',
-      '/home/plagas',
-      '/home/enfermedades',
-      '/home/programas',
+    candidates: [
+      { screen: 'solicitudes', path: '/home/solicitudes', label: 'Solicitudes' },
+      { screen: 'planificaciones', path: '/home/planificacion', label: 'Planificación' },
+      { screen: 'acta_silos', path: '/home/inspecciones-silos', label: 'Inspecciones Silos' },
+      { screen: 'avales', path: '/home/avales', label: 'Avales' },
+      { screen: 'seguimientos', path: '/home/seguimientos', label: 'Seguimientos' },
     ],
   },
   {
     id: 'registro',
     label: 'Registro',
     icon: FolderKanban,
-    path: '/home/clientes',
     matchPrefixes: [
       '/home/clientes',
       '/home/propiedades',
       '/home/empleados',
-      '/home/inventario',
-      '/home/oficinas',
-      '/home/vehiculos',
       '/home/comunicados',
+    ],
+    candidates: [
+      { screen: 'clientes', path: '/home/clientes', label: 'Productores' },
+      { screen: 'propiedades', path: '/home/propiedades', label: 'Propiedades' },
+      { screen: 'empleados', path: '/home/empleados', label: 'Empleados' },
+      { screen: 'mail', path: '/home/comunicados', label: 'Comunicados' },
     ],
   },
   {
-    id: 'menu',
-    label: 'Menú',
-    icon: Menu,
-    isMenuTrigger: true,
+    id: 'inventario',
+    label: 'Inventario',
+    icon: Package,
+    matchPrefixes: [
+      '/home/inventario',
+      '/home/oficinas',
+      '/home/vehiculos',
+    ],
+    candidates: [
+      { screen: 'insumos', path: '/home/inventario', label: 'Insumos' },
+      { screen: 'oficinas', path: '/home/oficinas', label: 'Oficinas' },
+      { screen: 'vehiculos', path: '/home/vehiculos', label: 'Vehículos' },
+    ],
+  },
+  {
+    id: 'reportes',
+    label: 'Reportes',
+    icon: BarChart3,
+    matchPrefixes: [
+      '/home/reportes',
+      '/home/bitacora',
+    ],
+    candidates: [
+      { screen: 'reportes', path: '/home/reportes', label: 'Reportes' },
+      { screen: 'bitacora', path: '/home/bitacora', label: 'Bitácora' },
+    ],
+  },
+  {
+    id: 'admin',
+    label: 'Gestión',
+    icon: Settings,
+    matchPrefixes: [
+      '/home/usuarios',
+      '/home/roles',
+      '/home/instancias',
+      '/home/configuraciones',
+    ],
+    candidates: [
+      { screen: 'usuarios', path: '/home/usuarios', label: 'Usuarios' },
+      { screen: 'roles', path: '/home/roles', label: 'Roles' },
+      { screen: 'instancias', path: '/home/instancias', label: 'Instancias' },
+      { screen: 'configuracion', path: '/home/configuraciones', label: 'Configuración' },
+    ],
   },
 ];
 
@@ -97,10 +160,52 @@ export function BottomNav() {
   const { canSee } = usePermissions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Construcción dinámica de pestañas según los permisos del usuario activo
+  const visibleTabs = useMemo<TabItem[]>(() => {
+    const tabs: TabItem[] = [];
+
+    // 1. Tab de Inicio (si tiene permiso 'home' o por defecto para todo usuario autenticado)
+    tabs.push({
+      id: 'inicio',
+      label: 'Inicio',
+      icon: Home,
+      path: '/home',
+      matchPrefixes: ['/home$'],
+    });
+
+    // 2. Filtrar categorías que tengan al menos una pantalla a la que el usuario tenga acceso
+    const accessibleCategories: TabItem[] = [];
+    for (const cat of CATEGORIES) {
+      const firstAccessible = cat.candidates.find((c) => canSee(c.screen));
+      if (firstAccessible) {
+        accessibleCategories.push({
+          id: cat.id,
+          label: cat.label,
+          icon: cat.icon,
+          path: firstAccessible.path,
+          matchPrefixes: cat.matchPrefixes,
+        });
+      }
+    }
+
+    // Tomamos hasta 3 categorías disponibles para totalizar un máximo de 5 tabs perfectamente balanceados
+    tabs.push(...accessibleCategories.slice(0, 3));
+
+    // 3. Tab de Menú desplegable completo
+    tabs.push({
+      id: 'menu',
+      label: 'Menú',
+      icon: Menu,
+      isMenuTrigger: true,
+    });
+
+    return tabs;
+  }, [canSee]);
+
   const isActiveTab = (tab: TabItem) => {
     if (tab.isMenuTrigger) return isMenuOpen;
     if (tab.id === 'inicio') {
-      return location.pathname === '/home';
+      return location.pathname === '/home' || location.pathname === '/home/';
     }
     return tab.matchPrefixes?.some((prefix) => location.pathname.startsWith(prefix)) ?? false;
   };
@@ -133,8 +238,11 @@ export function BottomNav() {
         aria-label="Navegación principal móvil"
         className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background/95 backdrop-blur-xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1.5"
       >
-        <div className="grid grid-cols-5 items-center justify-around max-w-lg mx-auto px-1">
-          {TABS.map((tab) => {
+        <div
+          className="grid items-center justify-around max-w-lg mx-auto px-1"
+          style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+        >
+          {visibleTabs.map((tab) => {
             const active = isActiveTab(tab);
             const Icon = tab.icon;
 

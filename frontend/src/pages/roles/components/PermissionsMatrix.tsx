@@ -25,7 +25,11 @@ export function PermissionsMatrix({
 }: PermissionsMatrixProps) {
 
   const isAllChecked = PANTALLAS.every(p =>
-    p.ACCIONES.every(a => permisos?.[p.key]?.includes(a))
+    p.ACCIONES.every(a =>
+      permisos?.[p.key]?.includes(a) ||
+      (a === 'edit' && permisos?.[p.key]?.includes('update')) ||
+      (a === 'update' && permisos?.[p.key]?.includes('edit'))
+    )
   );
 
   return (
@@ -80,7 +84,11 @@ export function PermissionsMatrix({
           <TableBody className="divide-y divide-border/30">
             {PANTALLAS.map((pantalla) => {
 
-              const isScopeChecked = pantalla.ACCIONES.every(a => permisos?.[pantalla.key]?.includes(a));
+              const isScopeChecked = pantalla.ACCIONES.every(a =>
+                permisos?.[pantalla.key]?.includes(a) ||
+                (a === 'edit' && permisos?.[pantalla.key]?.includes('update')) ||
+                (a === 'update' && permisos?.[pantalla.key]?.includes('edit'))
+              );
 
               return (
                 <TableRow key={pantalla.key} className="hover:bg-primary/5 group transition-colors">
@@ -102,8 +110,12 @@ export function PermissionsMatrix({
                     </div>
                   </TableCell>
                   {ACCIONES.map((accion) => {
-                    const isSupported = pantalla.ACCIONES.includes(accion.key);
-                    const isChecked = permisos?.[pantalla.key]?.includes(accion.key);
+                    const isSupported = pantalla.ACCIONES.includes(accion.key) ||
+                      (accion.key === 'update' && pantalla.ACCIONES.includes('edit'));
+                    const isChecked = Boolean(
+                      permisos?.[pantalla.key]?.includes(accion.key) ||
+                      (accion.key === 'update' && permisos?.[pantalla.key]?.includes('edit'))
+                    );
 
                     return (
                       <TableCell key={accion.key} className="px-4 py-4 text-center">

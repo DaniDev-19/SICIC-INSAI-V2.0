@@ -220,27 +220,47 @@ export const createAval = async (req, res) => {
       if (biologicos) {
         const parsedBiologicos = typeof biologicos === 'string' ? JSON.parse(biologicos) : biologicos;
         for (const bio of parsedBiologicos) {
-          if (!bio.insumo_id) continue;
-          await tx.aval_biologicos.create({
-            data: {
-              aval_id: aval.id,
-              insumo_id: Number(bio.insumo_id),
-              fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
-              pruebas_diagnosticas: bio.pruebas_diagnosticas || null
-            }
-          });
+          const isManual = bio.modo === 'manual' || bio.es_manual || !bio.insumo_id;
+          if (isManual) {
+            const payloadDiagnostico = JSON.stringify({
+              manual: true,
+              vacuna: bio.vacuna_manual || bio.nombre || 'Biológico Manual',
+              marca: bio.marca_manual || bio.marca || '',
+              lote: bio.lote || '',
+              detalle: bio.pruebas_diagnosticas || ''
+            });
+            await tx.aval_biologicos.create({
+              data: {
+                aval_id: aval.id,
+                insumo_id: null,
+                fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
+                pruebas_diagnosticas: payloadDiagnostico
+              }
+            });
+          } else {
+            await tx.aval_biologicos.create({
+              data: {
+                aval_id: aval.id,
+                insumo_id: Number(bio.insumo_id),
+                fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
+                pruebas_diagnosticas: bio.pruebas_diagnosticas || null
+              }
+            });
 
-          await inventoryService.registrarMovimiento({
-            tx,
-            insumo_id: Number(bio.insumo_id),
-            oficina_id: Number(bio.oficina_id),
-            tipo_movimiento: 'CONSUMO',
-            cantidad: Number(bio.cantidad) || 1,
-            lote: bio.lote || null,
-            aval_id: aval.id,
-            empleado_id,
-            observaciones: `Consumo automático por Aval ${numero_aval}`
-          });
+            if (bio.oficina_id) {
+              await inventoryService.registrarMovimiento({
+                tx,
+                insumo_id: Number(bio.insumo_id),
+                oficina_id: Number(bio.oficina_id),
+                tipo_movimiento: 'CONSUMO',
+                cantidad: Number(bio.cantidad) || 1,
+                lote: bio.lote || null,
+                aval_id: aval.id,
+                empleado_id,
+                observaciones: `Consumo automático por Aval ${numero_aval}`
+              });
+            }
+          }
         }
       }
 
@@ -409,27 +429,47 @@ export const updateAval = async (req, res) => {
 
         const parsedBiologicos = typeof biologicos === 'string' ? JSON.parse(biologicos) : biologicos;
         for (const bio of parsedBiologicos) {
-          if (!bio.insumo_id) continue;
-          await tx.aval_biologicos.create({
-            data: {
-              aval_id: existing.id,
-              insumo_id: Number(bio.insumo_id),
-              fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
-              pruebas_diagnosticas: bio.pruebas_diagnosticas || null
-            }
-          });
+          const isManual = bio.modo === 'manual' || bio.es_manual || !bio.insumo_id;
+          if (isManual) {
+            const payloadDiagnostico = JSON.stringify({
+              manual: true,
+              vacuna: bio.vacuna_manual || bio.nombre || 'Biológico Manual',
+              marca: bio.marca_manual || bio.marca || '',
+              lote: bio.lote || '',
+              detalle: bio.pruebas_diagnosticas || ''
+            });
+            await tx.aval_biologicos.create({
+              data: {
+                aval_id: existing.id,
+                insumo_id: null,
+                fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
+                pruebas_diagnosticas: payloadDiagnostico
+              }
+            });
+          } else {
+            await tx.aval_biologicos.create({
+              data: {
+                aval_id: existing.id,
+                insumo_id: Number(bio.insumo_id),
+                fecha_vacunacion: bio.fecha_vacunacion ? new Date(bio.fecha_vacunacion) : null,
+                pruebas_diagnosticas: bio.pruebas_diagnosticas || null
+              }
+            });
 
-          await inventoryService.registrarMovimiento({
-            tx,
-            insumo_id: Number(bio.insumo_id),
-            oficina_id: Number(bio.oficina_id),
-            tipo_movimiento: 'CONSUMO',
-            cantidad: Number(bio.cantidad) || 1,
-            lote: bio.lote || null,
-            aval_id: existing.id,
-            empleado_id,
-            observaciones: `Consumo actualizado por Aval ${existing.numero_aval}`
-          });
+            if (bio.oficina_id) {
+              await inventoryService.registrarMovimiento({
+                tx,
+                insumo_id: Number(bio.insumo_id),
+                oficina_id: Number(bio.oficina_id),
+                tipo_movimiento: 'CONSUMO',
+                cantidad: Number(bio.cantidad) || 1,
+                lote: bio.lote || null,
+                aval_id: existing.id,
+                empleado_id,
+                observaciones: `Consumo actualizado por Aval ${existing.numero_aval}`
+              });
+            }
+          }
         }
       }
 
@@ -595,17 +635,6 @@ export const getAvalReporte = async (req, res) => {
 
     if (!aval) {
       return res.status(404).json({ status: 'error', message: 'Aval no encontrado' });
-    }
-
-    if (isInspectorUser(req)) {
-      const empleadoId = req.user?.currentInstance?.empleado_id || (await resolveEmpleadoId(req, tenantPrisma));
-      const isMedicoOrJefe = aval.medico_responsable_id === empleadoId || aval.jefe_osa_id === empleadoId;
-      const isAssignedToInspeccion = aval.inspecciones?.planificaciones?.planificacion_empleados?.some(
-        (pe) => pe.empleado_id === empleadoId
-      );
-      if (!isMedicoOrJefe && !isAssignedToInspeccion) {
-        return res.status(403).json({ status: 'error', message: 'Acceso denegado. No está asignado a este aval sanitario.' });
-      }
     }
 
     const reporte = await avalReporteService.buildAvalReporte(aval, tenantPrisma);

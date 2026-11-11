@@ -706,22 +706,22 @@ export function AvalSanitarioDocument({
                 </View>
               </View>
 
-              {/* Otros / Queso */}
+              {/* Otros / Especie Adicional */}
               <View style={[styles.tableRow, styles.tableRowLast]}>
                 <View style={[styles.tableCell, { width: '32%' }]}>
-                  <Text style={styles.cellText}>{otras.otros.nombre || 'queso'}</Text>
+                  <Text style={styles.cellText}>{otras.otros.nombre ? otras.otros.nombre : '-'}</Text>
                 </View>
                 <View style={[styles.tableCell, { width: '17%' }]}>
-                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.machos}</Text>
+                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.machos || ''}</Text>
                 </View>
                 <View style={[styles.tableCell, { width: '17%' }]}>
-                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.hembras}</Text>
+                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.hembras || ''}</Text>
                 </View>
                 <View style={[styles.tableCell, { width: '17%' }]}>
-                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.crias}</Text>
+                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.crias || ''}</Text>
                 </View>
                 <View style={[styles.tableCell, styles.tableCellLast, { width: '17%' }]}>
-                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.total}</Text>
+                  <Text style={[styles.cellText, styles.cellCenter]}>{otras.otros.total > 0 ? otras.otros.total : ''}</Text>
                 </View>
               </View>
             </View>

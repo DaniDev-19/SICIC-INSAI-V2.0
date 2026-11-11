@@ -24,7 +24,7 @@ import { useSolicitudes } from '@/hooks/use-solicitudes';
 import { useVehiculos } from '@/hooks/use-vehiculos';
 import { useEmpleados } from '@/hooks/use-empleados';
 import type { Planificacion } from '@/types/planificaciones';
-import { Calendar, Users, Clock, Loader2, Check } from 'lucide-react';
+import { Calendar, Users, Clock, Loader2, Check, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const planificacionSchema = z.object({
@@ -208,11 +208,25 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
     setValue('empleados', current, { shouldValidate: true });
   };
 
-  const filteredSolicitudes = solicitudes.filter(sol => {
-    if (planificacion) {
-      return sol.estatus === 'CREADA' || sol.id === planificacion.solicitud_id;
+  const setComoJefe = (empId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const current = [...selectedEmpleados];
+    const index = current.indexOf(empId);
+    if (index > -1) {
+      current.splice(index, 1);
+      current.unshift(empId); // Lo coloca como primero (Inspector Principal / Jefe)
+      setValue('empleados', current, { shouldValidate: true });
     }
-    return sol.estatus === 'CREADA';
+  };
+
+  const filteredSolicitudes = solicitudes.filter(sol => {
+    // Si estamos editando una planificación, permitimos su propia solicitud
+    if (planificacion) {
+      if (sol.id === planificacion.solicitud_id) return true;
+      return sol.estatus === 'CREADA' && (!sol.planificaciones || sol.planificaciones.id === planificacion.id);
+    }
+    // En modo creación: solo solicitudes en estado CREADA y que NO tengan ninguna planificación asociada
+    return sol.estatus === 'CREADA' && !sol.planificaciones;
   });
 
   const isSubmitting = isCreating || isUpdating;
@@ -387,34 +401,62 @@ export const PlanificacionModal: React.FC<PlanificacionModalProps> = ({
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Users className="size-4 text-primary" /> Asignación de Inspectores y Personal Técnico <span className="text-rose-500">*</span>
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1 font-semibold uppercase tracking-wider">Indique al menos un inspector comisionado para la visita</p>
+                <p className="text-xs text-muted-foreground mt-1 font-semibold">
+                  El primer inspector asignado figurará como el <strong className="text-amber-600 dark:text-amber-400">Jefe/Encargado</strong> con potestad de vaciado y titular del código oficial.
+                </p>
               </div>
               <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-full">
                 {selectedEmpleados.length} Asignados
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-55 overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto custom-scrollbar pr-2">
               {empleados.map((emp: any) => {
                 const isSelected = selectedEmpleados.includes(emp.id);
+                const isJefe = selectedEmpleados[0] === emp.id;
+
                 return (
                   <div
                     key={emp.id}
                     onClick={() => toggleEmpleado(emp.id)}
                     className={cn(
-                      "p-4 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between",
-                      isSelected
+                      "p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-2",
+                      isJefe
+                        ? "border-amber-500/60 bg-amber-500/10 shadow-md shadow-amber-500/5 ring-1 ring-amber-500/30"
+                        : isSelected
                         ? "border-primary bg-primary/5 shadow-md shadow-primary/5"
                         : "border-border hover:border-primary/30 hover:bg-muted/10"
                     )}
                   >
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-bold text-foreground">{emp.nombre} {emp.apellido}</p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{emp.cargos?.nombre || 'Inspector Técnico'}</p>
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-sm font-bold text-foreground truncate">{emp.nombre} {emp.apellido}</p>
+                        {isJefe && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500 text-white shadow-xs">
+                            <Crown className="size-2.5" /> Jefe / Encargado
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider truncate">
+                        {emp.cargos?.nombre || 'Inspector Técnico'} • C.I: {emp.cedula || 'S/N'}
+                      </p>
+                      {isSelected && !isJefe && (
+                        <button
+                          type="button"
+                          onClick={(e) => setComoJefe(emp.id, e)}
+                          className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+                        >
+                          <Crown className="size-3" /> Nombrar como Jefe de Visita
+                        </button>
+                      )}
                     </div>
                     <div className={cn(
-                      "size-5 rounded-full border flex items-center justify-center transition-all",
-                      isSelected ? "bg-primary border-primary text-white" : "border-border bg-background"
+                      "size-5 rounded-full border flex items-center justify-center transition-all shrink-0",
+                      isJefe
+                        ? "bg-amber-500 border-amber-500 text-white"
+                        : isSelected
+                        ? "bg-primary border-primary text-white"
+                        : "border-border bg-background"
                     )}>
                       {isSelected && <Check className="size-3 text-white" />}
                     </div>

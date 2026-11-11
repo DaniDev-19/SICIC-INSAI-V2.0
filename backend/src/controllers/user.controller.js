@@ -50,7 +50,7 @@ export const getUsers = async (req, res) => {
         created_at: true,
         usuario_instancia: {
           include: {
-            instancias: { select: { id: true, nombre_mostrable: true } },
+            instancias: { select: { id: true, nombre_mostrable: true, db_name: true } },
             roles: { select: { id: true, nombre: true } },
           },
         },

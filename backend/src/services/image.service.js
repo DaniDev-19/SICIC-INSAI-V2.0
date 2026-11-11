@@ -1,7 +1,12 @@
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const getUploadsDir = () => path.resolve(__dirname, '../../uploads');
 
 
 class ImageService {
@@ -49,7 +54,7 @@ class ImageService {
   }
 
   async uploadToLocal(buffer, fileName) {
-    const uploadsDir = path.resolve('uploads');
+    const uploadsDir = getUploadsDir();
     const fullPath = path.join(uploadsDir, fileName);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.writeFile(fullPath, buffer);
@@ -83,7 +88,9 @@ class ImageService {
 
     const relativePath = this.resolveRelativePath(fileUrl);
     if (!relativePath) return null;
-    const fullPath = path.resolve('uploads', relativePath);
+    const baseUploadsDir = getUploadsDir();
+    const primaryPath = path.join(baseUploadsDir, relativePath);
+    const fullPath = fsSync.existsSync(primaryPath) ? primaryPath : path.resolve('uploads', relativePath);
     return fs.readFile(fullPath);
   }
 

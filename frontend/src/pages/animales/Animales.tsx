@@ -8,14 +8,14 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Can from '@/components/auth/Can';
 import { Button } from '@/components/ui/button';
@@ -93,7 +93,7 @@ const Animales: React.FC = () => {
                         >
                             <ChevronLeft className="size-5" />
                         </Button>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text break-words">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text wrap-break-words">
                             Catálogo de Animales
                         </h1>
                     </div>
@@ -157,12 +157,12 @@ const Animales: React.FC = () => {
                 ) : (
                     <>
                         <div className="overflow-x-auto custom-scrollbar">
-                                <AnimalesTable
-                                    animales={animales}
-                                    onView={handleOpenView}
-                                    onEdit={handleOpenEdit}
-                                    onDelete={setDeleteId}
-                                />
+                            <AnimalesTable
+                                animales={animales}
+                                onView={handleOpenView}
+                                onEdit={handleOpenEdit}
+                                onDelete={setDeleteId}
+                            />
                         </div>
 
                         <div className="px-6 py-4 border-t border-border bg-muted/20">

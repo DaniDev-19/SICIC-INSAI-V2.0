@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -10,6 +11,7 @@ import {
   Trash2,
   History,
   Warehouse,
+  X,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -165,10 +167,16 @@ const Inventario: React.FC = () => {
   };
 
   const toggleSelectAllInsumos = () => {
-    if (selectedInsumoIds.length === filteredInsumos.length) {
-      setSelectedInsumoIds([]);
+    const allFilteredSelected =
+      filteredInsumos.length > 0 &&
+      filteredInsumos.every((i) => selectedInsumoIds.includes(i.id));
+
+    if (allFilteredSelected) {
+      const currentIds = new Set(filteredInsumos.map((i) => i.id));
+      setSelectedInsumoIds((prev) => prev.filter((id) => !currentIds.has(id)));
     } else {
-      setSelectedInsumoIds(filteredInsumos.map((i) => i.id));
+      const newIds = new Set([...selectedInsumoIds, ...filteredInsumos.map((i) => i.id)]);
+      setSelectedInsumoIds(Array.from(newIds));
     }
   };
 
@@ -186,12 +194,12 @@ const Inventario: React.FC = () => {
             >
               <ChevronLeft className="size-5" />
             </Button>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex flex-wrap items-center gap-2 min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text flex flex-wrap items-center gap-2 min-w-0 flex-1">
               <Package className="size-6 sm:size-8 text-emerald-500 shrink-0" />
-              <span className="break-words [overflow-wrap:anywhere] min-w-0">Inventario de Insumos & Kardex</span>
+              <span className="wrap-break-words wrap:anywhere min-w-0">Inventario de Insumos & Kardex</span>
             </h1>
           </div>
-          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12 break-words whitespace-normal">
+          <p className="text-muted-foreground font-medium text-xs sm:text-sm md:text-base pl-2 sm:pl-12 wrap-break-words whitespace-normal">
             Control de productos, vacunas, insumos fitosanitarios y auditoría de movimientos por sede.
           </p>
         </div>
@@ -240,11 +248,10 @@ const Inventario: React.FC = () => {
 
         {/* KPI 2 */}
         <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border glass-effect flex items-center gap-3 sm:gap-4 min-w-0">
-          <div className={`p-3 sm:p-3.5 rounded-2xl border shrink-0 ${
-            (kpis?.stockBajoCount || 0) > 0
-              ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-              : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-          }`}>
+          <div className={`p-3 sm:p-3.5 rounded-2xl border shrink-0 ${(kpis?.stockBajoCount || 0) > 0
+            ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+            : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+            }`}>
             <AlertTriangle className="size-5 sm:size-6" />
           </div>
           <div className="min-w-0">
@@ -252,9 +259,8 @@ const Inventario: React.FC = () => {
               STOCK CRÍTICO
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className={`text-xl sm:text-2xl font-black ${
-                (kpis?.stockBajoCount || 0) > 0 ? 'text-rose-500' : 'text-foreground'
-              }`}>
+              <span className={`text-xl sm:text-2xl font-black ${(kpis?.stockBajoCount || 0) > 0 ? 'text-rose-500' : 'text-foreground'
+                }`}>
                 {isLoadingKpis ? '...' : kpis?.stockBajoCount || 0}
               </span>
               <span className="text-xs font-medium text-muted-foreground">con alerta</span>
@@ -350,7 +356,7 @@ const Inventario: React.FC = () => {
 
               <div className="w-full sm:w-auto min-w-0">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                  <SelectTrigger className="w-full sm:w-50 h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Todas las Categorías" />
                   </SelectTrigger>
                   <SelectContent className="glass-effect">
@@ -363,20 +369,6 @@ const Inventario: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {selectedInsumoIds.length > 0 && (
-                <Can screen="insumos" action="delete">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setIsBulkDeleteOpen(true)}
-                    className="h-10 px-3 rounded-xl text-xs font-bold animate-in fade-in shrink-0"
-                  >
-                    <Trash2 className="size-4 mr-1.5" />
-                    Eliminar ({selectedInsumoIds.length})
-                  </Button>
-                </Can>
-              )}
             </div>
           </div>
 
@@ -433,7 +425,7 @@ const Inventario: React.FC = () => {
                     setStockPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-[220px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                  <SelectTrigger className="w-full sm:w-55 h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Todas las oficinas / sedes" />
                   </SelectTrigger>
                   <SelectContent className="glass-effect max-h-60">
@@ -509,7 +501,7 @@ const Inventario: React.FC = () => {
                     setKardexPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
+                  <SelectTrigger className="w-full sm:w-50 h-10 bg-background/80 rounded-xl text-xs font-semibold min-w-0 [&>span]:truncate [&>span]:block [&>span]:text-left">
                     <SelectValue placeholder="Todos los tipos" />
                   </SelectTrigger>
                   <SelectContent className="glass-effect">
@@ -659,6 +651,48 @@ const Inventario: React.FC = () => {
         insumo={detailInsumo}
         onEdit={handleOpenEditInsumo}
       />
+
+      {/* Floating bulk delete bar - Mobile-First using createPortal */}
+      {selectedInsumoIds.length > 0 &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-9999 animate-in slide-in-from-bottom-5 duration-300 max-w-[calc(100vw-1.5rem)] sm:max-w-fit w-auto pointer-events-auto">
+            <div className="bg-card text-card-foreground px-3.5 sm:px-6 py-2.5 sm:py-3.5 rounded-2xl shadow-2xl border-2 border-primary/20 backdrop-blur-xl flex items-center justify-between gap-3 sm:gap-6 glass-effect">
+              <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-5 border-r border-border shrink-0">
+                <div className="size-7 sm:size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs sm:text-sm shadow-md shadow-primary/25 shrink-0">
+                  {selectedInsumoIds.length}
+                </div>
+                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                  {selectedInsumoIds.length === 1 ? 'Seleccionado' : 'Seleccionados'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Can screen="insumos" action="delete">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    title="Eliminar insumos seleccionados"
+                    className="font-bold cursor-pointer transition-all text-xs sm:text-sm px-3 sm:px-4 h-8 sm:h-9 shadow-md flex items-center gap-1.5"
+                    onClick={() => setIsBulkDeleteOpen(true)}
+                  >
+                    <Trash2 className="size-4 shrink-0" />
+                    <span>Eliminar Selección</span>
+                  </Button>
+                </Can>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Limpiar selección"
+                  className="rounded-xl hover:bg-muted cursor-pointer text-muted-foreground hover:text-foreground size-8 sm:size-9 shrink-0"
+                  onClick={() => setSelectedInsumoIds([])}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

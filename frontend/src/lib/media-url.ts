@@ -16,13 +16,20 @@ export function resolveMediaUrl(url: string | null | undefined): string {
 
   const apiBase = getApiBaseUrl();
 
-  if (trimmed.includes('localhost:4000') || trimmed.includes('127.0.0.1:4000')) {
-    trimmed = trimmed.replace(/^https?:\/\/(localhost|127\.0\.0\.1):4000/, apiBase);
+  // Si la URL contiene /uploads/, asegurar que siempre apunte al backend / túnel actual
+  if (trimmed.includes('/uploads/')) {
+    const uploadRelative = trimmed.slice(trimmed.indexOf('/uploads/'));
+    return apiBase ? `${apiBase}${uploadRelative}` : uploadRelative;
   }
 
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return trimmed;
   }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
   if (trimmed.startsWith('/')) return `${apiBase}${trimmed}`;
   return `${apiBase}/${trimmed}`;
 }

@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { writeLimiter } from './middlewares/rate.middleware.js';
 import { idempotencyMiddleware } from './middlewares/idempotency.middleware.js';
 
@@ -90,7 +92,13 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-app.use('/uploads', express.static(path.resolve('uploads')));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_DIR = fs.existsSync(path.resolve(__dirname, '../uploads'))
+  ? path.resolve(__dirname, '../uploads')
+  : path.resolve('uploads');
+
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Servidor SICIZ-INSAI online' });
